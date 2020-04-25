@@ -21,17 +21,11 @@ init : Value -> ( Model, Cmd Msg )
 init value =
     case Decode.decodeValue decodeFlags value of
         Ok flags ->
-            let
-                currentPokemon =
-                    flags.myPokemon.master
-            in
             ( { defaultModel
-                | myPokemon = currentPokemon.myPokemon
-                , team = currentPokemon.team
-                , opponents = currentPokemon.opponents
-                , great = flags.myPokemon.great
-                , ultra = flags.myPokemon.ultra
-                , master = flags.myPokemon.master
+                | season = flags.persisted.season
+                , great = flags.persisted.great
+                , ultra = flags.persisted.ultra
+                , master = flags.persisted.master
                 , pokedex = flags.pokedex
                 , effectiveness = flags.effectiveness
                 , attacks = Dict.union flags.fast flags.charged
@@ -73,7 +67,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
         SwitchSeason season ->
-            ( { model | season = season }, Cmd.none )
+            { model | season = season } |> andPersist
 
         SwitchPage page ->
             ( { model | page = page }, Cmd.none )
@@ -120,12 +114,15 @@ update message model =
                     }
 
                 newModel =
-                    if isMyPokemon then
-                        { model | myPokemon = Array.push pokemon model.myPokemon }
-                        --, autocomplete = resetToFirstItem (updateConfig model.search) (getRelevantChoices model) model.autocomplete
+                    model
+                        |> updateLeague
+                            (\l ->
+                                if isMyPokemon then
+                                    { l | myPokemon = Array.push pokemon l.myPokemon }
 
-                    else
-                        { model | opponents = name :: model.opponents }
+                                else
+                                    { l | opponents = name :: l.opponents }
+                            )
             in
             { newModel | chooser = mapSearch (\_ -> "") model.chooser } |> andPersist
 
@@ -133,10 +130,14 @@ update message model =
             ( { model | chooser = chooser }, Cmd.none )
 
         ToggleExpanded idx ->
-            { model | myPokemon = AE.update idx (\p -> { p | expanded = not p.expanded }) model.myPokemon } |> andPersist
+            model
+                |> updateLeague (\l -> { l | myPokemon = AE.update idx (\p -> { p | expanded = not p.expanded }) l.myPokemon })
+                |> andPersist
 
         SelectFastMove idx move ->
-            { model | myPokemon = AE.update idx (\p -> { p | fast = move }) model.myPokemon } |> andPersist
+            model
+                |> updateLeague (\l -> { l | myPokemon = AE.update idx (\p -> { p | fast = move }) l.myPokemon })
+                |> andPersist
 
         SelectChargedMove idx move ->
             let
@@ -147,10 +148,14 @@ update message model =
                     else
                         Set.insert move charged
             in
-            { model | myPokemon = AE.update idx (\p -> { p | charged = updater p.charged }) model.myPokemon } |> andPersist
+            model
+                |> updateLeague (\l -> { l | myPokemon = AE.update idx (\p -> { p | charged = updater p.charged }) l.myPokemon })
+                |> andPersist
 
         RemovePokemon idx ->
-            { model | myPokemon = AE.removeAt idx model.myPokemon } |> andPersist
+            model
+                |> updateLeague (\l -> { l | myPokemon = AE.removeAt idx l.myPokemon })
+                |> andPersist
 
         SelectCandidate pokemon ->
             ( { model
@@ -165,14 +170,27 @@ update message model =
             )
 
         UpdateTeam team ->
-            { model
-                | team = team
-                , selectedPokemon = Nothing
-            }
+            { model | selectedPokemon = Nothing }
+                |> updateLeague (\l -> { l | team = team })
                 |> andPersist
 
         RemoveOpponent name ->
-            { model | opponents = L.filter ((/=) name) model.opponents } |> andPersist
+            model
+                |> updateLeague (\l -> { l | opponents = L.filter ((/=) name) l.opponents })
+                |> andPersist
+
+
+updateLeague : (League -> League) -> Model -> Model
+updateLeague fn model =
+    case model.season of
+        Great ->
+            { model | great = fn model.great }
+
+        Ultra ->
+            { model | ultra = fn model.ultra }
+
+        Master ->
+            { model | master = fn model.master }
 
 
 andPersist : Model -> ( Model, Cmd msg )
@@ -264,14 +282,14 @@ view model =
         , if model.page == Choosing then
             div [ class "main choosing flex flex-row" ]
                 [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemon model league)
-                , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model)
-                , div [ class "opponents flex flex-col flex-grow" ] (viewOpponents model)
+                , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model league)
+                , div [ class "opponents flex flex-col flex-grow" ] (viewOpponents model league)
                 ]
 
           else
             div [ class "main battling flex flex-row" ]
-                [ div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model)
-                , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model)
+                [ div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
+                , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
                 ]
         ]
 
@@ -384,11 +402,11 @@ viewPokemon model meta idx pokemon =
 -- -------------------
 
 
-viewTeam : Model -> List (Html Msg)
-viewTeam model =
+viewTeam : Model -> League -> List (Html Msg)
+viewTeam model league =
     let
         team =
-            model.team
+            league.team
 
         convertToPokedex : Pokemon -> PokedexEntry -> ( String, PokedexEntry )
         convertToPokedex pokemon pokedex =
@@ -396,7 +414,7 @@ viewTeam model =
 
         lookup : String -> Maybe Pokemon
         lookup name =
-            model.myPokemon
+            league.myPokemon
                 |> Array.filter (\item -> item.name == name)
                 |> Array.get 0
 
@@ -479,8 +497,8 @@ viewWithStrengths model name entry =
 -- -------------------
 
 
-viewOpponents : Model -> List (Html Msg)
-viewOpponents model =
+viewOpponents : Model -> League -> List (Html Msg)
+viewOpponents model league =
     let
         chooser =
             case model.chooser of
@@ -506,18 +524,18 @@ viewOpponents model =
     in
     [ h2 [] [ text "Opponents" ]
     , chooser
-    , (model.opponents ++ Array.toList (Array.map .name model.myPokemon))
+    , (league.opponents ++ Array.toList (Array.map .name league.myPokemon))
         |> L.map viewer
         |> div []
     ]
 
 
-viewOpponentsBattling : Model -> List (Html Msg)
-viewOpponentsBattling model =
+viewOpponentsBattling : Model -> League -> List (Html Msg)
+viewOpponentsBattling model league =
     let
         team : List ( String, PType )
         team =
-            summariseTeam model
+            summariseTeam model league
 
         viewOpponent name entry =
             let
@@ -551,7 +569,7 @@ viewOpponentsBattling model =
                     text <| "Could not look up " ++ name
     in
     [ h2 [] [ text "Opponents" ]
-    , (model.opponents ++ Array.toList (Array.map .name model.myPokemon))
+    , (league.opponents ++ Array.toList (Array.map .name league.myPokemon))
         |> L.sort
         |> L.map viewer
         |> div [ class "flex flex-row flex-wrap" ]
@@ -579,17 +597,17 @@ checkAttackAgainstDefenderType effectiveness team defenderTypes =
     L.foldl go ( [], [] ) team
 
 
-summariseTeam model =
+summariseTeam model league =
     let
         lookup : String -> Maybe Pokemon
         lookup name =
-            model.myPokemon
+            league.myPokemon
                 |> Array.filter (\item -> item.name == name)
                 |> Array.get 0
     in
-    [ model.team.cand1
-    , model.team.cand2
-    , model.team.cand3
+    [ league.team.cand1
+    , league.team.cand2
+    , league.team.cand3
     ]
         |> L.filterMap
             (\mbName ->
@@ -708,15 +726,16 @@ viewTypes fn weaknesses title =
         ]
 
 
-viewAttacks model entry =
-    div [ class "flex flex-col" ]
-        [ entry.fast
-            |> L.map (viewAttack model)
-            |> div [ class "flex flex-col" ]
-        , entry.charged
-            |> L.map (viewAttack model)
-            |> div [ class "flex flex-col" ]
-        ]
+
+--viewAttacks model entry =
+--    div [ class "flex flex-col" ]
+--        [ entry.fast
+--            |> L.map (viewAttack model)
+--            |> div [ class "flex flex-col" ]
+--        , entry.charged
+--            |> L.map (viewAttack model)
+--            |> div [ class "flex flex-col" ]
+--        ]
 
 
 viewAttack : Model -> String -> Html msg

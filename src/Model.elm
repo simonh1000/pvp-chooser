@@ -13,10 +13,7 @@ import Set exposing (Set)
 
 
 type alias Model =
-    { myPokemon : Array Pokemon
-    , team : Team
-    , opponents : List String
-    , season : Season
+    { season : Season
     , great : League
     , ultra : League
     , master : League
@@ -34,10 +31,7 @@ type alias Model =
 
 defaultModel : Model
 defaultModel =
-    { myPokemon = Array.fromList []
-    , team = blankTeam
-    , opponents = []
-    , season = Great
+    { season = Great
     , great = blankLeague
     , ultra = blankLeague
     , master = blankLeague
@@ -97,7 +91,7 @@ type Page
 
 
 type alias Flags =
-    { myPokemon : Persisted
+    { persisted : Persisted
     , pokedex : Dict String PokedexEntry -- keys by lowercase name
     , fast : Dict String MoveType
     , charged : Dict String MoveType
@@ -387,7 +381,8 @@ decodeLeague =
 
 
 type alias Persisted =
-    { great : League
+    { season : Season
+    , great : League
     , ultra : League
     , master : League
     }
@@ -397,12 +392,10 @@ decodePersisted : Decoder Persisted
 decodePersisted =
     let
         dec s =
-            Decode.oneOf
-                [ Decode.field s decodeLeague
-                , Decode.succeed blankLeague
-                ]
+            Decode.field s decodeLeague
     in
     Decode.succeed Persisted
+        |> andMap (Decode.oneOf [ Decode.field "season" decodeSeason, Decode.succeed Ultra ])
         |> andMap (dec "great")
         |> andMap (dec "ultra")
         |> andMap (dec "master")
@@ -410,15 +403,12 @@ decodePersisted =
 
 encodePersisted : Model -> Encode.Value
 encodePersisted model =
-    let
-        currentLeague =
-            League model.myPokemon model.team model.opponents
-    in
-    [ ( "great", encodeLeague model.great )
-    , ( "ultra", encodeLeague model.ultra )
-    , ( "master", encodeLeague currentLeague )
-    ]
-        |> Encode.object
+    Encode.object
+        [ ( "season", encodeSeason model.season )
+        , ( "great", encodeLeague model.great )
+        , ( "ultra", encodeLeague model.ultra )
+        , ( "master", encodeLeague model.master )
+        ]
 
 
 
