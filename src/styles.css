@@ -1,0 +1,57 @@
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+@import url("https://cdn.materialdesignicons.com/4.5.95/css/materialdesignicons.min.css");
+
+h2 {
+    @apply text-xl mb-3
+}
+
+.my-pokemon {
+    flex-grow: 1;
+}
+
+.battling .my-team {
+    flex-basis: 500px;
+}
+
+.choosing .my-team {
+    flex-grow: 3;
+}
+
+.opponents {
+    flex-grow: 2;
+}
+.chooser-container {
+    z-index: 1;
+}
+.recommendations > div {
+    min-width: 30px;
+}
+.btn {
+    @apply bg-blue-500 text-white font-bold py-2 px-4 rounded;
+}
+
+/*.btn-delete {*/
+/*    position: absolute;*/
+/*    right: 10px;*/
+/*    top: 10px;*/
+/*}*/
+.badge-list {
+    line-height: 30px;
+}
+
+.badge {
+    @apply text-white;
+    /*display: inline-flex;*/
+}
+
+.badge + .badge {
+    @apply ml-1
+}
+.super .badge {
+    @apply font-bold;
+}

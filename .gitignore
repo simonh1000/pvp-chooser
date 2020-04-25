@@ -1,0 +1,7 @@
+elm.js
+build
+elm-stuff
+.DS_Store
+documentation.json
+node_modules
+ignore
