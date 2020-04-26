@@ -142,7 +142,7 @@ update message model =
         SelectChargedMove idx move ->
             let
                 updater charged =
-                    if Debug.log "member?" <| Set.member move charged then
+                    if Set.member move charged then
                         Set.remove move charged
 
                     else
@@ -281,7 +281,7 @@ view model =
             ]
         , if model.page == Choosing then
             div [ class "main choosing flex flex-row" ]
-                [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemon model league)
+                [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
                 , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model league)
                 , div [ class "opponents flex flex-col flex-grow" ] (viewOpponents model league)
                 ]
@@ -300,8 +300,8 @@ view model =
 -- -------------------
 
 
-viewMyPokemon : Model -> League -> List (Html Msg)
-viewMyPokemon model league =
+viewMyPokemons : Model -> League -> List (Html Msg)
+viewMyPokemons model league =
     let
         chooser =
             case model.chooser of
@@ -315,10 +315,17 @@ viewMyPokemon model league =
         viewer idx pokemon =
             case Dict.get pokemon.name model.pokedex of
                 Just meta ->
-                    viewPokemon model meta idx pokemon
+                    viewMyPokemon model meta idx pokemon
 
                 Nothing ->
-                    text <| "Could not look up " ++ pokemon.name
+                    div [ class <| cardClass ++ " mb-2 relative bg-red-200" ]
+                        [ div [ class "flex flex-row items-center justify-between" ]
+                            [ div [ class "flex flex-row items-center" ]
+                                [ h3 [ class "text-xl font-bold" ] [ text pokemon.name ] ]
+                            , deleteIcon <| RemovePokemon idx
+                            ]
+                        , div [] [ text <| "viewMyPokemons: no meta!" ]
+                        ]
     in
     [ h2 [] [ text "My Pokemons" ]
     , chooser
@@ -329,15 +336,15 @@ viewMyPokemon model league =
     ]
 
 
-viewPokemon : Model -> PokedexEntry -> Int -> Pokemon -> Html Msg
-viewPokemon model meta idx pokemon =
+viewMyPokemon : Model -> PokedexEntry -> Int -> Pokemon -> Html Msg
+viewMyPokemon model meta idx pokemon =
     let
         mainCls =
             if Maybe.map .name model.selectedPokemon == Just pokemon.name then
-                cardClass ++ " relative bg-blue-100"
+                cardClass ++ " mb-2 relative bg-blue-100"
 
             else
-                cardClass ++ " relative bg-white"
+                cardClass ++ " mb-2 relative bg-white"
 
         viewAttack_ selectMove isSelected attack =
             let
@@ -412,24 +419,25 @@ viewTeam model league =
         convertToPokedex pokemon pokedex =
             ( pokemon.name, { pokedex | fast = [ pokemon.fast ], charged = Set.toList pokemon.charged } )
 
-        lookup : String -> Maybe Pokemon
+        lookup : String -> Result String Pokemon
         lookup name =
             league.myPokemon
                 |> Array.filter (\item -> item.name == name)
                 |> Array.get 0
+                |> Result.fromMaybe ("Could not lookup: " ++ name)
 
         viewMbCand updater mbCand =
             let
                 content =
                     mbCand
                         |> Result.fromMaybe ""
-                        |> Result.andThen (\name -> lookup name |> Result.fromMaybe "no match in my pokemon")
+                        |> Result.andThen lookup
                         |> Result.andThen
                             (\pokemon ->
                                 model.pokedex
                                     |> Dict.get pokemon.name
                                     |> Maybe.map (convertToPokedex pokemon)
-                                    |> Result.fromMaybe "could not look up in pokedex"
+                                    |> Result.fromMaybe ("Could not look up " ++ pokemon.name ++ " in pokedex")
                             )
                         |> Result.map (\( name, entry ) -> viewWithStrengths model name entry)
                         |> RE.extract (\err -> [ text err ])
@@ -493,7 +501,7 @@ viewWithStrengths model name entry =
 
 
 -- -------------------
--- RHS My Pokemon
+-- RHS Opponents
 -- -------------------
 
 
@@ -508,23 +516,33 @@ viewOpponents model league =
                 _ ->
                     viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
 
-        viewOpponent name entry =
+        viewOpponent withDelete name entry =
             div [ class "flex flex-row align-items justify-between" ]
                 [ viewNameAndTypes name entry
-                , deleteIcon <| RemoveOpponent name
+                , if withDelete then
+                    deleteIcon <| RemoveOpponent name
+
+                  else
+                    text ""
                 ]
 
-        viewer name =
+        viewer ( withDelete, name ) =
             case Dict.get name model.pokedex of
                 Just entry ->
-                    div [ class <| cardClass ++ " bg-white" ] (viewOpponent name entry :: viewPokemonResistsAndWeaknesses model name)
+                    div [ class <| cardClass ++ " mb-2" ]
+                        (viewOpponent withDelete name entry :: viewPokemonResistsAndWeaknesses model name)
 
                 Nothing ->
                     text <| "Could not look up " ++ name
+
+        opponents =
+            L.map (Tuple.pair True) league.opponents
+                ++ (L.map (Tuple.pair False) <| Array.toList (Array.map .name league.myPokemon))
+                |> L.sortBy Tuple.second
     in
     [ h2 [] [ text "Opponents" ]
     , chooser
-    , (league.opponents ++ Array.toList (Array.map .name league.myPokemon))
+    , opponents
         |> L.map viewer
         |> div []
     ]
@@ -547,17 +565,15 @@ viewOpponentsBattling model league =
                         text ""
 
                     else
-                        div [ class <| "flex-grow ml-4 p-2 border-solid border-2 " ++ cls ] <|
+                        div [ class <| "ml-4 p-1 border-solid border-2 " ++ cls ] <|
                             L.map (\( title, pType ) -> colouredBadge pType title) lst
             in
-            div [ class "w-1/3 p-2" ]
-                [ div [ class <| cardClass ++ " bg-white relative mr-2" ]
+            div [ class <| cardClass ++ " flex flex-row justify-between mb-1" ]
+                [ div [ class "flex flex-row" ]
                     [ viewNameTitle name
-                    , div [ class "recommendations flex flex-col" ]
-                        [ viewLst "border-green-500" weak
-                        , viewLst "border-red-500" resists
-                        ]
+                    , viewLst "border-green-500" weak
                     ]
+                , viewLst "border-red-500" resists
                 ]
 
         viewer name =
@@ -572,7 +588,7 @@ viewOpponentsBattling model league =
     , (league.opponents ++ Array.toList (Array.map .name league.myPokemon))
         |> L.sort
         |> L.map viewer
-        |> div [ class "flex flex-row flex-wrap" ]
+        |> div [ class "flex flex-col" ]
     ]
 
 
@@ -683,15 +699,15 @@ viewNameTitle name =
 viewPokemonResistsAndWeaknesses : Model -> String -> List (Html msg)
 viewPokemonResistsAndWeaknesses model name =
     let
-        weaknesses =
+        effectivenesses =
             model.pokedex
                 |> Dict.get name
                 |> Maybe.map .types
                 |> Maybe.withDefault []
                 |> getDefenceMeta model.effectiveness
     in
-    [ viewTypes (\_ f -> f > 1.1) weaknesses "Weak to"
-    , viewTypes (\_ f -> f < 0.9) weaknesses "Resists"
+    [ viewTypes (\_ f -> f > 1.1) effectivenesses "Weak to"
+    , viewTypes (\_ f -> f < 0.9) effectivenesses "Resists"
     ]
 
 
@@ -723,29 +739,6 @@ viewTypes fn weaknesses title =
             [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div []
             , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             ]
-        ]
-
-
-
---viewAttacks model entry =
---    div [ class "flex flex-col" ]
---        [ entry.fast
---            |> L.map (viewAttack model)
---            |> div [ class "flex flex-col" ]
---        , entry.charged
---            |> L.map (viewAttack model)
---            |> div [ class "flex flex-col" ]
---        ]
-
-
-viewAttack : Model -> String -> Html msg
-viewAttack model attack =
-    div [ class "flex flex-row items-center" ]
-        [ div [ class "mr-2" ] [ viewAttackBadge model.attacks attack ]
-        , model.attacks
-            |> Dict.get attack
-            |> Maybe.map (.type_ >> viewAttack1 model.effectiveness)
-            |> Maybe.withDefault (text attack)
         ]
 
 
@@ -846,7 +839,7 @@ viewConfig =
 
 
 cardClass =
-    "rounded overflow-hidden shadow-lg mb-3 p-1"
+    "rounded overflow-hidden shadow-lg p-1 bg-white"
 
 
 ppType : PType -> Html msg
@@ -899,3 +892,25 @@ main =
                 }
         , subscriptions = \_ -> Sub.none
         }
+
+
+
+--
+--viewAttacks model entry =
+--    div [ class "flex flex-col" ]
+--        [ entry.fast
+--            |> L.map (viewAttack model)
+--            |> div [ class "flex flex-col" ]
+--        , entry.charged
+--            |> L.map (viewAttack model)
+--            |> div [ class "flex flex-col" ]
+--        ]
+--viewAttack : Model -> String -> Html msg
+--viewAttack model attack =
+--    div [ class "flex flex-row items-center" ]
+--        [ div [ class "mr-2" ] [ viewAttackBadge model.attacks attack ]
+--        , model.attacks
+--            |> Dict.get attack
+--            |> Maybe.map (.type_ >> viewAttack1 model.effectiveness)
+--            |> Maybe.withDefault (text attack)
+--        ]
