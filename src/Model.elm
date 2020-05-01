@@ -25,7 +25,6 @@ type alias Model =
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
     , attacks : Dict String MoveType
-    , effectiveness : Effectiveness
     }
 
 
@@ -40,7 +39,6 @@ defaultModel =
     , chooser = MyChooser "" Autocomplete.empty
     , pokedex = Dict.empty
     , attacks = Dict.empty
-    , effectiveness = Dict.empty
     }
 
 

@@ -13,7 +13,7 @@ import Json.Decode as Decode exposing (Decoder, Value)
 import List as L
 import List.Extra as LE
 import Model exposing (..)
-import Pokemon exposing (PType, stringFromPType)
+import Pokemon exposing (PType, effectiveness, stringFromPType)
 import Ports
 import Result.Extra as RE
 import Set
@@ -28,18 +28,13 @@ init value =
                     { defaultModel
                         | season = flags.persisted.season
                         , pokedex = flags.pokedex
-                        , effectiveness = flags.effectiveness
                         , attacks = Dict.union flags.fast flags.charged
                     }
             in
             ( { model_
-                | season = flags.persisted.season
-                , great = addScoresToLeague model_ flags.persisted.great
+                | great = addScoresToLeague model_ flags.persisted.great
                 , ultra = addScoresToLeague model_ flags.persisted.ultra
                 , master = addScoresToLeague model_ flags.persisted.master
-                , pokedex = flags.pokedex
-                , effectiveness = flags.effectiveness
-                , attacks = Dict.union flags.fast flags.charged
               }
             , Cmd.none
             )
@@ -275,6 +270,9 @@ view model =
 
                 Master ->
                     model.master
+
+        _ =
+            Helpers.evaluateTeams league
     in
     div [ class "m-3" ]
         [ div [ class "flex flex-row justify-between" ]
@@ -465,7 +463,7 @@ viewTeam model league =
                         content
 
         score =
-            Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookup team.cand1) (lookup team.cand2) (lookup team.cand2)
+            Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookup team.cand1) (lookup team.cand2) (lookup team.cand3)
                 |> Result.map (Helpers.summariseTeam >> String.fromFloat)
                 |> RE.extract identity
     in
@@ -502,7 +500,7 @@ viewWithStrengths model name entry =
         viewAttk tp =
             div [ class "flex flex-row items-center mb-1" ]
                 [ div [ class "mr-2" ] [ ppType tp ]
-                , viewAttack1 model.effectiveness tp
+                , viewAttack1 effectiveness tp
                 ]
     in
     [ viewNameTitle name
@@ -574,7 +572,7 @@ viewOpponentsBattling model league =
         viewOpponent name entry =
             let
                 ( weak, resists ) =
-                    checkAttackAgainstDefenderType model.effectiveness team entry.types
+                    checkAttackAgainstDefenderType effectiveness team entry.types
 
                 viewLst cls lst =
                     if L.isEmpty lst then
@@ -606,7 +604,7 @@ viewOpponentsBattling model league =
         --teamScore =
         --    opNames
         --        |> L.filterMap (\op -> Dict.get op model.pokedex)
-        --        |> (\opponents -> calcTeamEffectiveness model.effectiveness opponents team)
+        --        |> (\opponents -> calcTeamEffectiveness effectiveness opponents team)
     in
     [ h2 [] [ text "Opponents" ]
 
@@ -645,7 +643,7 @@ calcTeamEffectiveness effectiveness opponents teamAttacks =
 --                |> L.filterMap (\opName -> Dict.get opName model.pokedex)
 --
 --        scorer =
---            calcPokemonScore model.attacks model.effectiveness opponents
+--            calcPokemonScore model.attacks effectiveness opponents
 --    in
 --    { league | myPokemon = Array.map scorer league.myPokemon }
 --calcPokemonScore : Dict String MoveType -> Effectiveness -> List PokedexEntry -> Pokemon -> Pokemon
@@ -766,7 +764,7 @@ viewPokemonResistsAndWeaknesses model name =
                 |> Dict.get name
                 |> Maybe.map .types
                 |> Maybe.withDefault []
-                |> getDefenceMeta model.effectiveness
+                |> getDefenceMeta effectiveness
     in
     [ viewTypes (\_ f -> f > 1.1) effectivenesses "Weak to"
     , viewTypes (\_ f -> f < 0.9) effectivenesses "Resists"
@@ -783,22 +781,8 @@ viewTypes fn weaknesses title =
     in
     div [ class "flex flex-row items-center" ]
         [ span [ class "mr-3" ] [ text title ]
-
-        --, weaknesses
-        --    |> Dict.filter fn
-        --    |> Dict.toList
-        --    |> L.sortBy (\( _, v ) -> -1 * abs (1 - v))
-        --    |> L.map
-        --        (\( tp, v ) ->
-        --            if v > 0.5 && v < 2 then
-        --                span [ class "mr-1" ] [ ppType tp ]
-        --
-        --            else
-        --                span [ class "super mr-3" ] [ ppType tp ]
-        --        )
-        --    |> div [ class "badge-list flex flex-row flex-wrap" ]
-        , div [ class "badge-list flex flex-row flex-wrap" ]
-            [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div []
+        , div [ class "badge-list flex flex-row" ]
+            [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div [ class "flex flex-row" ]
             , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             ]
         ]
@@ -973,6 +957,6 @@ main =
 --        [ div [ class "mr-2" ] [ viewAttackBadge model.attacks attack ]
 --        , model.attacks
 --            |> Dict.get attack
---            |> Maybe.map (.type_ >> viewAttack1 model.effectiveness)
+--            |> Maybe.map (.type_ >> viewAttack1 effectiveness)
 --            |> Maybe.withDefault (text attack)
 --        ]

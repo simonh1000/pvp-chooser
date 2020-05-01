@@ -4,7 +4,7 @@ import Array
 import AssocList as Dict exposing (Dict)
 import List as L
 import Model exposing (..)
-import Pokemon exposing (PType)
+import Pokemon exposing (PType, effectiveness)
 import Set
 
 
@@ -26,40 +26,18 @@ mkTeams lst =
 --
 
 
-evaluateTeams : Model -> League -> List ( ( a, a, a ), Float )
-evaluateTeams model league =
-    let
-        candidates : List ( Pokemon, Pokemon, Pokemon )
-        candidates =
-            league.myPokemon
-                |> Array.toList
-                |> mkTeams
-
-        --scoreTeam : List (List Pokemon, List (String, PType))
-        --scoreTeam =
-        --    teams
-        --        |> L.filterMap
-        --            (\t ->
-        --                case t of
-        --                    [ _, _, _ ] ->
-        --                        summariseTeamInner model.attacks t
-        --                            |> Tuple.pair t
-        --                            |> Just
-        --
-        --                    _ ->
-        --                        Nothing
-        --            )
-        --
-        --team : List ( String, PType )
-        --team =
-        --    summariseTeam model league
-    in
-    []
+evaluateTeams : League -> List ( ( String, String, String ), Float )
+evaluateTeams league =
+    league.myPokemon
+        |> Array.toList
+        |> mkTeams
+        |> L.map (\(( p1, p2, p3 ) as team) -> ( ( p1.name, p2.name, p3.name ), summariseTeam <| evaluateTeam team ))
+        |> L.sortBy Tuple.second
 
 
 summariseTeam : Dict String Float -> Float
-summariseTeam dict =
-    L.sum (Dict.values dict) / (toFloat <| Dict.size dict)
+summariseTeam opponentScores =
+    L.sum (Dict.values opponentScores) / (toFloat <| Dict.size opponentScores)
 
 
 evaluateTeam : ( Pokemon, Pokemon, Pokemon ) -> Dict String Float
@@ -97,7 +75,11 @@ addScoresToLeague : Model -> League -> League
 addScoresToLeague model league =
     let
         opponents =
-            mkOpponentTypes model.pokedex league.opponents
+            league.myPokemon
+                |> Array.toList
+                |> L.map .name
+                |> (++) league.opponents
+                |> mkOpponentTypes model.pokedex
     in
     { league | myPokemon = Array.map (addScores model opponents) league.myPokemon }
 
@@ -131,14 +113,14 @@ evaluateAgainstOpponent model pokemon defenderTypes =
         bestCharged =
             pokemon.charged
                 |> Set.toList
-                |> L.filterMap (lookupMatrix model.attacks model.effectiveness)
+                |> L.filterMap (lookupMatrix model.attacks effectiveness)
                 |> L.map (calculateEffectiveness defenderTypes)
                 |> L.head
                 |> Maybe.withDefault -100
 
         fastAttack =
             pokemon.fast
-                |> lookupMatrix model.attacks model.effectiveness
+                |> lookupMatrix model.attacks effectiveness
                 |> Maybe.map (calculateEffectiveness defenderTypes)
                 |> Maybe.withDefault -100
     in
