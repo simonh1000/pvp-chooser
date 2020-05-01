@@ -1,15 +1,17 @@
 module Main exposing (main)
 
-import Array
+import Array exposing (Array)
 import Array.Extra as AE
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Browser
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Decode exposing (Decoder, Value)
 import List as L
+import List.Extra as LE
 import Model exposing (..)
 import Pokemon exposing (PType, stringFromPType)
 import Ports
@@ -21,11 +23,20 @@ init : Value -> ( Model, Cmd Msg )
 init value =
     case Decode.decodeValue decodeFlags value of
         Ok flags ->
-            ( { defaultModel
+            let
+                model_ =
+                    { defaultModel
+                        | season = flags.persisted.season
+                        , pokedex = flags.pokedex
+                        , effectiveness = flags.effectiveness
+                        , attacks = Dict.union flags.fast flags.charged
+                    }
+            in
+            ( { model_
                 | season = flags.persisted.season
-                , great = flags.persisted.great
-                , ultra = flags.persisted.ultra
-                , master = flags.persisted.master
+                , great = addScoresToLeague model_ flags.persisted.great
+                , ultra = addScoresToLeague model_ flags.persisted.ultra
+                , master = addScoresToLeague model_ flags.persisted.master
                 , pokedex = flags.pokedex
                 , effectiveness = flags.effectiveness
                 , attacks = Dict.union flags.fast flags.charged
@@ -387,7 +398,7 @@ viewMyPokemon model meta idx pokemon =
                         [ class "text-xl font-bold"
                         , onClick <| SelectCandidate pokemon
                         ]
-                        [ text pokemon.name ]
+                        [ text <| pokemon.name ]
                     , meta.types
                         |> L.map (\tp -> span [ class "ml-2" ] [ ppType tp ])
                         |> div []
@@ -419,19 +430,18 @@ viewTeam model league =
         convertToPokedex pokemon pokedex =
             ( pokemon.name, { pokedex | fast = [ pokemon.fast ], charged = Set.toList pokemon.charged } )
 
-        lookup : String -> Result String Pokemon
+        lookup : Maybe String -> Result String Pokemon
         lookup name =
             league.myPokemon
-                |> Array.filter (\item -> item.name == name)
+                |> Array.filter (\item -> Just item.name == name)
                 |> Array.get 0
-                |> Result.fromMaybe ("Could not lookup: " ++ name)
+                |> Result.fromMaybe ("Could not lookup: " ++ Maybe.withDefault "" name)
 
         viewMbCand updater mbCand =
             let
                 content =
                     mbCand
-                        |> Result.fromMaybe ""
-                        |> Result.andThen lookup
+                        |> lookup
                         |> Result.andThen
                             (\pokemon ->
                                 model.pokedex
@@ -453,8 +463,14 @@ viewTeam model league =
                 Nothing ->
                     div [ class "drop-zone p-1 mb-2 border-gray-500" ]
                         content
+
+        score =
+            Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookup team.cand1) (lookup team.cand2) (lookup team.cand2)
+                |> Result.map (Helpers.summariseTeam >> String.fromFloat)
+                |> RE.extract identity
     in
     [ h2 [] [ text "My Team" ]
+    , div [] [ text <| "team score: " ++ score ]
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Just c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Just c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Just c }) team.cand3
@@ -583,13 +599,69 @@ viewOpponentsBattling model league =
 
                 Nothing ->
                     text <| "Could not look up " ++ name
+
+        opNames =
+            league.opponents ++ Array.toList (Array.map .name league.myPokemon)
+
+        --teamScore =
+        --    opNames
+        --        |> L.filterMap (\op -> Dict.get op model.pokedex)
+        --        |> (\opponents -> calcTeamEffectiveness model.effectiveness opponents team)
     in
     [ h2 [] [ text "Opponents" ]
-    , (league.opponents ++ Array.toList (Array.map .name league.myPokemon))
+
+    --, div [] [ text <| String.fromFloat teamScore ]
+    , opNames
         |> L.sort
         |> L.map viewer
         |> div [ class "flex flex-col" ]
     ]
+
+
+calcTeamEffectiveness : Effectiveness -> List PokedexEntry -> List ( String, PType ) -> Float
+calcTeamEffectiveness effectiveness opponents teamAttacks =
+    --let
+    --    ctOps =
+    --        L.length opponents |> toFloat
+    --
+    --    ctAttacks =
+    --        L.length teamAttacks |> toFloat
+    --
+    --    scoreAttack : ( String, PType ) -> Float
+    --    scoreAttack ( _, attackTp ) =
+    --        L.foldl (\op acc -> acc + calculateEffectiveness effectiveness attackTp op.types) 0 opponents
+    --in
+    --L.foldl (\attack acc -> acc + scoreAttack attack) 0 teamAttacks / ctOps / ctAttacks
+    0
+
+
+
+--
+--addScores : Model -> League -> League
+--addScores model league =
+--    let
+--        opponents =
+--            league.opponents
+--                |> L.filterMap (\opName -> Dict.get opName model.pokedex)
+--
+--        scorer =
+--            calcPokemonScore model.attacks model.effectiveness opponents
+--    in
+--    { league | myPokemon = Array.map scorer league.myPokemon }
+--calcPokemonScore : Dict String MoveType -> Effectiveness -> List PokedexEntry -> Pokemon -> Pokemon
+--calcPokemonScore attacks effectiveness opponents pokemon =
+--    let
+--        thisAttacks : List ( String, PType )
+--        thisAttacks =
+--            (pokemon.fast :: Set.toList pokemon.charged)
+--                |> L.filterMap (nameToAttack attacks)
+--    in
+--    { pokemon | scores = calcTeamEffectiveness effectiveness opponents thisAttacks }
+--nameToAttack : Dict String MoveType -> String -> Maybe ( String, PType )
+--nameToAttack moves attack =
+--    moves
+--        |> Dict.get attack
+--        |> Maybe.map (.type_ >> Tuple.pair attack)
 
 
 checkAttackAgainstDefenderType : Effectiveness -> List ( String, PType ) -> List PType -> ( List ( String, PType ), List ( String, PType ) )
@@ -599,7 +671,9 @@ checkAttackAgainstDefenderType effectiveness team defenderTypes =
         go (( _, attackTp ) as val) ( accWeak, accResists ) =
             let
                 score =
-                    calculateEffectiveness effectiveness attackTp defenderTypes
+                    Dict.get attackTp effectiveness
+                        |> Maybe.map (\matrix -> calculateEffectiveness defenderTypes matrix)
+                        |> Maybe.withDefault 0
             in
             if score > 1.1 then
                 ( val :: accWeak, accResists )
@@ -613,24 +687,28 @@ checkAttackAgainstDefenderType effectiveness team defenderTypes =
     L.foldl go ( [], [] ) team
 
 
+summariseTeam : Model -> League -> List ( String, PType )
 summariseTeam model league =
-    let
-        lookup : String -> Maybe Pokemon
-        lookup name =
-            league.myPokemon
-                |> Array.filter (\item -> item.name == name)
-                |> Array.get 0
-    in
     [ league.team.cand1
     , league.team.cand2
     , league.team.cand3
     ]
-        |> L.filterMap
-            (\mbName ->
-                mbName
-                    |> Maybe.andThen lookup
-            )
-        |> summariseTeamInner model.attacks
+        |> L.filterMap identity
+        |> summariseTeam2 model.attacks league.myPokemon
+
+
+summariseTeam2 : Dict String MoveType -> Array Pokemon -> List String -> List ( String, PType )
+summariseTeam2 attacks myPokemon team =
+    let
+        lookup : String -> Maybe Pokemon
+        lookup name =
+            myPokemon
+                |> Array.filter (\item -> item.name == name)
+                |> Array.get 0
+    in
+    team
+        |> L.filterMap lookup
+        |> summariseTeamInner attacks
 
 
 summariseTeamInner : Dict String MoveType -> List Pokemon -> List ( String, PType )
@@ -651,22 +729,6 @@ summariseTeamInner attacks pokemons =
                 |> (++) acc
     in
     L.foldl go [] pokemons
-
-
-calculateEffectiveness : Effectiveness -> PType -> List PType -> Float
-calculateEffectiveness effectiveness attackTp defenderTypes =
-    let
-        matrix =
-            Dict.get attackTp effectiveness |> Maybe.withDefault Dict.empty
-
-        go : PType -> Float -> Float
-        go dType acc =
-            matrix
-                |> Dict.get dType
-                |> Maybe.withDefault 1
-                |> (*) acc
-    in
-    L.foldl go 1 defenderTypes
 
 
 deleteIcon : Msg -> Html Msg

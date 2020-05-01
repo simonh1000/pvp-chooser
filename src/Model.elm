@@ -120,16 +120,18 @@ type alias Pokemon =
     , name : String
     , fast : String
     , charged : Set String
+    , scores : Dict String Float -- opponent name => score
     }
 
 
+blankPokemon : Pokemon
 blankPokemon =
-    Pokemon True "" "" Set.empty
+    Pokemon True "" "" Set.empty Dict.empty
 
 
 decodePokemon : Decoder Pokemon
 decodePokemon =
-    Decode.succeed (Pokemon False)
+    Decode.succeed (\name fast charged -> Pokemon False name fast charged Dict.empty)
         |> andMap (Decode.field "name" Decode.string)
         |> andMap (Decode.field "fast" Decode.string)
         |> andMap (Decode.field "charged" <| decSet Decode.string)
