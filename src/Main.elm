@@ -5,6 +5,7 @@ import Array.Extra as AE
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Browser
+import Common.CoreHelpers exposing (ifThenElse)
 import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -61,6 +62,8 @@ type Msg
     | SelectFastMove Int String
     | SelectChargedMove Int String
     | RemovePokemon Int
+      -- Team chooser
+    | SetTeam Team
       -- middle
     | SelectCandidate Pokemon -- first part of adding to team
     | UpdateTeam Team -- second part
@@ -160,6 +163,11 @@ update message model =
         RemovePokemon idx ->
             model
                 |> updateLeague (\l -> { l | myPokemon = AE.removeAt idx l.myPokemon })
+                |> andPersist
+
+        SetTeam team ->
+            model
+                |> updateLeague (\l -> { l | team = team })
                 |> andPersist
 
         SelectCandidate pokemon ->
@@ -269,9 +277,6 @@ view model =
 
                 Master ->
                     model.master
-
-        _ =
-            Debug.log "" <| Helpers.evaluateTeams league
     in
     div [ class "m-3" ]
         [ div [ class "flex flex-row justify-between" ]
@@ -281,30 +286,79 @@ view model =
                 , mkButton (SwitchSeason Ultra) "Ultra"
                 , mkButton (SwitchSeason Master) "Master"
                 ]
-            , if model.page == Choosing then
-                mkButton (SwitchPage Battling) "Battling"
-
-              else
-                mkButton (SwitchPage Choosing) "Choosing"
+            , div []
+                [ mkButton (SwitchPage Choosing) "Choosing"
+                , mkButton (SwitchPage Battling) "Battling"
+                , mkButton (SwitchPage TeamOptions) "Team options"
+                ]
             ]
-        , if model.page == Choosing then
-            div [ class "main choosing flex flex-row" ]
-                [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
-                , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model league)
-                , div [ class "opponents flex flex-col flex-grow" ] (viewOpponents model league)
-                ]
+        , case model.page of
+            Choosing ->
+                div [ class "main choosing flex flex-row" ]
+                    [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
+                    , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model league)
+                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponents model league)
+                    ]
 
-          else
-            div [ class "main battling flex flex-row" ]
-                [ div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
-                , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
-                ]
+            Battling ->
+                div [ class "main battling flex flex-row" ]
+                    [ div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
+                    ]
+
+            TeamOptions ->
+                div [ class "main teams flex flex-row" ]
+                    [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewTeamOptions model league)
+                    , div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
+                    ]
         ]
 
 
 
 -- -------------------
--- LHS My Pokemon
+-- LHS Teams
+-- -------------------
+
+
+viewTeamOptions : Model -> League -> List (Html Msg)
+viewTeamOptions model league =
+    let
+        cls selected =
+            if selected then
+                "flex flex-row bg-white"
+
+            else
+                "flex flex-row"
+
+        team =
+            [ league.team.cand1, league.team.cand2, league.team.cand3 ]
+
+        viewOption : ( ( String, String, String ), Float ) -> Html Msg
+        viewOption ( ( c1, c2, c3 ), score ) =
+            let
+                selected =
+                    L.member (Just c1) team && L.member (Just c2) team && L.member (Just c3) team
+            in
+            div
+                [ class <| cls selected
+                , onClick <| SetTeam { cand1 = Just c1, cand2 = Just c2, cand3 = Just c3 }
+                ]
+                [ text <| ppFloat score
+                , text <| Debug.toString ( c1, c2, c3 )
+                ]
+    in
+    [ h2 [] [ text "Team options" ]
+    , Helpers.evaluateTeams league
+        |> L.take 20
+        |> L.map viewOption
+        |> div [ class "flex flex-col" ]
+    ]
+
+
+
+-- -------------------
+-- LHS Choosing
 -- -------------------
 
 

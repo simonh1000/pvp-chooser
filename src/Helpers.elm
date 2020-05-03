@@ -11,19 +11,20 @@ import Set
 mkTeams : List a -> List ( a, a, a )
 mkTeams lst =
     let
-        mkThree ( x, y ) =
-            L.map (\mem -> ( x, y, mem ))
+        inner tl =
+            case tl of
+                hd :: tl_ ->
+                    L.map (\x -> ( hd, x )) tl_ ++ inner tl_
+
+                [] ->
+                    []
     in
     case lst of
-        m1 :: m2 :: tl ->
-            mkThree ( m1, m2 ) tl ++ mkTeams (m2 :: tl)
-
-        _ ->
+        [] ->
             []
 
-
-
---
+        hd :: tl ->
+            L.map (\( x, y ) -> ( hd, x, y )) (inner tl) ++ mkTeams tl
 
 
 evaluateTeams : League -> List ( ( String, String, String ), Float )
@@ -32,7 +33,7 @@ evaluateTeams league =
         |> Array.toList
         |> mkTeams
         |> L.map (\(( p1, p2, p3 ) as team) -> ( ( p1.name, p2.name, p3.name ), summariseTeam <| evaluateTeam team ))
-        |> L.sortBy Tuple.second
+        |> L.sortBy (Tuple.second >> (*) -1)
 
 
 summariseTeam : Dict String Float -> Float
@@ -43,26 +44,22 @@ summariseTeam opponentScores =
 evaluateTeam : ( Pokemon, Pokemon, Pokemon ) -> Dict String Float
 evaluateTeam ( p1, p2, p3 ) =
     let
-        evalTeam : List Float -> Float
         evalTeam scores =
             let
                 weaks =
-                    L.length <| L.filter (\s -> s < 0.9) scores
-
-                strongs =
-                    L.length <| L.filter (\s -> s < 0.9) scores
+                    L.filter (\s -> s < 0.9) scores
             in
-            if weaks > 1 then
-                -2
+            if L.length weaks > 1 then
+                L.sum weaks
 
             else
-                toFloat strongs
+                L.sum scores
     in
     Dict.foldl
         (\name s1 acc ->
             case Maybe.map2 (\s2 s3 -> evalTeam [ s1, s2, s3 ]) (Dict.get name p2.scores) (Dict.get name p3.scores) of
                 Just score ->
-                    Dict.insert name score acc
+                    Dict.insert name (score / 3) acc
 
                 Nothing ->
                     acc

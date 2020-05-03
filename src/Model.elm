@@ -82,6 +82,7 @@ encodeSeason s =
 type Page
     = Choosing
     | Battling
+    | TeamOptions
 
 
 
