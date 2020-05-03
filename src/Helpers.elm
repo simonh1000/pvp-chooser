@@ -72,10 +72,7 @@ addScoresToLeague : Model -> League -> League
 addScoresToLeague model league =
     let
         opponents =
-            league.myPokemon
-                |> Array.toList
-                |> L.map .name
-                |> (++) league.opponents
+            league.opponents
                 |> mkOpponentTypes model.pokedex
     in
     { league | myPokemon = Array.map (addScores model opponents) league.myPokemon }
@@ -89,14 +86,14 @@ addScores model opponents pokemon =
     }
 
 
-mkOpponentTypes : Pokedex -> List String -> Dict String (List PType)
+mkOpponentTypes : Pokedex -> List ( String, Int ) -> Dict String (List PType)
 mkOpponentTypes pokedex opponents =
     let
-        go : String -> Dict String (List PType) -> Dict String (List PType)
-        go opponent acc =
-            case Dict.get opponent pokedex of
+        go : ( String, Int ) -> Dict String (List PType) -> Dict String (List PType)
+        go ( opName, _ ) acc =
+            case Dict.get opName pokedex of
                 Just entry ->
-                    Dict.insert opponent entry.types acc
+                    Dict.insert opName entry.types acc
 
                 Nothing ->
                     acc

@@ -5,7 +5,6 @@ import Array.Extra as AE
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Browser
-import Common.CoreHelpers exposing (ifThenElse)
 import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -129,7 +128,7 @@ update message model =
                                     { l | myPokemon = Array.push pokemon l.myPokemon }
 
                                 else
-                                    { l | opponents = name :: l.opponents }
+                                    { l | opponents = ( name, 1 ) :: l.opponents }
                             )
             in
             { newModel | chooser = mapSearch (\_ -> "") model.chooser } |> andPersist
@@ -189,7 +188,7 @@ update message model =
 
         RemoveOpponent name ->
             model
-                |> updateLeague (\l -> { l | opponents = L.filter ((/=) name) l.opponents })
+                |> updateLeague (\l -> { l | opponents = L.filter (\( n, _ ) -> n /= name) l.opponents })
                 |> andPersist
 
 
@@ -322,7 +321,7 @@ view model =
 
 
 viewTeamOptions : Model -> League -> List (Html Msg)
-viewTeamOptions model league =
+viewTeamOptions _ league =
     let
         cls selected =
             if selected then
@@ -593,23 +592,19 @@ viewOpponents model league =
                     text ""
                 ]
 
-        viewer ( withDelete, name ) =
+        viewer ( name, _ ) =
             case Dict.get name model.pokedex of
                 Just entry ->
                     div [ class <| cardClass ++ " mb-2" ]
-                        (viewOpponent withDelete name entry :: viewPokemonResistsAndWeaknesses model name)
+                        (viewOpponent True name entry :: viewPokemonResistsAndWeaknesses model name)
 
                 Nothing ->
                     text <| "Could not look up " ++ name
-
-        opponents =
-            L.map (Tuple.pair True) league.opponents
-                ++ (L.map (Tuple.pair False) <| Array.toList (Array.map .name league.myPokemon))
-                |> L.sortBy Tuple.second
     in
     [ h2 [] [ text "Opponents" ]
     , chooser
-    , opponents
+    , league.opponents
+        |> L.sortBy Tuple.second
         |> L.map viewer
         |> div []
     ]
@@ -643,19 +638,16 @@ viewOpponentsBattling model league =
                 , viewLst "border-red-500" resists
                 ]
 
-        viewer name =
+        viewer ( name, _ ) =
             case Dict.get name model.pokedex of
                 Just entry ->
                     viewOpponent name entry
 
                 Nothing ->
                     text <| "Could not look up " ++ name
-
-        opNames =
-            league.opponents ++ Array.toList (Array.map .name league.myPokemon)
     in
     [ h2 [] [ text "Opponents" ]
-    , opNames
+    , league.opponents
         |> L.sort
         |> L.map viewer
         |> div [ class "flex flex-col" ]

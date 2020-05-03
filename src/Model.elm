@@ -224,20 +224,18 @@ mapSearch fn chooser =
             NoChooser
 
 
-mapAutocomplete : (Autocomplete.State -> Autocomplete.State) -> PokedexChooser -> PokedexChooser
-mapAutocomplete fn chooser =
-    case chooser of
-        MyChooser string state ->
-            MyChooser string (fn state)
 
-        OpponentChooser string state ->
-            OpponentChooser string (fn state)
-
-        NoChooser ->
-            NoChooser
-
-
-
+--mapAutocomplete : (Autocomplete.State -> Autocomplete.State) -> PokedexChooser -> PokedexChooser
+--mapAutocomplete fn chooser =
+--    case chooser of
+--        MyChooser string state ->
+--            MyChooser string (fn state)
+--
+--        OpponentChooser string state ->
+--            OpponentChooser string (fn state)
+--
+--        NoChooser ->
+--            NoChooser
 -- -----------------------
 -- Team
 -- -----------------------
@@ -334,7 +332,7 @@ decodeMoves =
 type alias League =
     { myPokemon : Array Pokemon
     , team : Team
-    , opponents : List String
+    , opponents : List ( String, Int )
     }
 
 
@@ -346,7 +344,7 @@ encodeLeague : League -> Value
 encodeLeague league =
     [ ( "myPokemon", Encode.list encodePokemon <| Array.toList league.myPokemon )
     , ( "team", encodeTeam league.team )
-    , ( "opponents", Encode.list Encode.string league.opponents )
+    , ( "opponents", Encode.list encodeOpponent league.opponents )
     ]
         |> Encode.object
 
@@ -367,12 +365,20 @@ decodeLeague =
                 , Decode.succeed blankTeam
                 ]
             )
-        |> andMap
-            (Decode.oneOf
-                [ Decode.field "opponents" <| Decode.list Decode.string
-                , Decode.succeed []
-                ]
-            )
+        |> andMap (Decode.field "opponents" <| Decode.list decodeOpponent)
+
+
+decodeOpponent : Decoder ( String, Int )
+decodeOpponent =
+    Decode.oneOf
+        [ Decode.map2 Tuple.pair (Decode.index 0 Decode.string) (Decode.index 1 Decode.int)
+        , Decode.map (\name -> ( name, 1 )) Decode.string
+        ]
+
+
+encodeOpponent : ( String, Int ) -> Value
+encodeOpponent ( name, freq ) =
+    Encode.list identity [ Encode.string name, Encode.int freq ]
 
 
 
