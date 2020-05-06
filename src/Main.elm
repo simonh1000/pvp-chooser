@@ -5,6 +5,7 @@ import Array.Extra as AE
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Browser
+import Common.CoreHelpers exposing (ifThenElse)
 import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -67,12 +68,13 @@ type Msg
     | SelectCandidate Pokemon -- first part of adding to team
     | UpdateTeam Team -- second part
       -- My opponents
+    | IncrOpponent String Int -- name
     | RemoveOpponent String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
-    case message of
+    case Debug.log "" message of
         SwitchSeason season ->
             { model | season = season } |> andPersist
 
@@ -186,6 +188,11 @@ update message model =
                 |> updateLeague (\l -> { l | team = team })
                 |> andPersist
 
+        IncrOpponent name y ->
+            model
+                |> updateLeague (\l -> { l | opponents = L.map (\( n, x ) -> ( n, ifThenElse (n == name) (x + y) x )) l.opponents })
+                |> andPersist
+
         RemoveOpponent name ->
             model
                 |> updateLeague (\l -> { l | opponents = L.filter (\( n, _ ) -> n /= name) l.opponents })
@@ -287,8 +294,8 @@ view model =
                 ]
             , div []
                 [ mkButton (SwitchPage Choosing) "Choosing"
-                , mkButton (SwitchPage Battling) "Battling"
                 , mkButton (SwitchPage TeamOptions) "Team options"
+                , mkButton (SwitchPage Battling) "Battling"
                 ]
             ]
         , case model.page of
@@ -296,7 +303,7 @@ view model =
                 div [ class "main choosing flex flex-row" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
                     , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model league)
-                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponents model league)
+                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsChoosing model league)
                     ]
 
             Battling ->
@@ -516,7 +523,9 @@ viewTeam model league =
 
         score =
             Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookup team.cand1) (lookup team.cand2) (lookup team.cand3)
-                |> Result.map (Helpers.summariseTeam >> ppFloat)
+                |> Result.map (Helpers.summariseTeam league.opponents)
+                |> Result.map (\x -> x / Helpers.calcWeightedTotal league.opponents)
+                |> Result.map ppFloat
                 |> RE.extract identity
     in
     [ h2 [] [ text "My Team" ]
@@ -571,8 +580,8 @@ viewWithStrengths model name entry =
 -- -------------------
 
 
-viewOpponents : Model -> League -> List (Html Msg)
-viewOpponents model league =
+viewOpponentsChoosing : Model -> League -> List (Html Msg)
+viewOpponentsChoosing model league =
     let
         chooser =
             case model.chooser of
@@ -582,9 +591,14 @@ viewOpponents model league =
                 _ ->
                     viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
 
-        viewOpponent withDelete name entry =
+        viewOpponent withDelete name freq entry =
             div [ class "flex flex-row align-items justify-between" ]
-                [ viewNameAndTypes name entry
+                [ div [ class "flex flex-row items-center" ]
+                    [ button [ onClick <| IncrOpponent name -1, class "mr-1" ] [ text "-" ]
+                    , span [ class "mr-1" ] [ text <| String.fromInt freq ]
+                    , button [ onClick <| IncrOpponent name 1, class "mr-1" ] [ text "+" ]
+                    , viewNameAndTypes name entry
+                    ]
                 , if withDelete then
                     deleteIcon <| RemoveOpponent name
 
@@ -592,11 +606,11 @@ viewOpponents model league =
                     text ""
                 ]
 
-        viewer ( name, _ ) =
+        viewer ( name, freq ) =
             case Dict.get name model.pokedex of
                 Just entry ->
                     div [ class <| cardClass ++ " mb-2" ]
-                        (viewOpponent True name entry :: viewPokemonResistsAndWeaknesses model name)
+                        (viewOpponent True name freq entry :: viewPokemonResistsAndWeaknesses model name)
 
                 Nothing ->
                     text <| "Could not look up " ++ name
@@ -604,7 +618,7 @@ viewOpponents model league =
     [ h2 [] [ text "Opponents" ]
     , chooser
     , league.opponents
-        |> L.sortBy Tuple.second
+        |> L.sortBy Tuple.first
         |> L.map viewer
         |> div []
     ]
@@ -627,7 +641,7 @@ viewOpponentsBattling model league =
                         text ""
 
                     else
-                        div [ class <| "ml-4 p-1 border-solid border-2 " ++ cls ] <|
+                        div [ class <| "flex flex-row flex-wrap ml-4 p-1 border-solid border-2 " ++ cls ] <|
                             L.map (\( title, pType ) -> colouredBadge pType title) lst
             in
             div [ class <| cardClass ++ " flex flex-row justify-between mb-1" ]
@@ -901,11 +915,7 @@ colouredBadge pType str =
         ( _, col ) =
             stringFromPType pType
     in
-    span
-        [ style "background-color" col
-        , class "badge p-1 rounded text-sm"
-        ]
-        [ text str ]
+    badge col str
 
 
 badge : String -> String -> Html msg

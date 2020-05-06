@@ -17,9 +17,8 @@ type alias Model =
     , great : League
     , ultra : League
     , master : League
-
-    -- session data
-    , page : Page
+    , -- session data
+      page : Page
     , selectedPokemon : Maybe Pokemon
     , chooser : PokedexChooser
     , -- data
@@ -117,7 +116,7 @@ decodeFlags =
 type alias Pokemon =
     { expanded : Bool
     , name : String
-    , fast : String
+    , fast : String -- the specific attack being used
     , charged : Set String
     , scores : Dict String Float -- opponent name => score
     }

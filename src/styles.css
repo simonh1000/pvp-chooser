@@ -48,7 +48,11 @@ h2 {
 
 .badge {
     @apply text-white;
-    /*display: inline-flex;*/
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0.1rem;
 }
 
 .badge + .badge {
