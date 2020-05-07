@@ -2,6 +2,7 @@ module Helpers exposing (..)
 
 import Array
 import AssocList as Dict exposing (Dict)
+import Common.CoreHelpers exposing (foldResult)
 import List as L
 import Model exposing (..)
 import Pokemon exposing (PType, effectiveness)
@@ -58,7 +59,6 @@ summariseTeam opponents scores =
         go ( name, freq ) acc =
             scores
                 |> Dict.get name
-                |> Debug.log ""
                 |> Maybe.withDefault 0
                 |> (*) (toFloat freq)
                 |> (+) acc
@@ -103,53 +103,46 @@ evaluateTeam ( p1, p2, p3 ) =
 addScoresToLeague : Model -> League -> League
 addScoresToLeague model league =
     let
-        opponents =
-            league.opponents
-                |> mkOpponentTypes model.pokedex
+        addScores_ : Pokemon -> Dict String Float
+        addScores_ p =
+            let
+                foldFn : ( String, b ) -> Dict String Float -> Result String (Dict String Float)
+                foldFn ( opName, _ ) acc =
+                    case evaluateBattle model.pokedex model.attacks p opName of
+                        Ok score ->
+                            Ok <| Dict.insert opName score acc
+
+                        Err err ->
+                            Err err
+
+                mbRes =
+                    foldResult foldFn (Ok Dict.empty) league.opponents
+            in
+            case mbRes of
+                Ok res ->
+                    res
+
+                Err err ->
+                    Debug.todo err
     in
-    { league | myPokemon = Array.map (addScores model opponents) league.myPokemon }
-
-
-mkOpponentTypes : Pokedex -> List ( String, Int ) -> Dict String (List PType)
-mkOpponentTypes pokedex opponents =
-    let
-        go : ( String, Int ) -> Dict String (List PType) -> Dict String (List PType)
-        go ( opName, _ ) acc =
-            case Dict.get opName pokedex of
-                Just entry ->
-                    Dict.insert opName entry.types acc
-
-                Nothing ->
-                    acc
-    in
-    L.foldl go Dict.empty opponents
-
-
-addScores : Model -> Dict String (List PType) -> Pokemon -> Pokemon
-addScores model opponents pokemon =
-    { pokemon
-        | scores =
-            Dict.map (\_ defenderTypes -> evaluateAgainstOpponent model.attacks pokemon defenderTypes) opponents
-    }
+    { league | myPokemon = Array.map (\p -> { p | scores = addScores_ p }) league.myPokemon }
 
 
 evaluateBattle : Pokedex -> Dict String MoveType -> Pokemon -> String -> Result String Float
-evaluateBattle pokedex attacks pokemon opname =
+evaluateBattle pokedex attacks pokemon opName =
     let
         handler myPokedexEntry opponent =
             let
                 attackScore =
                     evaluateAgainstOpponent attacks pokemon opponent.types
-                        |> Debug.log "attack"
 
                 defenceScore =
                     evaluateAverageEffect attacks (opponent.fast ++ opponent.charged) myPokedexEntry.types
-                        |> Debug.log "defence"
             in
             attackScore / defenceScore
     in
-    Maybe.map2 handler (Dict.get pokemon.name pokedex) (Dict.get opname pokedex)
-        |> Result.fromMaybe ("could not look up one of : " ++ opname ++ ", or " ++ pokemon.name)
+    Maybe.map2 handler (Dict.get pokemon.name pokedex) (Dict.get opName pokedex)
+        |> Result.fromMaybe ("could not look up one of : " ++ opName ++ ", or " ++ pokemon.name)
 
 
 evaluateAgainstOpponent : Dict String MoveType -> Pokemon -> List PType -> Float

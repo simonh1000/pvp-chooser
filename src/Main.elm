@@ -315,7 +315,7 @@ view model =
             TeamOptions ->
                 div [ class "main teams flex flex-row" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewTeamOptions model league)
-                    , div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
                     ]
         ]
@@ -793,7 +793,7 @@ viewTypes fn weaknesses title =
     in
     div [ class "flex flex-row items-center" ]
         [ span [ class "mr-3" ] [ text title ]
-        , div [ class "badge-list flex flex-row" ]
+        , div [ class "badge-list flex flex-row items-center" ]
             [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div [ class "flex flex-row" ]
             , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             ]

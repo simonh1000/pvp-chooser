@@ -312,19 +312,20 @@ exactMatchGeneral matchDecoder match dec =
 --    L.foldr (\a acc -> acc |> Maybe.andThen (f a)) bMaybe lst
 --
 --
---
----- RESULT
---
---
---foldResult : (a -> b -> Result e b) -> Result e b -> List a -> Result e b
---foldResult f bResult lst =
---    L.foldl (\a acc -> acc |> Result.andThen (f a)) bResult lst
---
---
---foldRResult : (a -> b -> Result e b) -> Result e b -> List a -> Result e b
---foldRResult f bResult lst =
---    L.foldr (\a acc -> acc |> Result.andThen (f a)) bResult lst
---
+-- RESULT
+
+
+foldResult : (a -> b -> Result e b) -> Result e b -> List a -> Result e b
+foldResult f bResult lst =
+    L.foldl (\a acc -> acc |> Result.andThen (f a)) bResult lst
+
+
+foldRResult : (a -> b -> Result e b) -> Result e b -> List a -> Result e b
+foldRResult f bResult lst =
+    L.foldr (\a acc -> acc |> Result.andThen (f a)) bResult lst
+
+
+
 --
 --mapResult : (a -> Result b c) -> List a -> Result b (List c)
 --mapResult fn lst =
