@@ -24,20 +24,18 @@ init value =
     case Decode.decodeValue decodeFlags value of
         Ok flags ->
             let
-                model_ =
+                model =
                     { defaultModel
                         | season = flags.persisted.season
                         , pokedex = flags.pokedex
                         , attacks = Dict.union flags.fast flags.charged
+                        , great = flags.persisted.great
+                        , ultra = flags.persisted.ultra
+                        , master = flags.persisted.master
+                        , debug = flags.debug
                     }
             in
-            ( { model_
-                | great = addScoresToLeague model_ flags.persisted.great
-                , ultra = addScoresToLeague model_ flags.persisted.ultra
-                , master = addScoresToLeague model_ flags.persisted.master
-              }
-            , Cmd.none
-            )
+            ( addScores model, Cmd.none )
 
         Err err ->
             Debug.todo (Decode.errorToString err)
@@ -68,7 +66,7 @@ type Msg
     | SelectCandidate Pokemon -- first part of adding to team
     | UpdateTeam Team -- second part
       -- My opponents
-    | IncrOpponent String Int -- name
+    | UpdateOpponentFrequency String Int -- name
     | RemoveOpponent String
 
 
@@ -188,7 +186,7 @@ update message model =
                 |> updateLeague (\l -> { l | team = team })
                 |> andPersist
 
-        IncrOpponent name y ->
+        UpdateOpponentFrequency name y ->
             model
                 |> updateLeague (\l -> { l | opponents = L.map (\( n, x ) -> ( n, ifThenElse (n == name) (x + y) x )) l.opponents })
                 |> andPersist
@@ -197,6 +195,15 @@ update message model =
             model
                 |> updateLeague (\l -> { l | opponents = L.filter (\( n, _ ) -> n /= name) l.opponents })
                 |> andPersist
+
+
+addScores : Model -> Model
+addScores model =
+    { model
+        | great = addScoresToLeague model model.great
+        , ultra = addScoresToLeague model model.ultra
+        , master = addScoresToLeague model model.master
+    }
 
 
 updateLeague : (League -> League) -> Model -> Model
@@ -214,7 +221,7 @@ updateLeague fn model =
 
 andPersist : Model -> ( Model, Cmd msg )
 andPersist model =
-    ( model
+    ( addScores model
     , Ports.toJs { tag = "Persist", payload = encodePersisted model }
     )
 
@@ -456,11 +463,13 @@ viewMyPokemon model meta idx pokemon =
                         , onClick <| SelectCandidate pokemon
                         ]
                         [ text <| pokemon.name ]
-                    , meta.types
+                    ]
+                , div [ class "flex flex-row items-center" ]
+                    [ meta.types
                         |> L.map (\tp -> span [ class "ml-2" ] [ ppType tp ])
                         |> div []
+                    , deleteIcon <| RemovePokemon idx
                     ]
-                , deleteIcon <| RemovePokemon idx
                 ]
     in
     div [ class mainCls ] <|
@@ -594,9 +603,9 @@ viewOpponentsChoosing model league =
         viewOpponent withDelete name freq entry =
             div [ class "flex flex-row align-items justify-between" ]
                 [ div [ class "flex flex-row items-center" ]
-                    [ button [ onClick <| IncrOpponent name -1, class "mr-1" ] [ text "-" ]
+                    [ button [ onClick <| UpdateOpponentFrequency name -1, class "mr-1" ] [ text "-" ]
                     , span [ class "mr-1" ] [ text <| String.fromInt freq ]
-                    , button [ onClick <| IncrOpponent name 1, class "mr-1" ] [ text "+" ]
+                    , button [ onClick <| UpdateOpponentFrequency name 1, class "mr-1" ] [ text "+" ]
                     , viewNameAndTypes name entry
                     ]
                 , if withDelete then
@@ -641,12 +650,19 @@ viewOpponentsBattling model league =
                         text ""
 
                     else
-                        div [ class <| "flex flex-row flex-wrap ml-4 p-1 border-solid border-2 " ++ cls ] <|
+                        div [ class <| "flex flex-row flex-wrap items-baseline ml-4 p-1 border-solid border-2 " ++ cls ] <|
                             L.map (\( title, pType ) -> colouredBadge pType title) lst
             in
             div [ class <| cardClass ++ " flex flex-row justify-between mb-1" ]
                 [ div [ class "flex flex-row" ]
-                    [ viewNameTitle name
+                    [ div []
+                        [ viewNameTitle name
+                        , if model.debug then
+                            small [ class "text-xs" ] [ text <| calcTeamScores model league name ]
+
+                          else
+                            text ""
+                        ]
                     , viewLst "border-green-500" weak
                     ]
                 , viewLst "border-red-500" resists
@@ -662,7 +678,7 @@ viewOpponentsBattling model league =
     in
     [ h2 [] [ text "Opponents" ]
     , league.opponents
-        |> L.sort
+        |> L.sortBy (Tuple.second >> (*) -1)
         |> L.map viewer
         |> div [ class "flex flex-col" ]
     ]
@@ -688,7 +704,7 @@ checkAttackAgainstDefenderType effectiveness team defenderTypes =
             else
                 ( accWeak, accResists )
     in
-    L.foldl go ( [], [] ) team
+    L.foldr go ( [], [] ) team
 
 
 summariseTeam : Model -> League -> List ( String, PType )
@@ -701,18 +717,40 @@ summariseTeam model league =
         |> summariseTeam2 model.attacks league.myPokemon
 
 
+calcTeamScores : Model -> League -> String -> String
+calcTeamScores model league opName =
+    let
+        mkItemInner pokemon =
+            Helpers.evaluateBattle model.pokedex model.attacks pokemon opName
+                |> Result.toMaybe
+
+        mkItem mbCand =
+            Maybe.map mkItemInner
+                (mbCand |> Maybe.andThen (lookupMyPokemon league.myPokemon))
+                |> Maybe.andThen identity
+                |> Maybe.map ppFloat
+                |> Maybe.withDefault "."
+    in
+    [ league.team.cand1
+    , league.team.cand2
+    , league.team.cand3
+    ]
+        |> L.map mkItem
+        |> String.join ", "
+
+
 summariseTeam2 : Dict String MoveType -> Array Pokemon -> List String -> List ( String, PType )
 summariseTeam2 attacks myPokemon team =
-    let
-        lookup : String -> Maybe Pokemon
-        lookup name =
-            myPokemon
-                |> Array.filter (\item -> item.name == name)
-                |> Array.get 0
-    in
     team
-        |> L.filterMap lookup
+        |> L.filterMap (lookupMyPokemon myPokemon)
         |> summariseTeamInner attacks
+
+
+lookupMyPokemon : Array Pokemon -> String -> Maybe Pokemon
+lookupMyPokemon myPokemon name =
+    myPokemon
+        |> Array.filter (\item -> item.name == name)
+        |> Array.get 0
 
 
 summariseTeamInner : Dict String MoveType -> List Pokemon -> List ( String, PType )
@@ -733,15 +771,6 @@ summariseTeamInner attacks pokemons =
                 |> (++) acc
     in
     L.foldl go [] pokemons
-
-
-deleteIcon : Msg -> Html Msg
-deleteIcon msg =
-    span
-        [ class "btn-delete"
-        , onClick msg
-        ]
-        [ matIcon "delete-outline" ]
 
 
 
@@ -765,7 +794,7 @@ viewNameAndTypes name entry =
 
 
 viewNameTitle name =
-    h3 [ class "text-2xl font-bold" ] [ text name ]
+    h3 [ class "text-xl font-bold" ] [ text name ]
 
 
 viewPokemonResistsAndWeaknesses : Model -> String -> List (Html msg)
@@ -783,6 +812,7 @@ viewPokemonResistsAndWeaknesses model name =
     ]
 
 
+viewTypes : (PType -> Float -> Bool) -> Dict PType Float -> String -> Html msg
 viewTypes fn weaknesses title =
     let
         ( normals, supers ) =
@@ -900,6 +930,15 @@ cardClass =
     "rounded overflow-hidden shadow-lg p-1 bg-white"
 
 
+deleteIcon : Msg -> Html Msg
+deleteIcon msg =
+    span
+        [ class "btn-delete"
+        , onClick msg
+        ]
+        [ matIcon "delete-outline" ]
+
+
 ppType : PType -> Html msg
 ppType pType =
     let
@@ -922,7 +961,7 @@ badge : String -> String -> Html msg
 badge col str =
     span
         [ style "background-color" col
-        , class "badge p-1 rounded text-sm"
+        , class "badge truncate p-1 rounded text-sm"
         ]
         [ text str ]
 

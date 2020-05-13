@@ -18,7 +18,8 @@ type alias Model =
     , ultra : League
     , master : League
     , -- session data
-      page : Page
+      debug : Bool
+    , page : Page
     , selectedPokemon : Maybe Pokemon
     , chooser : PokedexChooser
     , -- data
@@ -33,6 +34,7 @@ defaultModel =
     , great = blankLeague
     , ultra = blankLeague
     , master = blankLeague
+    , debug = False
     , page = Choosing
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
@@ -94,6 +96,7 @@ type alias Flags =
     , fast : Dict String MoveType
     , charged : Dict String MoveType
     , effectiveness : Effectiveness
+    , debug : Bool
     }
 
 
@@ -105,6 +108,7 @@ decodeFlags =
         |> andMap (Decode.field "fast" decodeMoves)
         |> andMap (Decode.field "charged" decodeMoves)
         |> andMap (Decode.field "effectiveness" decodeEffectiveness)
+        |> andMap (Decode.field "debug" Decode.bool)
 
 
 

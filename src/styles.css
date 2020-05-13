@@ -49,12 +49,13 @@ h2 {
 .badge {
     @apply text-white;
     max-width: 100px;
+    margin: 0.1rem;
+}
+.truncate {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin: 0.1rem;
 }
-
 .badge + .badge {
     @apply ml-1
 }

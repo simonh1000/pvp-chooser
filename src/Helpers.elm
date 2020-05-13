@@ -75,19 +75,19 @@ evaluateTeam ( p1, p2, p3 ) =
                     L.filter (\s -> s < 0.9) scores
             in
             if L.length weaks > 2 then
-                -1
+                -3
 
             else if L.length weaks > 1 then
-                L.sum weaks
+                -1
 
             else
-                L.sum scores
+                L.sum scores / 3
     in
     Dict.foldl
         (\name s1 acc ->
             case Maybe.map2 (\s2 s3 -> evalTeam [ s1, s2, s3 ]) (Dict.get name p2.scores) (Dict.get name p3.scores) of
                 Just score ->
-                    Dict.insert name (score / 3) acc
+                    Dict.insert name score acc
 
                 Nothing ->
                     acc
