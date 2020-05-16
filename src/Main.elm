@@ -281,7 +281,7 @@ view model =
                 [ text txt ]
 
         cls s =
-            class <| "p-2 main flex flex-row " ++ s
+            class <| "p-2 main flex-grow flex flex-row " ++ s
 
         league =
             case model.season of
@@ -294,11 +294,10 @@ view model =
                 Master ->
                     model.master
     in
-    div [ class "bg-gray-100" ]
-        [ header [ class "grid grid-cols-3 p-3 bg-gray-400" ]
-            [ div [] []
-            , h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
-            , div [ class "flex-grow" ]
+    div [ class "h-screen flex flex-col bg-gray-100" ]
+        [ header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
+            [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
+            , div [ class "" ]
                 [ mkButton (SwitchPage Choosing) "Choosing"
                 , mkButton (SwitchPage TeamOptions) "Team options"
                 , mkButton (SwitchPage Battling) "Battling"
@@ -306,7 +305,7 @@ view model =
             ]
         , case model.page of
             Choosing ->
-                div [ cls "choosing" ]
+                div [ class "flex flex-row p-2 main choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
                     , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsChoosing model league)
@@ -402,7 +401,7 @@ viewMyPokemons model league =
                     div [ class <| cardClass ++ " mb-2 relative bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
                             [ div [ class "flex flex-row items-center" ]
-                                [ h3 [ class "text-xl font-bold" ] [ text pokemon.name ] ]
+                                [ viewNameTitle pokemon.name ]
                             , deleteIcon <| RemovePokemon idx
                             ]
                         , div [] [ text <| "viewMyPokemons: no meta!" ]
@@ -465,7 +464,7 @@ viewMyPokemon model meta idx pokemon =
                             matIcon "chevron-right"
                         ]
                     , h3
-                        [ class "text-xl font-bold"
+                        [ class "text-xl font-bold truncate"
                         , onClick <| SelectCandidate pokemon
                         ]
                         [ text <| pokemon.name ]
@@ -521,7 +520,7 @@ viewTeam model league =
                                     |> Maybe.map (convertToPokedex pokemon)
                                     |> Result.fromMaybe ("Could not look up " ++ pokemon.name ++ " in pokedex")
                             )
-                        |> Result.map (\( name, entry ) -> viewWithStrengths model name entry)
+                        |> Result.map (\( name, entry ) -> viewTeamMember model name entry)
                         |> RE.extract (\err -> [ text err ])
             in
             case model.selectedPokemon of
@@ -551,8 +550,8 @@ viewTeam model league =
     ]
 
 
-viewWithStrengths : Model -> String -> PokedexEntry -> List (Html msg)
-viewWithStrengths model name entry =
+viewTeamMember : Model -> String -> PokedexEntry -> List (Html msg)
+viewTeamMember model name entry =
     let
         go attk acc =
             case attackToType model.attacks attk of
@@ -794,7 +793,7 @@ ppFloat x =
 
 
 viewNameTitle name =
-    h3 [ class "text-xl font-bold" ] [ text name ]
+    h3 [ class "text-xl font-bold truncate" ] [ text name ]
 
 
 viewPokemonResistsAndWeaknesses : Model -> String -> List (Html msg)
@@ -824,8 +823,8 @@ viewTypes fn weaknesses title =
     div [ class "flex flex-row items-center mb-2" ]
         [ span [ class "mr-3" ] [ text title ]
         , div [ class "badge-list flex flex-row items-center" ]
-            [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div [ class "flex flex-row" ]
-            , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
+            [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppTypeShort tp ]) |> div [ class "flex flex-row" ]
+            , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppTypeShort tp ]) |> div [ class "flex flex-row flex-wrap" ]
             ]
         ]
 
@@ -946,6 +945,15 @@ ppType pType =
             stringFromPType pType
     in
     badge col str
+
+
+ppTypeShort : PType -> Html msg
+ppTypeShort pType =
+    let
+        ( str, col ) =
+            stringFromPType pType
+    in
+    badge col <| String.left 1 str
 
 
 colouredBadge : PType -> String -> Html msg
