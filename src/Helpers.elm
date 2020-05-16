@@ -159,7 +159,7 @@ evaluateAgainstOpponent attacks pokemon opponentTypes =
             pokemon.charged
                 |> Set.toList
                 |> L.map lookup
-                |> L.sortBy (\( name, score ) -> score * -1)
+                |> L.sortBy (\( _, score ) -> score * -1)
                 |> L.head
                 |> Maybe.map Tuple.second
                 |> Maybe.withDefault -100

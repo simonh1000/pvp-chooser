@@ -280,6 +280,9 @@ view model =
                 ]
                 [ text txt ]
 
+        cls s =
+            class <| "p-2 main flex flex-row " ++ s
+
         league =
             case model.season of
                 Great ->
@@ -291,15 +294,11 @@ view model =
                 Master ->
                     model.master
     in
-    div [ class "m-3" ]
-        [ div [ class "flex flex-row justify-between" ]
-            [ h1 [ class "text-2xl" ] [ text "Pokemon" ]
-            , div []
-                [ mkButton (SwitchSeason Great) "Great"
-                , mkButton (SwitchSeason Ultra) "Ultra"
-                , mkButton (SwitchSeason Master) "Master"
-                ]
-            , div []
+    div [ class "bg-gray-100" ]
+        [ header [ class "grid grid-cols-3 p-3 bg-gray-400" ]
+            [ div [] []
+            , h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
+            , div [ class "flex-grow" ]
                 [ mkButton (SwitchPage Choosing) "Choosing"
                 , mkButton (SwitchPage TeamOptions) "Team options"
                 , mkButton (SwitchPage Battling) "Battling"
@@ -307,24 +306,31 @@ view model =
             ]
         , case model.page of
             Choosing ->
-                div [ class "main choosing flex flex-row" ]
+                div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
                     , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsChoosing model league)
                     ]
 
-            Battling ->
-                div [ class "main battling flex flex-row" ]
-                    [ div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
-                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
-                    ]
-
             TeamOptions ->
-                div [ class "main teams flex flex-row" ]
+                div [ cls "teams" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewTeamOptions model league)
                     , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
                     ]
+
+            Battling ->
+                div [ cls "battling" ]
+                    [ div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
+                    ]
+        , footer [ class "flex flex-row items-center justify-end p-3 bg-gray-400" ]
+            [ div []
+                [ mkButton (SwitchSeason Great) "Great"
+                , mkButton (SwitchSeason Ultra) "Ultra"
+                , mkButton (SwitchSeason Master) "Master"
+                ]
+            ]
         ]
 
 
@@ -538,15 +544,13 @@ viewTeam model league =
                 |> RE.extract identity
     in
     [ h2 [] [ text "My Team" ]
-    , div [] [ text <| "team score: " ++ score ]
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Just c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Just c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Just c }) team.cand3
+    , div [] [ text <| "team score: " ++ score ]
     ]
 
 
-{-| Middle is passed a Pokemon, rights is passed a PokedexEntry
--}
 viewWithStrengths : Model -> String -> PokedexEntry -> List (Html msg)
 viewWithStrengths model name entry =
     let
@@ -603,16 +607,20 @@ viewOpponentsChoosing model league =
         viewOpponent withDelete name freq entry =
             div [ class "flex flex-row align-items justify-between" ]
                 [ div [ class "flex flex-row items-center" ]
-                    [ button [ onClick <| UpdateOpponentFrequency name -1, class "mr-1" ] [ text "-" ]
+                    [ matIcon "chevron-right"
+                    , viewNameTitle name
+                    ]
+                , div [ class "flex flex-row items-center" ]
+                    [ entry.types |> L.map (\tp -> span [ class "ml-1" ] [ ppType tp ]) |> div []
+                    , button [ onClick <| UpdateOpponentFrequency name -1, class "ml-2 mr-1" ] [ text "-" ]
                     , span [ class "mr-1" ] [ text <| String.fromInt freq ]
                     , button [ onClick <| UpdateOpponentFrequency name 1, class "mr-1" ] [ text "+" ]
-                    , viewNameAndTypes name entry
-                    ]
-                , if withDelete then
-                    deleteIcon <| RemoveOpponent name
+                    , if withDelete then
+                        deleteIcon <| RemoveOpponent name
 
-                  else
-                    text ""
+                      else
+                        text ""
+                    ]
                 ]
 
         viewer ( name, freq ) =
@@ -650,11 +658,11 @@ viewOpponentsBattling model league =
                         text ""
 
                     else
-                        div [ class <| "flex flex-row flex-wrap items-baseline ml-4 p-1 border-solid border-2 " ++ cls ] <|
+                        div [ class <| "flex flex-row flex-wrap items-baseline ml-4 p-1 " ++ cls ] <|
                             L.map (\( title, pType ) -> colouredBadge pType title) lst
             in
-            div [ class <| cardClass ++ " flex flex-row justify-between mb-1" ]
-                [ div [ class "flex flex-row" ]
+            div [ class <| cardClass ++ " flex flex-row  items-center justify-between mb-1" ]
+                [ div [ class "flex flex-row items-center" ]
                     [ div []
                         [ viewNameTitle name
                         , if model.debug then
@@ -663,9 +671,9 @@ viewOpponentsBattling model league =
                           else
                             text ""
                         ]
-                    , viewLst "border-green-500" weak
+                    , viewLst "bg-green-200" weak
                     ]
-                , viewLst "border-red-500" resists
+                , viewLst "bg-red-200" resists
                 ]
 
         viewer ( name, _ ) =
@@ -785,14 +793,6 @@ ppFloat x =
         |> (\y -> String.fromFloat (y / 10))
 
 
-viewNameAndTypes : String -> PokedexEntry -> Html msg
-viewNameAndTypes name entry =
-    div [ class "flex flex-row items-center" ]
-        [ viewNameTitle name
-        , entry.types |> L.map (\tp -> span [ class "ml-1" ] [ ppType tp ]) |> div []
-        ]
-
-
 viewNameTitle name =
     h3 [ class "text-xl font-bold" ] [ text name ]
 
@@ -821,7 +821,7 @@ viewTypes fn weaknesses title =
                 |> Dict.toList
                 |> L.partition (\( _, v ) -> v > 0.5 && v < 2)
     in
-    div [ class "flex flex-row items-center" ]
+    div [ class "flex flex-row items-center mb-2" ]
         [ span [ class "mr-3" ] [ text title ]
         , div [ class "badge-list flex flex-row items-center" ]
             [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div [ class "flex flex-row" ]

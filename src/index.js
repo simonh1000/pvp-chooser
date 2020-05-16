@@ -20,7 +20,7 @@ const flags = {
     fast,
     effectiveness,
     myPokemon,
-    debug : location.port == 3000
+    debug : false
 };
 // console.log(flags);
 

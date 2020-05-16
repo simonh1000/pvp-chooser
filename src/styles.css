@@ -6,6 +6,10 @@
 
 @import url("https://cdn.materialdesignicons.com/4.5.95/css/materialdesignicons.min.css");
 
+header {
+    justify-items: center;
+}
+
 h2 {
     @apply text-xl mb-3
 }
