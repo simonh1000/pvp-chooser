@@ -87,28 +87,85 @@ type Page
 
 
 
--- Flags
+-- -----------------------
+-- Persistence
+-- -----------------------
 
 
-type alias Flags =
-    { persisted : Persisted
-    , pokedex : Dict String PokedexEntry -- keys by lowercase name
-    , fast : Dict String MoveType
-    , charged : Dict String MoveType
-    , effectiveness : Effectiveness
-    , debug : Bool
+type alias Persisted =
+    { season : Season
+    , great : League
+    , ultra : League
+    , master : League
     }
 
 
-decodeFlags : Decoder Flags
-decodeFlags =
-    Decode.succeed Flags
-        |> andMap (Decode.field "myPokemon" decodePersisted)
-        |> andMap (Decode.field "pokemon" decodePokedex)
-        |> andMap (Decode.field "fast" decodeMoves)
-        |> andMap (Decode.field "charged" decodeMoves)
-        |> andMap (Decode.field "effectiveness" decodeEffectiveness)
-        |> andMap (Decode.field "debug" Decode.bool)
+decodePersisted : Decoder Persisted
+decodePersisted =
+    let
+        dec s =
+            Decode.field s decodeLeague
+    in
+    Decode.succeed Persisted
+        |> andMap (Decode.oneOf [ Decode.field "season" decodeSeason, Decode.succeed Ultra ])
+        |> andMap (dec "great")
+        |> andMap (dec "ultra")
+        |> andMap (dec "master")
+
+
+encodePersisted : Model -> Encode.Value
+encodePersisted model =
+    Encode.object
+        [ ( "season", encodeSeason model.season )
+        , ( "great", encodeLeague model.great )
+        , ( "ultra", encodeLeague model.ultra )
+        , ( "master", encodeLeague model.master )
+        ]
+
+
+
+-- -----------------------
+-- League
+-- -----------------------
+
+
+type alias League =
+    { myPokemon : Array Pokemon
+    , team : Team
+    , opponents : List Opponent
+    }
+
+
+blankLeague =
+    League Array.empty blankTeam []
+
+
+encodeLeague : League -> Value
+encodeLeague league =
+    [ ( "myPokemon", Encode.list encodePokemon <| Array.toList league.myPokemon )
+    , ( "team", encodeTeam league.team )
+    , ( "opponents", Encode.list encodeOpponent league.opponents )
+    ]
+        |> Encode.object
+
+
+decodeLeague : Decoder League
+decodeLeague =
+    Decode.succeed League
+        |> andMap
+            (Decode.oneOf
+                [ Decode.field "myPokemon" <| Decode.list decodePokemon
+                , Decode.succeed []
+                ]
+                |> Decode.map Array.fromList
+            )
+        |> andMap
+            (Decode.oneOf
+                [ Decode.field "team" decodeTeam
+                , Decode.succeed blankTeam
+                ]
+            )
+        |> andMap (Decode.field "opponents" <| Decode.list decodeOpponent)
 
 
 
@@ -146,6 +203,29 @@ encodePokemon p =
     , ( "charged", Encode.list Encode.string <| Set.toList p.charged )
     ]
         |> Encode.object
+
+
+
+-- -----------------------
+-- Opponent
+-- -----------------------
+
+
+type alias Opponent =
+    { expanded : Bool
+    , name : String
+    , frequency : Int
+    }
+
+
+decodeOpponent : Decoder Opponent
+decodeOpponent =
+    Decode.map2 (Opponent False) (Decode.index 0 Decode.string) (Decode.index 1 Decode.int)
+
+
+encodeOpponent : Opponent -> Value
+encodeOpponent { name, frequency } =
+    Encode.list identity [ Encode.string name, Encode.int frequency ]
 
 
 
@@ -324,101 +404,6 @@ decodeMoves =
             (Decode.map MoveType (Decode.field "type" decodePType))
         )
         |> Decode.map Dict.fromList
-
-
-
--- -----------------------
--- League
--- -----------------------
-
-
-type alias League =
-    { myPokemon : Array Pokemon
-    , team : Team
-    , opponents : List ( String, Int )
-    }
-
-
-blankLeague =
-    League Array.empty blankTeam []
-
-
-encodeLeague : League -> Value
-encodeLeague league =
-    [ ( "myPokemon", Encode.list encodePokemon <| Array.toList league.myPokemon )
-    , ( "team", encodeTeam league.team )
-    , ( "opponents", Encode.list encodeOpponent league.opponents )
-    ]
-        |> Encode.object
-
-
-decodeLeague : Decoder League
-decodeLeague =
-    Decode.succeed League
-        |> andMap
-            (Decode.oneOf
-                [ Decode.field "myPokemon" <| Decode.list decodePokemon
-                , Decode.succeed []
-                ]
-                |> Decode.map Array.fromList
-            )
-        |> andMap
-            (Decode.oneOf
-                [ Decode.field "team" decodeTeam
-                , Decode.succeed blankTeam
-                ]
-            )
-        |> andMap (Decode.field "opponents" <| Decode.list decodeOpponent)
-
-
-decodeOpponent : Decoder ( String, Int )
-decodeOpponent =
-    Decode.oneOf
-        [ Decode.map2 Tuple.pair (Decode.index 0 Decode.string) (Decode.index 1 Decode.int)
-        , Decode.map (\name -> ( name, 1 )) Decode.string
-        ]
-
-
-encodeOpponent : ( String, Int ) -> Value
-encodeOpponent ( name, freq ) =
-    Encode.list identity [ Encode.string name, Encode.int freq ]
-
-
-
--- -----------------------
--- Persistence
--- -----------------------
-
-
-type alias Persisted =
-    { season : Season
-    , great : League
-    , ultra : League
-    , master : League
-    }
-
-
-decodePersisted : Decoder Persisted
-decodePersisted =
-    let
-        dec s =
-            Decode.field s decodeLeague
-    in
-    Decode.succeed Persisted
-        |> andMap (Decode.oneOf [ Decode.field "season" decodeSeason, Decode.succeed Ultra ])
-        |> andMap (dec "great")
-        |> andMap (dec "ultra")
-        |> andMap (dec "master")
-
-
-encodePersisted : Model -> Encode.Value
-encodePersisted model =
-    Encode.object
-        [ ( "season", encodeSeason model.season )
-        , ( "great", encodeLeague model.great )
-        , ( "ultra", encodeLeague model.ultra )
-        , ( "master", encodeLeague model.master )
-        ]
 
 
 

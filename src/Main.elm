@@ -11,6 +11,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Decode exposing (Decoder, Value)
+import Json.Decode.Extra exposing (andMap)
 import List as L
 import Model exposing (..)
 import Pokemon exposing (PType, effectiveness, stringFromPType)
@@ -39,6 +40,27 @@ init value =
 
         Err err ->
             Debug.todo (Decode.errorToString err)
+
+
+type alias Flags =
+    { persisted : Persisted
+    , pokedex : Dict String PokedexEntry -- keys by lowercase name
+    , fast : Dict String MoveType
+    , charged : Dict String MoveType
+    , effectiveness : Effectiveness
+    , debug : Bool
+    }
+
+
+decodeFlags : Decoder Flags
+decodeFlags =
+    Decode.succeed Flags
+        |> andMap (Decode.field "myPokemon" decodePersisted)
+        |> andMap (Decode.field "pokemon" decodePokedex)
+        |> andMap (Decode.field "fast" decodeMoves)
+        |> andMap (Decode.field "charged" decodeMoves)
+        |> andMap (Decode.field "effectiveness" decodeEffectiveness)
+        |> andMap (Decode.field "debug" Decode.bool)
 
 
 
@@ -128,7 +150,7 @@ update message model =
                                     { l | myPokemon = Array.push pokemon l.myPokemon }
 
                                 else
-                                    { l | opponents = ( name, 1 ) :: l.opponents }
+                                    { l | opponents = Opponent False name 1 :: l.opponents }
                             )
             in
             { newModel | chooser = mapSearch (\_ -> "") model.chooser } |> andPersist
@@ -188,12 +210,12 @@ update message model =
 
         UpdateOpponentFrequency name y ->
             model
-                |> updateLeague (\l -> { l | opponents = L.map (\( n, x ) -> ( n, ifThenElse (n == name) (x + y) x )) l.opponents })
+                |> updateLeague (\l -> { l | opponents = L.map (\op -> ifThenElse (op.name == name) { op | frequency = op.frequency + y } op) l.opponents })
                 |> andPersist
 
         RemoveOpponent name ->
             model
-                |> updateLeague (\l -> { l | opponents = L.filter (\( n, _ ) -> n /= name) l.opponents })
+                |> updateLeague (\l -> { l | opponents = L.filter (\op -> op.name /= name) l.opponents })
                 |> andPersist
 
 
@@ -622,11 +644,11 @@ viewOpponentsChoosing model league =
                     ]
                 ]
 
-        viewer ( name, freq ) =
+        viewer { name, frequency } =
             case Dict.get name model.pokedex of
                 Just entry ->
                     div [ class <| cardClass ++ " mb-2" ]
-                        (viewOpponent True name freq entry :: viewPokemonResistsAndWeaknesses model name)
+                        (viewOpponent True name frequency entry :: viewPokemonResistsAndWeaknesses model name)
 
                 Nothing ->
                     text <| "Could not look up " ++ name
@@ -634,7 +656,7 @@ viewOpponentsChoosing model league =
     [ h2 [] [ text "Opponents" ]
     , chooser
     , league.opponents
-        |> L.sortBy Tuple.first
+        |> L.sortBy .name
         |> L.map viewer
         |> div []
     ]
@@ -675,7 +697,7 @@ viewOpponentsBattling model league =
                 , viewLst "bg-red-200" resists
                 ]
 
-        viewer ( name, _ ) =
+        viewer { name } =
             case Dict.get name model.pokedex of
                 Just entry ->
                     viewOpponent name entry
@@ -685,7 +707,7 @@ viewOpponentsBattling model league =
     in
     [ h2 [] [ text "Opponents" ]
     , league.opponents
-        |> L.sortBy (Tuple.second >> (*) -1)
+        |> L.sortBy (.frequency >> (*) -1)
         |> L.map viewer
         |> div [ class "flex flex-col" ]
     ]
@@ -979,9 +1001,10 @@ matIcon t =
 
 
 
---
+-- Main program
 
 
+main : Program Value Model Msg
 main =
     Browser.document
         { init = init

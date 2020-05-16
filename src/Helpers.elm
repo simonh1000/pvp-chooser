@@ -47,20 +47,21 @@ evaluateTeams league =
         |> L.sortBy (Tuple.second >> (*) -1)
 
 
+calcWeightedTotal : List Opponent -> Float
 calcWeightedTotal opponents =
-    opponents |> L.map Tuple.second |> L.sum |> toFloat
+    opponents |> L.map .frequency |> L.sum |> toFloat
 
 
 {-| Always divide by 3 even though for weak pokemon we only return two (low) numbers
 -}
-summariseTeam : List ( String, Int ) -> Dict String Float -> Float
+summariseTeam : List Opponent -> Dict String Float -> Float
 summariseTeam opponents scores =
     let
-        go ( name, freq ) acc =
+        go { name, frequency } acc =
             scores
                 |> Dict.get name
                 |> Maybe.withDefault 0
-                |> (*) (toFloat freq)
+                |> (*) (toFloat frequency)
                 |> (+) acc
     in
     L.foldl go 0 opponents
@@ -106,11 +107,11 @@ addScoresToLeague model league =
         addScores_ : Pokemon -> Dict String Float
         addScores_ p =
             let
-                foldFn : ( String, b ) -> Dict String Float -> Result String (Dict String Float)
-                foldFn ( opName, _ ) acc =
-                    case evaluateBattle model.pokedex model.attacks p opName of
+                foldFn : Opponent -> Dict String Float -> Result String (Dict String Float)
+                foldFn { name } acc =
+                    case evaluateBattle model.pokedex model.attacks p name of
                         Ok score ->
-                            Ok <| Dict.insert opName score acc
+                            Ok <| Dict.insert name score acc
 
                         Err err ->
                             Err err
