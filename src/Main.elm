@@ -305,13 +305,6 @@ toId =
 view : Model -> Html Msg
 view model =
     let
-        mkButton msg txt =
-            button
-                [ class "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-3"
-                , onClick msg
-                ]
-                [ text txt ]
-
         cls s =
             class <| "p-2 main flex-grow flex flex-row " ++ s
 
@@ -327,19 +320,12 @@ view model =
                     model.master
     in
     div [ class "h-screen flex flex-col bg-gray-100" ]
-        [ header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
-            [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
-            , div [ class "" ]
-                [ mkButton (SwitchPage Choosing) "Choosing"
-                , mkButton (SwitchPage TeamOptions) "Team options"
-                , mkButton (SwitchPage Battling) "Battling"
-                ]
-            ]
+        [ pvpHeader
         , case model.page of
             Choosing ->
-                div [ class "flex flex-row p-2 main choosing" ]
+                div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
-                    , div [ class "my-team flex flex-col flex-grow ml-3 mr-3" ] (viewTeam model league)
+                    , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsChoosing model league)
                     ]
 
@@ -361,55 +347,37 @@ view model =
                     [ h1 [] [ text "Fatal Error" ]
                     , div [] [ text string ]
                     ]
-        , footer [ class "flex flex-row items-center justify-end p-3 bg-gray-400" ]
-            [ div []
-                [ mkButton (SwitchSeason Great) "Great"
-                , mkButton (SwitchSeason Ultra) "Ultra"
-                , mkButton (SwitchSeason Master) "Master"
-                ]
+        , pvpFooter
+        ]
+
+
+pvpHeader =
+    header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
+        [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
+        , div [ class "" ]
+            [ mkButton (SwitchPage Choosing) "Choosing"
+            , mkButton (SwitchPage TeamOptions) "Team options"
+            , mkButton (SwitchPage Battling) "Battling"
             ]
         ]
 
 
+pvpFooter =
+    footer [ class "flex flex-row items-center justify-end p-3 bg-gray-400" ]
+        [ div []
+            [ mkButton (SwitchSeason Great) "Great"
+            , mkButton (SwitchSeason Ultra) "Ultra"
+            , mkButton (SwitchSeason Master) "Master"
+            ]
+        ]
 
--- -------------------
--- LHS Teams
--- -------------------
 
-
-viewTeamOptions : Model -> League -> List (Html Msg)
-viewTeamOptions _ league =
-    let
-        cls selected =
-            if selected then
-                "flex flex-row bg-white"
-
-            else
-                "flex flex-row"
-
-        team =
-            [ league.team.cand1, league.team.cand2, league.team.cand3 ]
-
-        viewOption : ( ( String, String, String ), Float ) -> Html Msg
-        viewOption ( ( c1, c2, c3 ), score ) =
-            let
-                selected =
-                    L.member (Just c1) team && L.member (Just c2) team && L.member (Just c3) team
-            in
-            div
-                [ class <| cls selected
-                , onClick <| SetTeam { cand1 = Just c1, cand2 = Just c2, cand3 = Just c3 }
-                ]
-                [ text <| ppFloat score
-                , [ c1, c2, c3 ] |> String.join ", " |> text
-                ]
-    in
-    [ h2 [] [ text "Team options" ]
-    , Helpers.evaluateTeams league
-        |> L.take 20
-        |> L.map viewOption
-        |> div [ class "flex flex-col" ]
-    ]
+mkButton msg txt =
+    button
+        [ class "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-3"
+        , onClick msg
+        ]
+        [ text txt ]
 
 
 
@@ -516,6 +484,44 @@ viewMyPokemon model meta idx pokemon =
 
         else
             [ topLine ]
+
+
+
+-- -------------------
+-- LHS Teams
+-- -------------------
+
+
+viewTeamOptions : Model -> League -> List (Html Msg)
+viewTeamOptions _ league =
+    let
+        team =
+            [ league.team.cand1, league.team.cand2, league.team.cand3 ]
+
+        viewOption : ( ( String, String, String ), Float ) -> Html Msg
+        viewOption ( ( c1, c2, c3 ), score ) =
+            let
+                selected =
+                    L.member (Just c1) team && L.member (Just c2) team && L.member (Just c3) team
+            in
+            div
+                [ classList
+                    [ ( cardClass, True )
+                    , ( "mb-1 flex flex-row justify-between", True )
+                    , ( "bg-blue-100", selected )
+                    ]
+                , onClick <| SetTeam { cand1 = Just c1, cand2 = Just c2, cand3 = Just c3 }
+                ]
+                [ span [] [ [ c1, c2, c3 ] |> String.join ", " |> text ]
+                , span [ class "text-sm" ] [ text <| ppFloat score ]
+                ]
+    in
+    [ h2 [] [ text "Team options" ]
+    , Helpers.evaluateTeams league
+        |> L.take 20
+        |> L.map viewOption
+        |> div [ class "flex flex-col" ]
+    ]
 
 
 
