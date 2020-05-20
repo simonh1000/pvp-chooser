@@ -84,6 +84,7 @@ type Page
     = Choosing
     | Battling
     | TeamOptions
+    | FatalError String
 
 
 

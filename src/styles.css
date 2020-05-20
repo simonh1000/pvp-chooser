@@ -14,7 +14,7 @@ h2 {
     @apply text-xl mb-3
 }
 
-.main > div {
+.main.choosing > div {
     flex: 1 0 33%;
 }
 
@@ -37,6 +37,15 @@ h2 {
     display: flex;
     flex-wrap: wrap;
 }
+
+button.toggle {
+    width: 30px;
+}
+
+button.toggle:hover {
+    background-color: #aaffaa;
+}
+
 .btn {
     @apply bg-blue-500 text-white font-bold py-2 px-4 rounded;
 }
@@ -48,6 +57,12 @@ h2 {
 /*}*/
 .badge-list {
     line-height: 30px;
+}
+
+.badge.round {
+    width: 25px;
+    height: 25px;
+    border-radius: 18px;
 }
 
 .badge {

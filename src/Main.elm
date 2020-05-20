@@ -39,7 +39,7 @@ init value =
             ( addScores model, Cmd.none )
 
         Err err ->
-            Debug.todo (Decode.errorToString err)
+            ( { defaultModel | page = FatalError <| Decode.errorToString err }, Cmd.none )
 
 
 type alias Flags =
@@ -78,7 +78,7 @@ type Msg
     | ACSelect Bool String -- isMyPokemon name
     | SetChooser PokedexChooser
       -- My pokemons
-    | ToggleExpanded Int
+    | ToggleMyPokemon Int
     | SelectFastMove Int String
     | SelectChargedMove Int String
     | RemovePokemon Int
@@ -88,13 +88,14 @@ type Msg
     | SelectCandidate Pokemon -- first part of adding to team
     | UpdateTeam Team -- second part
       -- My opponents
+    | ToggleOpponent String
     | UpdateOpponentFrequency String Int -- name
     | RemoveOpponent String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
-    case Debug.log "" message of
+    case message of
         SwitchSeason season ->
             { model | season = season } |> andPersist
 
@@ -158,7 +159,7 @@ update message model =
         SetChooser chooser ->
             ( { model | chooser = chooser }, Cmd.none )
 
-        ToggleExpanded idx ->
+        ToggleMyPokemon idx ->
             model
                 |> updateLeague (\l -> { l | myPokemon = AE.update idx (\p -> { p | expanded = not p.expanded }) l.myPokemon })
                 |> andPersist
@@ -207,6 +208,15 @@ update message model =
             { model | selectedPokemon = Nothing }
                 |> updateLeague (\l -> { l | team = team })
                 |> andPersist
+
+        ToggleOpponent name ->
+            let
+                mapper op =
+                    ifThenElse (op.name == name) { op | expanded = not op.expanded } op
+            in
+            ( updateLeague (\l -> { l | opponents = L.map mapper l.opponents }) model
+            , Cmd.none
+            )
 
         UpdateOpponentFrequency name y ->
             model
@@ -345,6 +355,12 @@ view model =
                     [ div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
                     ]
+
+            FatalError string ->
+                div [ cls "error" ]
+                    [ h1 [] [ text "Fatal Error" ]
+                    , div [] [ text string ]
+                    ]
         , footer [ class "flex flex-row items-center justify-end p-3 bg-gray-400" ]
             [ div []
                 [ mkButton (SwitchSeason Great) "Great"
@@ -385,7 +401,7 @@ viewTeamOptions _ league =
                 , onClick <| SetTeam { cand1 = Just c1, cand2 = Just c2, cand3 = Just c3 }
                 ]
                 [ text <| ppFloat score
-                , text <| Debug.toString ( c1, c2, c3 )
+                , [ c1, c2, c3 ] |> String.join ", " |> text
                 ]
     in
     [ h2 [] [ text "Team options" ]
@@ -432,8 +448,9 @@ viewMyPokemons model league =
     [ h2 [] [ text "My Pokemons" ]
     , chooser
     , league.myPokemon
-        |> Array.indexedMap viewer
         |> Array.toList
+        |> L.sortBy .name
+        |> L.indexedMap viewer
         |> div []
     ]
 
@@ -478,13 +495,7 @@ viewMyPokemon model meta idx pokemon =
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
                 [ div [ class "flex flex-row items-center" ]
-                    [ span [ onClick <| ToggleExpanded idx ]
-                        [ if pokemon.expanded then
-                            matIcon "chevron-down"
-
-                          else
-                            matIcon "chevron-right"
-                        ]
+                    [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
                     , h3
                         [ class "text-xl font-bold truncate"
                         , onClick <| SelectCandidate pokemon
@@ -625,33 +636,42 @@ viewOpponentsChoosing model league =
                 _ ->
                     viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
 
-        viewOpponent withDelete name freq entry =
-            div [ class "flex flex-row align-items justify-between" ]
-                [ div [ class "flex flex-row items-center" ]
-                    [ matIcon "chevron-right"
-                    , viewNameTitle name
-                    ]
-                , div [ class "flex flex-row items-center" ]
-                    [ entry.types |> L.map (\tp -> span [ class "ml-1" ] [ ppType tp ]) |> div []
-                    , button [ onClick <| UpdateOpponentFrequency name -1, class "ml-2 mr-1" ] [ text "-" ]
-                    , span [ class "mr-1" ] [ text <| String.fromInt freq ]
-                    , button [ onClick <| UpdateOpponentFrequency name 1, class "mr-1" ] [ text "+" ]
-                    , if withDelete then
-                        deleteIcon <| RemoveOpponent name
+        viewOpponent op entry =
+            let
+                headerRow =
+                    div [ class "flex flex-row align-items justify-between" ]
+                        [ div
+                            [ class "flex flex-row items-center"
+                            ]
+                            [ toggleBtn (ToggleOpponent op.name) op.expanded
+                            , viewNameTitle op.name
+                            ]
+                        , div [ class "flex flex-row items-center" ]
+                            [ entry.types |> L.map (\tp -> span [ class "ml-1" ] [ ppType tp ]) |> div []
+                            , button [ onClick <| UpdateOpponentFrequency op.name -1, class "ml-2 mr-1" ] [ text "-" ]
+                            , span [ class "mr-1" ] [ text <| String.fromInt op.frequency ]
+                            , button [ onClick <| UpdateOpponentFrequency op.name 1, class "mr-1" ] [ text "+" ]
+                            , deleteIcon <| RemoveOpponent op.name
+                            ]
+                        ]
 
-                      else
-                        text ""
-                    ]
-                ]
+                content =
+                    if op.expanded then
+                        viewPokemonResistsAndWeaknesses model op.name
 
-        viewer { name, frequency } =
-            case Dict.get name model.pokedex of
+                    else
+                        []
+            in
+            div [ class <| cardClass ++ " mb-2" ]
+                (headerRow :: content)
+
+        viewer op =
+            case Dict.get op.name model.pokedex of
                 Just entry ->
-                    div [ class <| cardClass ++ " mb-2" ]
-                        (viewOpponent True name frequency entry :: viewPokemonResistsAndWeaknesses model name)
+                    viewOpponent op entry
 
                 Nothing ->
-                    text <| "Could not look up " ++ name
+                    text <| "Could not look up " ++ op.name
     in
     [ h2 [] [ text "Opponents" ]
     , chooser
@@ -840,7 +860,7 @@ viewTypes fn weaknesses title =
             weaknesses
                 |> Dict.filter fn
                 |> Dict.toList
-                |> L.partition (\( _, v ) -> v > 0.5 && v < 2)
+                |> L.partition (\( _, v ) -> v > 0.5 && v < 1.5)
     in
     div [ class "flex flex-row items-center mb-2" ]
         [ span [ class "mr-3" ] [ text title ]
@@ -947,6 +967,14 @@ viewConfig =
 -- -------------------
 
 
+toggleBtn msg expanded =
+    button
+        [ class "toggle"
+        , onClick msg
+        ]
+        [ matIcon <| ifThenElse expanded "chevron-down" "chevron-right" ]
+
+
 cardClass =
     "rounded overflow-hidden shadow-lg p-1 bg-white"
 
@@ -954,7 +982,7 @@ cardClass =
 deleteIcon : Msg -> Html Msg
 deleteIcon msg =
     span
-        [ class "btn-delete"
+        [ class "btn-delete ml-1"
         , onClick msg
         ]
         [ matIcon "delete-outline" ]
@@ -975,7 +1003,11 @@ ppTypeShort pType =
         ( str, col ) =
             stringFromPType pType
     in
-    badge col <| String.left 1 str
+    div
+        [ style "background-color" col
+        , class "flex flex-row items-center justify-center badge round"
+        ]
+        [ text <| String.left 1 str ]
 
 
 colouredBadge : PType -> String -> Html msg
