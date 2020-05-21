@@ -3,7 +3,7 @@ module Model exposing (..)
 import Array exposing (Array)
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
-import Common.CoreHelpers exposing (decodeSimpleCustomTypes)
+import Common.CoreHelpers exposing (decodeSimpleCustomTypes, ifThenElse)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
@@ -174,6 +174,47 @@ decodeLeague =
 
 
 -- -----------------------
+-- Team
+-- -----------------------
+
+
+type alias Team =
+    { cand1 : Maybe String
+    , cand2 : Maybe String
+    , cand3 : Maybe String
+    }
+
+
+blankTeam =
+    { cand1 = Nothing
+    , cand2 = Nothing
+    , cand3 = Nothing
+    }
+
+
+removeFromTeam : String -> Team -> Team
+removeFromTeam name team =
+    { cand1 = ifThenElse (Just name == team.cand1) Nothing team.cand1
+    , cand2 = ifThenElse (Just name == team.cand2) Nothing team.cand2
+    , cand3 = ifThenElse (Just name == team.cand3) Nothing team.cand3
+    }
+
+
+decodeTeam =
+    Decode.map3 Team
+        (Decode.maybe <| Decode.index 0 Decode.string)
+        (Decode.maybe <| Decode.index 1 Decode.string)
+        (Decode.maybe <| Decode.index 2 Decode.string)
+
+
+encodeTeam t =
+    [ t.cand1, t.cand2, t.cand3 ]
+        |> L.filterMap identity
+        |> Encode.list Encode.string
+
+
+
+-- -----------------------
 -- Pokemon
 -- -----------------------
 
@@ -323,39 +364,6 @@ mapSearch fn chooser =
 --
 --        NoChooser ->
 --            NoChooser
--- -----------------------
--- Team
--- -----------------------
-
-
-type alias Team =
-    { cand1 : Maybe String
-    , cand2 : Maybe String
-    , cand3 : Maybe String
-    }
-
-
-blankTeam =
-    { cand1 = Nothing
-    , cand2 = Nothing
-    , cand3 = Nothing
-    }
-
-
-decodeTeam =
-    Decode.map3 Team
-        (Decode.maybe <| Decode.index 0 Decode.string)
-        (Decode.maybe <| Decode.index 1 Decode.string)
-        (Decode.maybe <| Decode.index 2 Decode.string)
-
-
-encodeTeam t =
-    [ t.cand1, t.cand2, t.cand3 ]
-        |> L.filterMap identity
-        |> Encode.list Encode.string
-
-
-
 -- -----------------------
 -- Effectiveness
 -- -----------------------

@@ -6,8 +6,9 @@
 
 @import url("https://cdn.materialdesignicons.com/4.5.95/css/materialdesignicons.min.css");
 
-header {
-    justify-items: center;
+body {
+    @apply bg-gray-100
+
 }
 
 h2 {
@@ -68,7 +69,6 @@ button.toggle:hover {
 .badge {
     @apply text-white;
     max-width: 100px;
-    margin: 0.1rem;
 }
 .truncate {
     white-space: nowrap;

@@ -6,6 +6,8 @@ import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Browser
 import Common.CoreHelpers exposing (ifThenElse)
+import FormatNumber
+import FormatNumber.Locales exposing (Decimals(..), usLocale)
 import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -76,7 +78,7 @@ type Msg
     | ACMsg Autocomplete.Msg
     | ACSearch String
     | ACSelect Bool String -- isMyPokemon name
-    | SetChooser PokedexChooser
+    | SetAutoComplete PokedexChooser
       -- My pokemons
     | ToggleMyPokemon Int
     | SelectFastMove Int String
@@ -95,13 +97,14 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
-    case message of
-        SwitchSeason season ->
-            { model | season = season } |> andPersist
-
+    case Debug.log "" message of
         SwitchPage page ->
             ( { model | page = page }, Cmd.none )
 
+        SwitchSeason season ->
+            { model | season = season } |> andPersist
+
+        -- Autocomplete
         ACMsg msg ->
             let
                 handler isMyPokemon search autocomplete =
@@ -156,9 +159,10 @@ update message model =
             in
             { newModel | chooser = mapSearch (\_ -> "") model.chooser } |> andPersist
 
-        SetChooser chooser ->
+        SetAutoComplete chooser ->
             ( { model | chooser = chooser }, Cmd.none )
 
+        -- My Pokemones
         ToggleMyPokemon idx ->
             model
                 |> updateLeague (\l -> { l | myPokemon = AE.update idx (\p -> { p | expanded = not p.expanded }) l.myPokemon })
@@ -183,10 +187,23 @@ update message model =
                 |> andPersist
 
         RemovePokemon idx ->
+            let
+                updater l =
+                    case Array.get idx l.myPokemon of
+                        Just p ->
+                            { l
+                                | myPokemon = AE.removeAt idx l.myPokemon
+                                , team = removeFromTeam p.name l.team
+                            }
+
+                        Nothing ->
+                            { l | myPokemon = AE.removeAt idx l.myPokemon }
+            in
             model
-                |> updateLeague (\l -> { l | myPokemon = AE.removeAt idx l.myPokemon })
+                |> updateLeague updater
                 |> andPersist
 
+        -- team chooser
         SetTeam team ->
             model
                 |> updateLeague (\l -> { l | team = team })
@@ -319,7 +336,7 @@ view model =
                 Master ->
                     model.master
     in
-    div [ class "h-screen flex flex-col bg-gray-100" ]
+    div [ class "h-screen flex flex-col" ]
         [ pvpHeader model.page
         , case model.page of
             Choosing ->
@@ -338,7 +355,7 @@ view model =
 
             Battling ->
                 div [ cls "battling" ]
-                    [ div [ class "my-team flex flex-col flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
+                    [ div [ class "my-team flex flex-col mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
                     ]
 
@@ -418,14 +435,13 @@ viewMyPokemons model league =
         viewer : Int -> Pokemon -> Html Msg
         viewer idx pokemon =
             case Dict.get pokemon.name model.pokedex of
-                Just meta ->
-                    viewMyPokemon model meta idx pokemon
+                Just entry ->
+                    viewMyPokemon model entry idx pokemon
 
                 Nothing ->
-                    div [ class <| cardClass ++ " mb-2 relative bg-red-200" ]
+                    div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
-                            [ div [ class "flex flex-row items-center" ]
-                                [ viewNameTitle pokemon.name ]
+                            [ viewNameTitle pokemon.name
                             , deleteIcon <| RemovePokemon idx
                             ]
                         , div [] [ text <| "viewMyPokemons: no meta!" ]
@@ -434,45 +450,44 @@ viewMyPokemons model league =
     [ h2 [] [ text "My Pokemons" ]
     , chooser
     , league.myPokemon
+        |> Array.indexedMap viewer
         |> Array.toList
-        |> L.sortBy .name
-        |> L.indexedMap viewer
         |> div []
     ]
 
 
 viewMyPokemon : Model -> PokedexEntry -> Int -> Pokemon -> Html Msg
-viewMyPokemon model meta idx pokemon =
+viewMyPokemon model entry idx pokemon =
     let
         mainCls =
             if Maybe.map .name model.selectedPokemon == Just pokemon.name then
-                cardClass ++ " mb-2 relative bg-blue-100"
+                cardClass ++ " mb-2 bg-blue-100"
 
             else
-                cardClass ++ " mb-2 relative bg-white"
+                cardClass ++ " mb-2 bg-white"
 
         viewAttack_ selectMove isSelected attack =
             let
                 cls c =
-                    class <| "ml-1 rounded border-2 " ++ c
+                    class <| "ml-1 cursor-pointer rounded border-4 " ++ c
             in
-            span
+            div
                 [ cls <|
                     if isSelected attack then
                         "border-teal-300"
 
                     else
-                        "bg-gray-200"
+                        "border-transparent"
                 , onClick <| selectMove idx attack
                 ]
                 [ viewAttackBadge model.attacks attack ]
 
         attacks =
-            [ meta.fast
+            [ entry.fast
                 |> L.map (viewAttack_ SelectFastMove ((==) pokemon.fast))
                 |> (::) (text "Fast: ")
-                |> div [ class "flex flex-row flex-wrap" ]
-            , meta.charged
+                |> div [ class "flex flex-row flex-wrap ml-1" ]
+            , entry.charged
                 |> L.map (viewAttack_ SelectChargedMove (\atk -> Set.member atk pokemon.charged))
                 |> (::) (text "Charged: ")
                 |> div [ class "flex flex-row flex-wrap" ]
@@ -483,13 +498,14 @@ viewMyPokemon model meta idx pokemon =
                 [ div [ class "flex flex-row items-center" ]
                     [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
                     , h3
-                        [ class "text-xl font-bold truncate"
+                        [ class "text-xl font-bold cursor-pointer truncate"
                         , onClick <| SelectCandidate pokemon
+                        , title "Select for team"
                         ]
                         [ text <| pokemon.name ]
                     ]
                 , div [ class "flex flex-row items-center" ]
-                    [ meta.types
+                    [ entry.types
                         |> L.map (\tp -> span [ class "ml-2" ] [ ppType tp ])
                         |> div []
                     , deleteIcon <| RemovePokemon idx
@@ -857,10 +873,8 @@ summariseTeamInner attacks pokemons =
 -- -------------------
 
 
-ppFloat x =
-    round (10 * x)
-        |> toFloat
-        |> (\y -> String.fromFloat (y / 10))
+ppFloat =
+    FormatNumber.format { usLocale | decimals = Exact 1 }
 
 
 viewNameTitle name =
@@ -958,7 +972,7 @@ viewChooser pokedex search autocomplete =
     div [ class "chooser-container flex flex-row justify-between mb-2" ]
         [ Autocomplete.view viewConfig autocomplete choices search
             |> Html.map ACMsg
-        , span [ onClick <| SetChooser NoChooser ] [ matIcon "close" ]
+        , span [ onClick <| SetAutoComplete NoChooser ] [ matIcon "close" ]
         ]
 
 
@@ -966,7 +980,7 @@ viewChooserPlaceholder : PokedexChooser -> Html Msg
 viewChooserPlaceholder chooser =
     div [ class "flex flex-row justify-between mb-2" ]
         [ text "Add pokemon"
-        , span [ onClick <| SetChooser chooser ] [ matIcon "pencil" ]
+        , span [ onClick <| SetAutoComplete chooser ] [ matIcon "pencil" ]
         ]
 
 
