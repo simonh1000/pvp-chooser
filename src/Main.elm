@@ -97,7 +97,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
-    case Debug.log "" message of
+    case message of
         SwitchPage page ->
             ( { model | page = page }, Cmd.none )
 
