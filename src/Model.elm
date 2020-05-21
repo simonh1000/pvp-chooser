@@ -105,10 +105,13 @@ decodePersisted : Decoder Persisted
 decodePersisted =
     let
         dec s =
-            Decode.field s decodeLeague
+            Decode.oneOf
+                [ Decode.field s decodeLeague
+                , Decode.succeed blankLeague
+                ]
     in
     Decode.succeed Persisted
-        |> andMap (Decode.oneOf [ Decode.field "season" decodeSeason, Decode.succeed Ultra ])
+        |> andMap (Decode.oneOf [ Decode.field "season" decodeSeason, Decode.succeed Great ])
         |> andMap (dec "great")
         |> andMap (dec "ultra")
         |> andMap (dec "master")

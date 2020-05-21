@@ -320,7 +320,7 @@ view model =
                     model.master
     in
     div [ class "h-screen flex flex-col bg-gray-100" ]
-        [ pvpHeader
+        [ pvpHeader model.page
         , case model.page of
             Choosing ->
                 div [ cls "choosing" ]
@@ -347,37 +347,55 @@ view model =
                     [ h1 [] [ text "Fatal Error" ]
                     , div [] [ text string ]
                     ]
-        , pvpFooter
+        , pvpFooter model.season
         ]
 
 
-pvpHeader =
+pvpHeader : Page -> Html Msg
+pvpHeader tgt =
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
         [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
-        , div [ class "" ]
-            [ mkButton (SwitchPage Choosing) "Choosing"
-            , mkButton (SwitchPage TeamOptions) "Team options"
-            , mkButton (SwitchPage Battling) "Battling"
+        , mkRadioButtons
+            [ ( SwitchPage Choosing, "Choosing", Choosing == tgt )
+            , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
+            , ( SwitchPage Battling, "Battling", Battling == tgt )
             ]
         ]
 
 
-pvpFooter =
+pvpFooter : Season -> Html Msg
+pvpFooter tgt =
     footer [ class "flex flex-row items-center justify-end p-3 bg-gray-400" ]
-        [ div []
-            [ mkButton (SwitchSeason Great) "Great"
-            , mkButton (SwitchSeason Ultra) "Ultra"
-            , mkButton (SwitchSeason Master) "Master"
+        [ mkRadioButtons
+            [ ( SwitchSeason Great, "Great", Great == tgt )
+            , ( SwitchSeason Ultra, "Ultra", Ultra == tgt )
+            , ( SwitchSeason Master, "Master", Master == tgt )
             ]
         ]
 
 
-mkButton msg txt =
-    button
-        [ class "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-3"
-        , onClick msg
-        ]
-        [ text txt ]
+mkRadioButtons : List ( msg, String, Bool ) -> Html msg
+mkRadioButtons list =
+    let
+        cls selected =
+            if selected then
+                "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
+
+            else
+                "inline-block border border-white rounded hover:border-gray-200 text-blue-500 hover:bg-gray-200 py-1 px-3"
+
+        mkButton ( msg, txt, selected ) =
+            li [ class "mr-3" ]
+                [ button
+                    [ class <| cls selected
+                    , onClick msg
+                    ]
+                    [ text txt ]
+                ]
+    in
+    list
+        |> L.map mkButton
+        |> ul [ class "flex" ]
 
 
 
@@ -542,10 +560,14 @@ viewTeam model league =
 
         lookup : Maybe String -> Result String Pokemon
         lookup name =
-            league.myPokemon
-                |> Array.filter (\item -> Just item.name == name)
-                |> Array.get 0
-                |> Result.fromMaybe ("Could not lookup: " ++ Maybe.withDefault "" name)
+            if name == Nothing then
+                Err "Click on one of your pokemons to add to the team"
+
+            else
+                league.myPokemon
+                    |> Array.filter (\item -> Just item.name == name)
+                    |> Array.get 0
+                    |> Result.fromMaybe ("Could not lookup: " ++ Maybe.withDefault "" name)
 
         viewMbCand updater mbCand =
             let
@@ -574,18 +596,19 @@ viewTeam model league =
                     div [ class "drop-zone p-1 mb-2 border-gray-500" ]
                         content
 
-        score =
+        mbScore =
             Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookup team.cand1) (lookup team.cand2) (lookup team.cand3)
                 |> Result.map (Helpers.summariseTeam league.opponents)
                 |> Result.map (\x -> x / Helpers.calcWeightedTotal league.opponents)
                 |> Result.map ppFloat
-                |> RE.extract identity
     in
     [ h2 [] [ text "My Team" ]
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Just c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Just c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Just c }) team.cand3
-    , div [] [ text <| "team score: " ++ score ]
+    , mbScore
+        |> Result.map (\score -> div [] [ text <| "team score: " ++ score ])
+        |> Result.withDefault (text "")
     ]
 
 
