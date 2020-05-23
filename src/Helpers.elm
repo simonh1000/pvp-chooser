@@ -9,10 +9,8 @@ import Pokemon exposing (PType, effectiveness)
 import Set
 
 
-
--- calculate team scores
-
-
+{-| Creates permustations of 3 differents
+-}
 mkTeams : List a -> List ( a, a, a )
 mkTeams lst =
     let
@@ -30,6 +28,10 @@ mkTeams lst =
 
         hd :: tl ->
             L.map (\( x, y ) -> ( hd, x, y )) (inner tl) ++ mkTeams tl
+
+
+
+-- calculate team scores
 
 
 evaluateTeams : League -> List ( ( String, String, String ), Float )

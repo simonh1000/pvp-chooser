@@ -612,10 +612,13 @@ viewTeam model league =
                     div [ class "drop-zone p-1 mb-2 border-gray-500" ]
                         content
 
+        sumFreqs =
+            Helpers.calcWeightedTotal league.opponents
+
         mbScore =
             Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookup team.cand1) (lookup team.cand2) (lookup team.cand3)
                 |> Result.map (Helpers.summariseTeam league.opponents)
-                |> Result.map (\x -> x / Helpers.calcWeightedTotal league.opponents)
+                |> Result.map (\x -> x / sumFreqs)
                 |> Result.map ppFloat
     in
     [ h2 [] [ text "My Team" ]
