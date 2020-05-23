@@ -35,9 +35,12 @@ mkTeams lst =
 evaluateTeams : League -> List ( ( String, String, String ), Float )
 evaluateTeams league =
     let
+        sumFreqs =
+            calcWeightedTotal league.opponents
+
         mapper (( p1, p2, p3 ) as team) =
             ( ( p1.name, p2.name, p3.name )
-            , (summariseTeam league.opponents <| evaluateTeam team) / calcWeightedTotal league.opponents
+            , (summariseTeam league.opponents <| evaluateTeam team) / sumFreqs
             )
     in
     league.myPokemon
@@ -52,7 +55,7 @@ calcWeightedTotal opponents =
     opponents |> L.map .frequency |> L.sum |> toFloat
 
 
-{-| Always divide by 3 even though for weak pokemon we only return two (low) numbers
+{-| Calculates the weighted sum of scores against opponents
 -}
 summariseTeam : List Opponent -> Dict String Float -> Float
 summariseTeam opponents scores =
@@ -67,6 +70,9 @@ summariseTeam opponents scores =
     L.foldl go 0 opponents
 
 
+{-| Looks at how we a team will do against each opponent. Teams that are all weak to a particular opponent
+are particularly penalised.
+-}
 evaluateTeam : ( Pokemon, Pokemon, Pokemon ) -> Dict String Float
 evaluateTeam ( p1, p2, p3 ) =
     let
