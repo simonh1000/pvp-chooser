@@ -529,14 +529,11 @@ viewMyPokemon model entry idx pokemon =
 viewTeamOptions : Model -> League -> List (Html Msg)
 viewTeamOptions _ league =
     let
-        team =
-            [ league.team.cand1, league.team.cand2, league.team.cand3 ]
-
         viewOption : ( ( String, String, String ), Float ) -> Html Msg
         viewOption ( ( c1, c2, c3 ), score ) =
             let
                 selected =
-                    L.member (Just c1) team && L.member (Just c2) team && L.member (Just c3) team
+                    hasMember c1 league.team && hasMember c2 league.team && hasMember c3 league.team
             in
             div
                 [ classList
@@ -544,7 +541,7 @@ viewTeamOptions _ league =
                     , ( "mb-1 flex flex-row justify-between", True )
                     , ( "bg-blue-100", selected )
                     ]
-                , onClick <| SetTeam { cand1 = Just c1, cand2 = Just c2, cand3 = Just c3 }
+                , onClick <| SetTeam { cand1 = Chosen c1, cand2 = Chosen c2, cand3 = Chosen c3 }
                 ]
                 [ span [] [ [ c1, c2, c3 ] |> String.join ", " |> text ]
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
@@ -574,16 +571,24 @@ viewTeam model league =
         convertToPokedex pokemon pokedex =
             ( pokemon.name, { pokedex | fast = [ pokemon.fast ], charged = Set.toList pokemon.charged } )
 
-        lookup : Maybe String -> Result String Pokemon
-        lookup name =
-            if name == Nothing then
-                Err "Click on one of your pokemons to add to the team"
+        lookup : TeamMember -> Result String Pokemon
+        lookup tm =
+            let
+                fn name =
+                    league.myPokemon
+                        |> Array.filter (\item -> item.name == name)
+                        |> Array.get 0
+                        |> Result.fromMaybe ("Could not lookup: " ++ name)
+            in
+            case tm of
+                Unset ->
+                    Err "Click on one of your pokemons to add to the team"
 
-            else
-                league.myPokemon
-                    |> Array.filter (\item -> Just item.name == name)
-                    |> Array.get 0
-                    |> Result.fromMaybe ("Could not lookup: " ++ Maybe.withDefault "" name)
+                Chosen name ->
+                    fn name
+
+                Pinned name ->
+                    fn name
 
         viewMbCand updater mbCand =
             let
@@ -622,9 +627,9 @@ viewTeam model league =
                 |> Result.map ppFloat
     in
     [ h2 [] [ text "My Team" ]
-    , viewMbCand (\c -> UpdateTeam { team | cand1 = Just c }) team.cand1
-    , viewMbCand (\c -> UpdateTeam { team | cand2 = Just c }) team.cand2
-    , viewMbCand (\c -> UpdateTeam { team | cand3 = Just c }) team.cand3
+    , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
+    , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
+    , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3
     , mbScore
         |> Result.map (\score -> div [] [ text <| "team score: " ++ score ])
         |> Result.withDefault (text "")
@@ -810,7 +815,7 @@ summariseTeam model league =
     , league.team.cand2
     , league.team.cand3
     ]
-        |> L.filterMap identity
+        |> L.filterMap getMember
         |> summariseTeam2 model.attacks league.myPokemon
 
 
@@ -821,9 +826,10 @@ calcTeamScores model league opName =
             Helpers.evaluateBattle model.pokedex model.attacks pokemon opName
                 |> Result.toMaybe
 
-        mkItem mbCand =
+        mkItem : String -> String
+        mkItem cand =
             Maybe.map mkItemInner
-                (mbCand |> Maybe.andThen (lookupMyPokemon league.myPokemon))
+                (lookupMyPokemon league.myPokemon cand)
                 |> Maybe.andThen identity
                 |> Maybe.map ppFloat
                 |> Maybe.withDefault "."
@@ -832,7 +838,7 @@ calcTeamScores model league opName =
     , league.team.cand2
     , league.team.cand3
     ]
-        |> L.map mkItem
+        |> L.filterMap (getMember >> Maybe.map mkItem)
         |> String.join ", "
 
 
