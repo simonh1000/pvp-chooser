@@ -255,6 +255,19 @@ eqMember tgt teamMember =
             tgt == m
 
 
+togglePinning : String -> TeamMember -> TeamMember
+togglePinning tgt teamMember =
+    case teamMember of
+        Unset ->
+            Unset
+
+        Chosen name ->
+            ifThenElse (name == tgt) (Pinned name) teamMember
+
+        Pinned name ->
+            ifThenElse (name == tgt) (Chosen name) teamMember
+
+
 decodeTM : Decoder TeamMember
 decodeTM =
     Decode.oneOf
