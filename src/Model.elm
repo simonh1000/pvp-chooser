@@ -35,7 +35,7 @@ defaultModel =
     , ultra = blankLeague
     , master = blankLeague
     , debug = False
-    , page = Choosing
+    , page = Registering
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
     , pokedex = Dict.empty
@@ -81,7 +81,7 @@ encodeSeason s =
 
 
 type Page
-    = Choosing
+    = Registering
     | Battling
     | TeamOptions
     | FatalError String
@@ -193,8 +193,13 @@ blankTeam =
 
 
 hasMember : String -> Team -> Bool
-hasMember tgt t =
-    L.any (eqMember tgt) [ t.cand1, t.cand2, t.cand3 ]
+hasMember tgt =
+    L.any (eqMember tgt) << mkTeamList
+
+
+mkTeamList : Team -> List TeamMember
+mkTeamList t =
+    [ t.cand1, t.cand2, t.cand3 ]
 
 
 removeFromTeam : String -> Team -> Team
@@ -227,6 +232,16 @@ type TeamMember
     = Unset
     | Chosen String
     | Pinned String
+
+
+getPinnedMember : TeamMember -> Maybe String
+getPinnedMember teamMember =
+    case teamMember of
+        Pinned name ->
+            Just name
+
+        _ ->
+            Nothing
 
 
 getMember : TeamMember -> Maybe String

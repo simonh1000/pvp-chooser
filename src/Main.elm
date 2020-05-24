@@ -8,7 +8,7 @@ import Browser
 import Common.CoreHelpers exposing (ifThenElse)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
-import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam)
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupName)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -355,7 +355,7 @@ view model =
     div [ class "h-screen flex flex-col" ]
         [ pvpHeader model.page
         , case model.page of
-            Choosing ->
+            Registering ->
                 div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
                     , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
@@ -389,7 +389,7 @@ pvpHeader tgt =
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
         [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
         , mkRadioButtons
-            [ ( SwitchPage Choosing, "Choosing", Choosing == tgt )
+            [ ( SwitchPage Registering, "Registering", Registering == tgt )
             , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
             , ( SwitchPage Battling, "Battling", Battling == tgt )
             ]
@@ -594,22 +594,15 @@ viewTeam model league =
                     Err "Team member not chosen"
 
                 Chosen name ->
-                    lookupName name
+                    lookupName league.myPokemon name
 
                 Pinned name ->
-                    lookupName name
-
-        lookupName : String -> Result String Pokemon
-        lookupName name =
-            league.myPokemon
-                |> Array.filter (\item -> item.name == name)
-                |> Array.get 0
-                |> Result.fromMaybe ("Could not lookup: " ++ name)
+                    lookupName league.myPokemon name
 
         viewMbCand updater mbCand =
             let
                 handler name isPinned =
-                    lookupName name
+                    lookupName league.myPokemon name
                         |> Result.andThen
                             (\pokemon ->
                                 model.pokedex
@@ -693,7 +686,7 @@ viewTeamMember model name entry isPinned =
         , button [ onClick <| PinTeamMember name ]
             [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
         ]
-    , if model.page == Choosing then
+    , if model.page == Registering then
         attacks |> L.map viewAttk |> div []
 
       else

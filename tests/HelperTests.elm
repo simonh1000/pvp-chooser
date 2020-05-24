@@ -15,15 +15,15 @@ mkTeamsTests =
     describe "mkteams"
         [ test "3" <|
             \_ ->
-                mkTeams [ 1, 2, 3 ]
+                mkTeams3 [ 1, 2, 3 ]
                     |> Expect.equal [ ( 1, 2, 3 ) ]
         , test "4" <|
             \_ ->
-                mkTeams [ 1, 2, 3, 4 ]
+                mkTeams3 [ 1, 2, 3, 4 ]
                     |> Expect.equal [ ( 1, 2, 3 ), ( 1, 2, 4 ), ( 1, 3, 4 ), ( 2, 3, 4 ) ]
         , test "5" <|
             \_ ->
-                mkTeams [ 1, 2, 3, 4, 5 ]
+                mkTeams3 [ 1, 2, 3, 4, 5 ]
                     |> Expect.equal [ ( 1, 2, 3 ), ( 1, 2, 4 ), ( 1, 2, 5 ), ( 1, 3, 4 ), ( 1, 3, 5 ), ( 1, 4, 5 ), ( 2, 3, 4 ), ( 2, 3, 5 ), ( 2, 4, 5 ), ( 3, 4, 5 ) ]
         ]
 
