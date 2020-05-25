@@ -162,7 +162,7 @@ addScoresToLeague model league =
                 Ok res ->
                     res
 
-                Err err ->
+                Err _ ->
                     Dict.empty
     in
     { league | myPokemon = Array.map (\p -> { p | scores = addScores_ p }) league.myPokemon }
