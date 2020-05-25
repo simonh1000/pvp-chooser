@@ -911,8 +911,8 @@ viewTypes fn weaknesses title =
     div [ class "flex flex-row items-center mb-2" ]
         [ span [ class "mr-3" ] [ text title ]
         , div [ class "badge-list flex flex-row items-center" ]
-            [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppTypeShort tp ]) |> div [ class "flex flex-row" ]
-            , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppTypeShort tp ]) |> div [ class "flex flex-row flex-wrap" ]
+            [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div [ class "flex flex-row" ]
+            , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             ]
         ]
 
