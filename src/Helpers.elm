@@ -1,6 +1,6 @@
 module Helpers exposing (..)
 
-import Array
+import Array exposing (Array)
 import AssocList as Dict exposing (Dict)
 import Common.CoreHelpers exposing (foldResult)
 import List as L
@@ -9,25 +9,26 @@ import Pokemon exposing (PType, effectiveness)
 import Set
 
 
-{-| Creates permustations of 3 differents
+{-| Creates permutations of 3 different members of a list
 -}
-mkTeams : List a -> List ( a, a, a )
-mkTeams lst =
-    let
-        inner tl =
-            case tl of
-                hd :: tl_ ->
-                    L.map (\x -> ( hd, x )) tl_ ++ inner tl_
-
-                [] ->
-                    []
-    in
+mkTeams3 : List a -> List ( a, a, a )
+mkTeams3 lst =
     case lst of
         [] ->
             []
 
         hd :: tl ->
-            L.map (\( x, y ) -> ( hd, x, y )) (inner tl) ++ mkTeams tl
+            L.map (\( x, y ) -> ( hd, x, y )) (mkTeams2 tl) ++ mkTeams3 tl
+
+
+mkTeams2 : List a -> List ( a, a )
+mkTeams2 tl =
+    case tl of
+        hd :: tl_ ->
+            L.map (\x -> ( hd, x )) tl_ ++ mkTeams2 tl_
+
+        [] ->
+            []
 
 
 
@@ -44,12 +45,42 @@ evaluateTeams league =
             ( ( p1.name, p2.name, p3.name )
             , (summariseTeam league.opponents <| evaluateTeam team) / sumFreqs
             )
+
+        teams =
+            -- built taking into account which team members are pinned
+            case mkTeamList league.team |> L.filterMap getPinnedMember |> L.filterMap (lookupName league.myPokemon >> Result.toMaybe) of
+                [ p1 ] ->
+                    league.myPokemon
+                        |> Array.toList
+                        |> L.filter (\p -> p.name /= p1.name)
+                        |> mkTeams2
+                        |> L.map (\( p2, p3 ) -> ( p1, p2, p3 ))
+
+                [ p1, p2 ] ->
+                    league.myPokemon
+                        |> Array.toList
+                        |> L.filter (\p -> p.name /= p1.name && p.name /= p2.name)
+                        |> L.map (\p3 -> ( p1, p2, p3 ))
+
+                [ p1, p2, p3 ] ->
+                    [ ( p1, p2, p3 ) ]
+
+                _ ->
+                    league.myPokemon
+                        |> Array.toList
+                        |> mkTeams3
     in
-    league.myPokemon
-        |> Array.toList
-        |> mkTeams
+    teams
         |> L.map mapper
         |> L.sortBy (Tuple.second >> (*) -1)
+
+
+lookupName : Array Pokemon -> String -> Result String Pokemon
+lookupName myPokemon name =
+    myPokemon
+        |> Array.filter (\item -> item.name == name)
+        |> Array.get 0
+        |> Result.fromMaybe ("Could not lookup: " ++ name)
 
 
 calcWeightedTotal : List Opponent -> Float
@@ -131,7 +162,7 @@ addScoresToLeague model league =
                 Ok res ->
                     res
 
-                Err err ->
+                Err _ ->
                     Dict.empty
     in
     { league | myPokemon = Array.map (\p -> { p | scores = addScores_ p }) league.myPokemon }

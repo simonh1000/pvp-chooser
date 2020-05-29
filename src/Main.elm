@@ -8,7 +8,7 @@ import Browser
 import Common.CoreHelpers exposing (ifThenElse)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
-import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam)
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupName)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -84,8 +84,9 @@ type Msg
     | SelectFastMove Int String
     | SelectChargedMove Int String
     | RemovePokemon Int
+    | PinTeamMember String
       -- Team chooser
-    | SetTeam Team
+    | SetTeam ( String, String, String )
       -- middle
     | SelectCandidate Pokemon -- first part of adding to team
     | UpdateTeam Team -- second part
@@ -203,10 +204,29 @@ update message model =
                 |> updateLeague updater
                 |> andPersist
 
+        PinTeamMember name ->
+            let
+                updater l =
+                    { l
+                        | team =
+                            { cand1 = togglePinning name l.team.cand1
+                            , cand2 = togglePinning name l.team.cand2
+                            , cand3 = togglePinning name l.team.cand3
+                            }
+                    }
+            in
+            model
+                |> updateLeague updater
+                |> andPersist
+
         -- team chooser
         SetTeam team ->
+            let
+                updater l =
+                    { l | team = copyPinning l.team team }
+            in
             model
-                |> updateLeague (\l -> { l | team = team })
+                |> updateLeague updater
                 |> andPersist
 
         SelectCandidate pokemon ->
@@ -339,7 +359,7 @@ view model =
     div [ class "h-screen flex flex-col" ]
         [ pvpHeader model.page
         , case model.page of
-            Choosing ->
+            Registering ->
                 div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
                     , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
@@ -373,7 +393,7 @@ pvpHeader tgt =
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
         [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
         , mkRadioButtons
-            [ ( SwitchPage Choosing, "Choosing", Choosing == tgt )
+            [ ( SwitchPage Registering, "Registering", Registering == tgt )
             , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
             , ( SwitchPage Battling, "Battling", Battling == tgt )
             ]
@@ -529,14 +549,11 @@ viewMyPokemon model entry idx pokemon =
 viewTeamOptions : Model -> League -> List (Html Msg)
 viewTeamOptions _ league =
     let
-        team =
-            [ league.team.cand1, league.team.cand2, league.team.cand3 ]
-
         viewOption : ( ( String, String, String ), Float ) -> Html Msg
         viewOption ( ( c1, c2, c3 ), score ) =
             let
                 selected =
-                    L.member (Just c1) team && L.member (Just c2) team && L.member (Just c3) team
+                    hasMember c1 league.team && hasMember c2 league.team && hasMember c3 league.team
             in
             div
                 [ classList
@@ -544,7 +561,7 @@ viewTeamOptions _ league =
                     , ( "mb-1 flex flex-row justify-between", True )
                     , ( "bg-blue-100", selected )
                     ]
-                , onClick <| SetTeam { cand1 = Just c1, cand2 = Just c2, cand3 = Just c3 }
+                , onClick <| SetTeam ( c1, c2, c3 )
                 ]
                 [ span [] [ [ c1, c2, c3 ] |> String.join ", " |> text ]
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
@@ -574,22 +591,22 @@ viewTeam model league =
         convertToPokedex pokemon pokedex =
             ( pokemon.name, { pokedex | fast = [ pokemon.fast ], charged = Set.toList pokemon.charged } )
 
-        lookup : Maybe String -> Result String Pokemon
-        lookup name =
-            if name == Nothing then
-                Err "Click on one of your pokemons to add to the team"
+        lookupTeamMember : TeamMember -> Result String Pokemon
+        lookupTeamMember teamMember =
+            case teamMember of
+                Unset ->
+                    Err "Team member not chosen"
 
-            else
-                league.myPokemon
-                    |> Array.filter (\item -> Just item.name == name)
-                    |> Array.get 0
-                    |> Result.fromMaybe ("Could not lookup: " ++ Maybe.withDefault "" name)
+                Chosen name ->
+                    lookupName league.myPokemon name
+
+                Pinned name ->
+                    lookupName league.myPokemon name
 
         viewMbCand updater mbCand =
             let
-                content =
-                    mbCand
-                        |> lookup
+                handler name isPinned =
+                    lookupName league.myPokemon name
                         |> Result.andThen
                             (\pokemon ->
                                 model.pokedex
@@ -597,8 +614,19 @@ viewTeam model league =
                                     |> Maybe.map (convertToPokedex pokemon)
                                     |> Result.fromMaybe ("Could not look up " ++ pokemon.name ++ " in pokedex")
                             )
-                        |> Result.map (\( name, entry ) -> viewTeamMember model name entry)
+                        |> Result.map (\( _, entry ) -> viewTeamMember model name entry isPinned)
                         |> RE.extract (\err -> [ text err ])
+
+                content =
+                    case mbCand of
+                        Unset ->
+                            []
+
+                        Chosen name ->
+                            handler name False
+
+                        Pinned name ->
+                            handler name True
             in
             case model.selectedPokemon of
                 Just selected ->
@@ -616,23 +644,23 @@ viewTeam model league =
             Helpers.calcWeightedTotal league.opponents
 
         mbScore =
-            Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookup team.cand1) (lookup team.cand2) (lookup team.cand3)
+            Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookupTeamMember team.cand1) (lookupTeamMember team.cand2) (lookupTeamMember team.cand3)
                 |> Result.map (Helpers.summariseTeam league.opponents)
                 |> Result.map (\x -> x / sumFreqs)
                 |> Result.map ppFloat
     in
     [ h2 [] [ text "My Team" ]
-    , viewMbCand (\c -> UpdateTeam { team | cand1 = Just c }) team.cand1
-    , viewMbCand (\c -> UpdateTeam { team | cand2 = Just c }) team.cand2
-    , viewMbCand (\c -> UpdateTeam { team | cand3 = Just c }) team.cand3
+    , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
+    , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
+    , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3
     , mbScore
         |> Result.map (\score -> div [] [ text <| "team score: " ++ score ])
         |> Result.withDefault (text "")
     ]
 
 
-viewTeamMember : Model -> String -> PokedexEntry -> List (Html msg)
-viewTeamMember model name entry =
+viewTeamMember : Model -> String -> PokedexEntry -> Bool -> List (Html Msg)
+viewTeamMember model name entry isPinned =
     let
         go attk acc =
             case attackToType model.attacks attk of
@@ -657,14 +685,18 @@ viewTeamMember model name entry =
                 , viewAttack1 effectiveness tp
                 ]
     in
-    [ viewNameTitle name
-    , if model.page == Choosing then
+    [ div [ class "flex flex-row justify-between" ]
+        [ viewNameTitle name
+        , button [ onClick <| PinTeamMember name ]
+            [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
+        ]
+    , if model.page == Registering then
         attacks |> L.map viewAttk |> div []
 
       else
         text ""
     ]
-        ++ viewPokemonResistsAndWeaknesses model name
+        ++ viewPokedexResistsAndWeaknesses entry
 
 
 
@@ -810,7 +842,7 @@ summariseTeam model league =
     , league.team.cand2
     , league.team.cand3
     ]
-        |> L.filterMap identity
+        |> L.filterMap getMember
         |> summariseTeam2 model.attacks league.myPokemon
 
 
@@ -821,9 +853,10 @@ calcTeamScores model league opName =
             Helpers.evaluateBattle model.pokedex model.attacks pokemon opName
                 |> Result.toMaybe
 
-        mkItem mbCand =
+        mkItem : String -> String
+        mkItem cand =
             Maybe.map mkItemInner
-                (mbCand |> Maybe.andThen (lookupMyPokemon league.myPokemon))
+                (lookupMyPokemon league.myPokemon cand)
                 |> Maybe.andThen identity
                 |> Maybe.map ppFloat
                 |> Maybe.withDefault "."
@@ -832,7 +865,7 @@ calcTeamScores model league opName =
     , league.team.cand2
     , league.team.cand3
     ]
-        |> L.map mkItem
+        |> L.filterMap (getMember >> Maybe.map mkItem)
         |> String.join ", "
 
 
@@ -886,13 +919,17 @@ viewNameTitle name =
 
 viewPokemonResistsAndWeaknesses : Model -> String -> List (Html msg)
 viewPokemonResistsAndWeaknesses model name =
+    model.pokedex
+        |> Dict.get name
+        |> Maybe.map viewPokedexResistsAndWeaknesses
+        |> Maybe.withDefault []
+
+
+viewPokedexResistsAndWeaknesses : PokedexEntry -> List (Html msg)
+viewPokedexResistsAndWeaknesses entry =
     let
         effectivenesses =
-            model.pokedex
-                |> Dict.get name
-                |> Maybe.map .types
-                |> Maybe.withDefault []
-                |> getDefenceMeta effectiveness
+            getDefenceMeta effectiveness entry.types
     in
     [ viewTypes (\_ f -> f > 1.1) effectivenesses "Weak to"
     , viewTypes (\_ f -> f < 0.9) effectivenesses "Resists"

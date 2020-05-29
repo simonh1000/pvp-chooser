@@ -3,7 +3,7 @@ module Model exposing (..)
 import Array exposing (Array)
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
-import Common.CoreHelpers exposing (decodeSimpleCustomTypes, ifThenElse)
+import Common.CoreHelpers exposing (decodeSimpleCustomTypes, exactMatchString, ifThenElse)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
@@ -18,10 +18,10 @@ type alias Model =
     , ultra : League
     , master : League
     , -- session data
-      debug : Bool
-    , page : Page
+      page : Page
     , selectedPokemon : Maybe Pokemon
     , chooser : PokedexChooser
+    , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
     , attacks : Dict String MoveType
@@ -35,7 +35,7 @@ defaultModel =
     , ultra = blankLeague
     , master = blankLeague
     , debug = False
-    , page = Choosing
+    , page = Registering
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
     , pokedex = Dict.empty
@@ -81,7 +81,7 @@ encodeSeason s =
 
 
 type Page
-    = Choosing
+    = Registering
     | Battling
     | TeamOptions
     | FatalError String
@@ -179,38 +179,147 @@ decodeLeague =
 
 
 type alias Team =
-    { cand1 : Maybe String
-    , cand2 : Maybe String
-    , cand3 : Maybe String
+    { cand1 : TeamMember
+    , cand2 : TeamMember
+    , cand3 : TeamMember
     }
 
 
 blankTeam =
-    { cand1 = Nothing
-    , cand2 = Nothing
-    , cand3 = Nothing
+    { cand1 = Unset
+    , cand2 = Unset
+    , cand3 = Unset
     }
+
+
+copyPinning : Team -> ( String, String, String ) -> Team
+copyPinning currTeam ( p1, p2, p3 ) =
+    let
+        convertor : String -> TeamMember
+        convertor p =
+            if L.member (Pinned p) (mkTeamList currTeam) then
+                Pinned p
+
+            else
+                Chosen p
+    in
+    { cand1 = convertor p1
+    , cand2 = convertor p2
+    , cand3 = convertor p3
+    }
+
+
+hasMember : String -> Team -> Bool
+hasMember tgt =
+    L.any (eqMember tgt) << mkTeamList
+
+
+mkTeamList : Team -> List TeamMember
+mkTeamList t =
+    [ t.cand1, t.cand2, t.cand3 ]
 
 
 removeFromTeam : String -> Team -> Team
 removeFromTeam name team =
-    { cand1 = ifThenElse (Just name == team.cand1) Nothing team.cand1
-    , cand2 = ifThenElse (Just name == team.cand2) Nothing team.cand2
-    , cand3 = ifThenElse (Just name == team.cand3) Nothing team.cand3
+    { cand1 = ifThenElse (eqMember name team.cand1) Unset team.cand1
+    , cand2 = ifThenElse (eqMember name team.cand2) Unset team.cand2
+    , cand3 = ifThenElse (eqMember name team.cand3) Unset team.cand3
     }
 
 
+decodeTeam : Decoder Team
 decodeTeam =
     Decode.map3 Team
-        (Decode.maybe <| Decode.index 0 Decode.string)
-        (Decode.maybe <| Decode.index 1 Decode.string)
-        (Decode.maybe <| Decode.index 2 Decode.string)
+        (Decode.index 0 decodeTM)
+        (Decode.index 1 decodeTM)
+        (Decode.index 2 decodeTM)
 
 
+encodeTeam : Team -> Value
 encodeTeam t =
     [ t.cand1, t.cand2, t.cand3 ]
-        |> L.filterMap identity
-        |> Encode.list Encode.string
+        |> Encode.list encodeTM
+
+
+
+--
+
+
+type TeamMember
+    = Unset
+    | Chosen String
+    | Pinned String
+
+
+getPinnedMember : TeamMember -> Maybe String
+getPinnedMember teamMember =
+    case teamMember of
+        Pinned name ->
+            Just name
+
+        _ ->
+            Nothing
+
+
+getMember : TeamMember -> Maybe String
+getMember teamMember =
+    case teamMember of
+        Unset ->
+            Nothing
+
+        Chosen name ->
+            Just name
+
+        Pinned name ->
+            Just name
+
+
+eqMember : String -> TeamMember -> Bool
+eqMember tgt teamMember =
+    case teamMember of
+        Unset ->
+            False
+
+        Chosen m ->
+            tgt == m
+
+        Pinned m ->
+            tgt == m
+
+
+togglePinning : String -> TeamMember -> TeamMember
+togglePinning tgt teamMember =
+    case teamMember of
+        Unset ->
+            Unset
+
+        Chosen name ->
+            ifThenElse (name == tgt) (Pinned name) teamMember
+
+        Pinned name ->
+            ifThenElse (name == tgt) (Chosen name) teamMember
+
+
+decodeTM : Decoder TeamMember
+decodeTM =
+    Decode.oneOf
+        [ exactMatchString Decode.string "Unset" (Decode.succeed Unset)
+        , exactMatchString (Decode.index 0 Decode.string) "Chosen" (Decode.map Chosen <| Decode.index 1 Decode.string)
+        , exactMatchString (Decode.index 0 Decode.string) "Pinned" (Decode.map Pinned <| Decode.index 1 Decode.string)
+        ]
+
+
+encodeTM : TeamMember -> Value
+encodeTM teamMember =
+    case teamMember of
+        Unset ->
+            Encode.string "Unset"
+
+        Chosen m ->
+            Encode.list Encode.string [ "Chosen", m ]
+
+        Pinned m ->
+            Encode.list Encode.string [ "Pinned", m ]
 
 
 
