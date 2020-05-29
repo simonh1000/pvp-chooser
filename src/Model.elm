@@ -18,10 +18,10 @@ type alias Model =
     , ultra : League
     , master : League
     , -- session data
-      debug : Bool
-    , page : Page
+      page : Page
     , selectedPokemon : Maybe Pokemon
     , chooser : PokedexChooser
+    , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
     , attacks : Dict String MoveType
@@ -189,6 +189,23 @@ blankTeam =
     { cand1 = Unset
     , cand2 = Unset
     , cand3 = Unset
+    }
+
+
+copyPinning : Team -> ( String, String, String ) -> Team
+copyPinning currTeam ( p1, p2, p3 ) =
+    let
+        convertor : String -> TeamMember
+        convertor p =
+            if L.member (Pinned p) (mkTeamList currTeam) then
+                Pinned p
+
+            else
+                Chosen p
+    in
+    { cand1 = convertor p1
+    , cand2 = convertor p2
+    , cand3 = convertor p3
     }
 
 

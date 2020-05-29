@@ -86,7 +86,7 @@ type Msg
     | RemovePokemon Int
     | PinTeamMember String
       -- Team chooser
-    | SetTeam Team
+    | SetTeam ( String, String, String )
       -- middle
     | SelectCandidate Pokemon -- first part of adding to team
     | UpdateTeam Team -- second part
@@ -221,8 +221,12 @@ update message model =
 
         -- team chooser
         SetTeam team ->
+            let
+                updater l =
+                    { l | team = copyPinning l.team team }
+            in
             model
-                |> updateLeague (\l -> { l | team = team })
+                |> updateLeague updater
                 |> andPersist
 
         SelectCandidate pokemon ->
@@ -557,7 +561,7 @@ viewTeamOptions _ league =
                     , ( "mb-1 flex flex-row justify-between", True )
                     , ( "bg-blue-100", selected )
                     ]
-                , onClick <| SetTeam { cand1 = Chosen c1, cand2 = Chosen c2, cand3 = Chosen c3 }
+                , onClick <| SetTeam ( c1, c2, c3 )
                 ]
                 [ span [] [ [ c1, c2, c3 ] |> String.join ", " |> text ]
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
