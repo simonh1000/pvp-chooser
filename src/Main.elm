@@ -502,7 +502,10 @@ viewMyPokemon model entry idx pokemon =
                 ]
                 [ viewAttackBadge model.attacks attack ]
 
-        attacks =
+        attacksSummary =
+            getAttackTypes model.attacks entry
+
+        attacksDetail =
             [ entry.fast
                 |> L.map (viewAttack_ SelectFastMove ((==) pokemon.fast))
                 |> (::) (text "Fast: ")
@@ -523,21 +526,43 @@ viewMyPokemon model entry idx pokemon =
                         , title "Select for team"
                         ]
                         [ text <| pokemon.name ]
-                    ]
-                , div [ class "flex flex-row items-center" ]
-                    [ entry.types
+                    , entry.types
                         |> L.map (\tp -> span [ class "ml-2" ] [ ppType tp ])
                         |> div []
+                    ]
+                , div [ class "flex flex-row items-center" ]
+                    [ attacksSummary
                     , deleteIcon <| RemovePokemon idx
                     ]
                 ]
     in
     div [ class mainCls ] <|
         if pokemon.expanded then
-            topLine :: attacks
+            topLine :: attacksDetail
 
         else
             [ topLine ]
+
+
+getAttackTypes attacks entry =
+    let
+        fn : String -> List PType -> List PType
+        fn attk acc =
+            case Dict.get attk attacks |> Maybe.map .type_ of
+                Just tp ->
+                    if L.member tp acc then
+                        acc
+
+                    else
+                        tp :: acc
+
+                Nothing ->
+                    acc
+    in
+    (entry.fast ++ entry.charged)
+        |> L.foldl fn []
+        |> L.map ppTypeShort
+        |> div [ class "flex flex-row text-xs" ]
 
 
 
@@ -721,14 +746,13 @@ viewOpponentsChoosing model league =
                 headerRow =
                     div [ class "flex flex-row align-items justify-between" ]
                         [ div
-                            [ class "flex flex-row items-center"
-                            ]
+                            [ class "flex flex-row items-center" ]
                             [ toggleBtn (ToggleOpponent op.name) op.expanded
                             , viewNameTitle op.name
+                            , entry.types |> L.map (\tp -> span [ class "ml-1" ] [ ppType tp ]) |> div []
                             ]
                         , div [ class "flex flex-row items-center" ]
-                            [ entry.types |> L.map (\tp -> span [ class "ml-1" ] [ ppType tp ]) |> div []
-                            , button [ onClick <| UpdateOpponentFrequency op.name -1, class "ml-2 mr-1" ] [ text "-" ]
+                            [ button [ onClick <| UpdateOpponentFrequency op.name -1, class "ml-2 mr-1" ] [ text "-" ]
                             , span [ class "mr-1" ] [ text <| String.fromInt op.frequency ]
                             , button [ onClick <| UpdateOpponentFrequency op.name 1, class "mr-1" ] [ text "+" ]
                             , deleteIcon <| RemoveOpponent op.name
@@ -1088,7 +1112,7 @@ ppTypeShort pType =
     in
     div
         [ style "background-color" col
-        , class "flex flex-row items-center justify-center badge round"
+        , class "flex flex-row items-center justify-center badge round small"
         ]
         [ text <| String.left 1 str ]
 

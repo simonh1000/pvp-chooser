@@ -50,6 +50,11 @@ button.toggle:hover {
 .btn {
     @apply bg-blue-500 text-white font-bold py-2 px-4 rounded;
 }
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 /*.btn-delete {*/
 /*    position: absolute;*/
@@ -60,25 +65,28 @@ button.toggle:hover {
     line-height: 30px;
 }
 
+.badge {
+    @apply text-white;
+    max-width: 100px;
+}
+
 .badge.round {
     width: 25px;
     height: 25px;
     border-radius: 18px;
 }
+.badge.small {
+    width: 20px;
+    height: 20px;
+    border-radius: 18px;
+    @apply text-xs
+}
 
-.badge {
-    @apply text-white;
-    max-width: 100px;
-}
-.truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
 .badge + .badge {
     @apply ml-1
 }
 .super .badge {
+    /* super resist/attack */
     @apply font-bold;
 }
 .drop-zone {
