@@ -491,13 +491,8 @@ viewMyPokemon model entry idx pokemon =
                 cls c =
                     class <| "ml-1 cursor-pointer rounded border-4 " ++ c
             in
-            div
-                [ cls <|
-                    if isSelected attack then
-                        "border-teal-300"
-
-                    else
-                        "border-transparent"
+            span
+                [ cls <| ifThenElse (isSelected attack) "border-teal-300" "border-transparent"
                 , onClick <| selectMove idx attack
                 ]
                 [ viewAttackBadge model.attacks attack ]
@@ -509,11 +504,11 @@ viewMyPokemon model entry idx pokemon =
             [ entry.fast
                 |> L.map (viewAttack_ SelectFastMove ((==) pokemon.fast))
                 |> (::) (text "Fast: ")
-                |> div [ class "flex flex-row flex-wrap ml-1" ]
+                |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
             , entry.charged
                 |> L.map (viewAttack_ SelectChargedMove (\atk -> Set.member atk pokemon.charged))
                 |> (::) (text "Charged: ")
-                |> div [ class "flex flex-row flex-wrap" ]
+                |> div [ class "flex flex-row flex-wrap items-center" ]
             ]
 
         topLine =
@@ -526,9 +521,7 @@ viewMyPokemon model entry idx pokemon =
                         , title "Select for team"
                         ]
                         [ text <| pokemon.name ]
-                    , entry.types
-                        |> L.map (\tp -> span [ class "ml-2" ] [ ppType tp ])
-                        |> div []
+                    , ppTypes entry.types
                     ]
                 , div [ class "flex flex-row items-center" ]
                     [ attacksSummary
@@ -710,8 +703,11 @@ viewTeamMember model name entry isPinned =
                 , viewAttack1 effectiveness tp
                 ]
     in
-    [ div [ class "flex flex-row justify-between" ]
-        [ viewNameTitle name
+    [ div [ class "flex flex-row items-center justify-between mb-2" ]
+        [ div [ class "flex flex-row items-center" ]
+            [ viewNameTitle name
+            , ppTypes entry.types
+            ]
         , button [ onClick <| PinTeamMember name ]
             [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
         ]
@@ -749,7 +745,7 @@ viewOpponentsChoosing model league =
                             [ class "flex flex-row items-center" ]
                             [ toggleBtn (ToggleOpponent op.name) op.expanded
                             , viewNameTitle op.name
-                            , entry.types |> L.map (\tp -> span [ class "ml-1" ] [ ppType tp ]) |> div []
+                            , ppTypes entry.types
                             ]
                         , div [ class "flex flex-row items-center" ]
                             [ button [ onClick <| UpdateOpponentFrequency op.name -1, class "ml-2 mr-1" ] [ text "-" ]
@@ -761,7 +757,16 @@ viewOpponentsChoosing model league =
 
                 content =
                     if op.expanded then
-                        viewPokemonResistsAndWeaknesses model op.name
+                        [ entry.fast
+                            |> L.map (viewAttackBadge model.attacks)
+                            |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
+                            |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
+                        , entry.charged
+                            |> L.map (viewAttackBadge model.attacks)
+                            |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
+                            |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
+                        , div [] <| viewPokemonResistsAndWeaknesses model op.name
+                        ]
 
                     else
                         []
@@ -1093,6 +1098,11 @@ deleteIcon msg =
         , onClick msg
         ]
         [ matIcon "delete-outline" ]
+
+
+ppTypes : List PType -> Html msg
+ppTypes types =
+    types |> L.map (\tp -> span [ class "ml-2" ] [ ppType tp ]) |> div [ class "flex flex-row items-center" ]
 
 
 ppType : PType -> Html msg
