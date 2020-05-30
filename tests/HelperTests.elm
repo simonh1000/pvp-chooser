@@ -33,14 +33,13 @@ mkTeamsTests =
 
 
 evaluateBattleTests =
-    only <|
-        describe "evaluateBattle"
-            [ test "despite a good attack, azumarill repels a stunfisk much better" <|
-                \_ ->
-                    evaluateBattle pokedex attacks stunfisk "Azumarill"
-                        |> Result.withDefault -1
-                        |> Expect.within (Absolute 0.1) 0.8
-            ]
+    describe "evaluateBattle"
+        [ test "despite a good attack, azumarill repels a stunfisk much better" <|
+            \_ ->
+                evaluateBattle pokedex attacks stunfisk "Azumarill"
+                    |> Result.withDefault -1
+                    |> Expect.within (Absolute 0.1) 0.8
+        ]
 
 
 evaluateAgainstOpponentTests =
@@ -71,6 +70,12 @@ calculateEffectivenessTests =
                 effectiveness
                     |> Dict.get Water
                     |> Maybe.map (calculateEffectiveness [ Water, Dragon ])
+                    |> Expect.equal (Just 0.390625)
+        , test "figher -> alolan marowak" <|
+            \_ ->
+                effectiveness
+                    |> Dict.get Fighting
+                    |> Maybe.map (calculateEffectiveness [ Fire, Ghost ])
                     |> Expect.equal (Just 0.390625)
         ]
 
