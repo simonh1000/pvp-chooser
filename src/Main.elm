@@ -37,7 +37,8 @@ init value =
                         , attacks = Dict.union flags.fast flags.charged
                         , debug = flags.debug
                         , page =
-                            getCurrentLeague flags.persisted
+                            flags.persisted
+                                |> getCurrentLeague
                                 |> .opponents
                                 |> sortOpponents
                                 |> Registering
@@ -108,7 +109,23 @@ update message model =
             ( { model | page = page }, Cmd.none )
 
         SwitchSeason season ->
-            { model | season = season } |> andPersist
+            let
+                newModel =
+                    { model | season = season }
+
+                newPage =
+                    case model.page of
+                        Registering _ ->
+                            newModel
+                                |> getCurrentLeague
+                                |> .opponents
+                                |> sortOpponents
+                                |> Registering
+
+                        p ->
+                            p
+            in
+            { newModel | page = newPage } |> andPersist
 
         -- Autocomplete
         ACMsg msg ->
