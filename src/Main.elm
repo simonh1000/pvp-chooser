@@ -55,7 +55,6 @@ type alias Flags =
     , pokedex : Dict String PokedexEntry -- keys by lowercase name
     , fast : Dict String MoveType
     , charged : Dict String MoveType
-    , effectiveness : Effectiveness
     , debug : Bool
     }
 
@@ -67,7 +66,6 @@ decodeFlags =
         |> andMap (Decode.field "pokemon" decodePokedex)
         |> andMap (Decode.field "fast" decodeMoves)
         |> andMap (Decode.field "charged" decodeMoves)
-        |> andMap (Decode.field "effectiveness" decodeEffectiveness)
         |> andMap (Decode.field "debug" Decode.bool)
 
 

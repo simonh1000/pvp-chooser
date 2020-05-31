@@ -10,7 +10,6 @@ const storageKey = "pokemons";
 import pokemon from "./assets/pokedex.json";
 import charged from "./assets/chargedmoves.json";
 import fast from "./assets/fastmoves.json";
-import effectiveness from "./assets/effectiveness.json";
 
 const myPokemon = JSON.parse(localStorage.getItem(storageKey) || "[]");
 
@@ -18,7 +17,6 @@ const flags = {
     pokemon,
     charged,
     fast,
-    effectiveness,
     myPokemon,
     debug : false
 };
