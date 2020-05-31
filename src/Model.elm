@@ -35,12 +35,38 @@ defaultModel =
     , ultra = blankLeague
     , master = blankLeague
     , debug = False
-    , page = Registering
+    , page = Registering []
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
     , pokedex = Dict.empty
     , attacks = Dict.empty
     }
+
+
+updateLeague : (League -> League) -> Model -> Model
+updateLeague fn model =
+    case model.season of
+        Great ->
+            { model | great = fn model.great }
+
+        Ultra ->
+            { model | ultra = fn model.ultra }
+
+        Master ->
+            { model | master = fn model.master }
+
+
+getCurrentLeague : { a | season : Season, great : League, ultra : League, master : League } -> League
+getCurrentLeague model =
+    case model.season of
+        Great ->
+            model.great
+
+        Ultra ->
+            model.ultra
+
+        Master ->
+            model.master
 
 
 
@@ -81,10 +107,20 @@ encodeSeason s =
 
 
 type Page
-    = Registering
-    | Battling
+    = Registering (List String)
     | TeamOptions
+    | Battling
     | FatalError String
+
+
+isRegistering : Page -> Bool
+isRegistering page =
+    case page of
+        Registering _ ->
+            True
+
+        _ ->
+            False
 
 
 
@@ -136,19 +172,20 @@ encodePersisted model =
 type alias League =
     { myPokemon : Array Pokemon
     , team : Team
-    , opponents : List Opponent
+    , opponents : Dict String Opponent -- name => opponent
     }
 
 
+blankLeague : League
 blankLeague =
-    League Array.empty blankTeam []
+    League Array.empty blankTeam Dict.empty
 
 
 encodeLeague : League -> Value
 encodeLeague league =
     [ ( "myPokemon", Encode.list encodePokemon <| Array.toList league.myPokemon )
     , ( "team", encodeTeam league.team )
-    , ( "opponents", Encode.list encodeOpponent league.opponents )
+    , ( "opponents", encodeOpponents league.opponents )
     ]
         |> Encode.object
 
@@ -169,7 +206,7 @@ decodeLeague =
                 , Decode.succeed blankTeam
                 ]
             )
-        |> andMap (Decode.field "opponents" <| Decode.list decodeOpponent)
+        |> andMap (Decode.field "opponents" decodeOpponents)
 
 
 
@@ -367,18 +404,33 @@ encodePokemon p =
 
 type alias Opponent =
     { expanded : Bool
-    , name : String
     , frequency : Int
     }
 
 
-decodeOpponent : Decoder Opponent
+decodeOpponents : Decoder (Dict String Opponent)
+decodeOpponents =
+    Decode.list decodeOpponent
+        |> Decode.map Dict.fromList
+
+
+encodeOpponents : Dict String Opponent -> Value
+encodeOpponents opponents =
+    opponents
+        |> Dict.toList
+        |> L.map encodeOpponent
+        |> Encode.list identity
+
+
+decodeOpponent : Decoder ( String, Opponent )
 decodeOpponent =
-    Decode.map2 (Opponent False) (Decode.index 0 Decode.string) (Decode.index 1 Decode.int)
+    Decode.map2 Tuple.pair
+        (Decode.index 0 Decode.string)
+        (Decode.map (Opponent False) <| Decode.index 1 Decode.int)
 
 
-encodeOpponent : Opponent -> Value
-encodeOpponent { name, frequency } =
+encodeOpponent : ( String, Opponent ) -> Value
+encodeOpponent ( name, { frequency } ) =
     Encode.list identity [ Encode.string name, Encode.int frequency ]
 
 

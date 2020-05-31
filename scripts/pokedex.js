@@ -7,11 +7,11 @@ const pokemon_types = require("./pokemon_types.json");
 
 const getType = (name, form) => {
     let tmp = pokemon_types.filter(p => {
-        if (form != "Normal") {
-            return p.pokemon_name == name && p.form == form;
+        if (form !== "Normal") {
+            return p.pokemon_name === name && p.form === form;
         } else
             // name must match and either form is Normal or it is not present
-            return p.pokemon_name == name && (p.form == form || typeof p.form == 'undefined');
+            return p.pokemon_name === name && (p.form === form || typeof p.form == 'undefined');
     });
     if (tmp.length) {
         return tmp[0].type;

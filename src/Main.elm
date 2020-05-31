@@ -30,12 +30,17 @@ init value =
                 model =
                     { defaultModel
                         | season = flags.persisted.season
-                        , pokedex = flags.pokedex
-                        , attacks = Dict.union flags.fast flags.charged
                         , great = flags.persisted.great
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
+                        , pokedex = flags.pokedex
+                        , attacks = Dict.union flags.fast flags.charged
                         , debug = flags.debug
+                        , page =
+                            getCurrentLeague flags.persisted
+                                |> .opponents
+                                |> sortOpponents
+                                |> Registering
                     }
             in
             ( addScores model, Cmd.none )
@@ -155,7 +160,7 @@ update message model =
                                     { l | myPokemon = Array.push pokemon l.myPokemon }
 
                                 else
-                                    { l | opponents = Opponent False name 1 :: l.opponents }
+                                    { l | opponents = Dict.insert name (Opponent False 1) l.opponents }
                             )
             in
             { newModel | chooser = mapSearch (\_ -> "") model.chooser } |> andPersist
@@ -248,21 +253,21 @@ update message model =
 
         ToggleOpponent name ->
             let
-                mapper op =
-                    ifThenElse (op.name == name) { op | expanded = not op.expanded } op
+                mapper n op =
+                    ifThenElse (n == name) { op | expanded = not op.expanded } op
             in
-            ( updateLeague (\l -> { l | opponents = L.map mapper l.opponents }) model
+            ( updateLeague (\l -> { l | opponents = Dict.map mapper l.opponents }) model
             , Cmd.none
             )
 
         UpdateOpponentFrequency name y ->
             model
-                |> updateLeague (\l -> { l | opponents = L.map (\op -> ifThenElse (op.name == name) { op | frequency = op.frequency + y } op) l.opponents })
+                |> updateLeague (\l -> { l | opponents = Dict.map (\n op -> ifThenElse (n == name) { op | frequency = op.frequency + y } op) l.opponents })
                 |> andPersist
 
         RemoveOpponent name ->
             model
-                |> updateLeague (\l -> { l | opponents = L.filter (\op -> op.name /= name) l.opponents })
+                |> updateLeague (\l -> { l | opponents = Dict.filter (\n _ -> n /= name) l.opponents })
                 |> andPersist
 
 
@@ -273,19 +278,6 @@ addScores model =
         , ultra = addScoresToLeague model model.ultra
         , master = addScoresToLeague model model.master
     }
-
-
-updateLeague : (League -> League) -> Model -> Model
-updateLeague fn model =
-    case model.season of
-        Great ->
-            { model | great = fn model.great }
-
-        Ultra ->
-            { model | ultra = fn model.ultra }
-
-        Master ->
-            { model | master = fn model.master }
 
 
 andPersist : Model -> ( Model, Cmd msg )
@@ -355,15 +347,18 @@ view model =
 
                 Master ->
                     model.master
+
+        lst =
+            sortOpponents league.opponents
     in
     div [ class "h-screen flex flex-col" ]
-        [ pvpHeader model.page
+        [ pvpHeader lst model.page
         , case model.page of
-            Registering ->
+            Registering names ->
                 div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
                     , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
-                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsChoosing model league)
+                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsRegistering model league names)
                     ]
 
             TeamOptions ->
@@ -388,12 +383,20 @@ view model =
         ]
 
 
-pvpHeader : Page -> Html Msg
-pvpHeader tgt =
+sortOpponents : Dict String Opponent -> List String
+sortOpponents opponents =
+    opponents
+        |> Dict.toList
+        |> L.sortBy (Tuple.second >> .frequency >> (*) -1)
+        |> L.map Tuple.first
+
+
+pvpHeader : List String -> Page -> Html Msg
+pvpHeader lst tgt =
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
         [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
         , mkRadioButtons
-            [ ( SwitchPage Registering, "Registering", Registering == tgt )
+            [ ( SwitchPage <| Registering lst, "Registering", isRegistering tgt )
             , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
             , ( SwitchPage Battling, "Battling", Battling == tgt )
             ]
@@ -711,7 +714,7 @@ viewTeamMember model name entry isPinned =
         , button [ onClick <| PinTeamMember name ]
             [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
         ]
-    , if model.page == Registering then
+    , if isRegistering model.page then
         attacks |> L.map viewAttk |> div []
 
       else
@@ -726,8 +729,8 @@ viewTeamMember model name entry isPinned =
 -- -------------------
 
 
-viewOpponentsChoosing : Model -> League -> List (Html Msg)
-viewOpponentsChoosing model league =
+viewOpponentsRegistering : Model -> League -> List String -> List (Html Msg)
+viewOpponentsRegistering model league names =
     let
         chooser =
             case model.chooser of
@@ -737,21 +740,21 @@ viewOpponentsChoosing model league =
                 _ ->
                     viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
 
-        viewOpponent op entry =
+        viewOpponent ( name, op ) entry =
             let
                 headerRow =
                     div [ class "flex flex-row align-items justify-between" ]
                         [ div
                             [ class "flex flex-row items-center" ]
-                            [ toggleBtn (ToggleOpponent op.name) op.expanded
-                            , viewNameTitle op.name
+                            [ toggleBtn (ToggleOpponent name) op.expanded
+                            , viewNameTitle name
                             , ppTypes entry.types
                             ]
                         , div [ class "flex flex-row items-center" ]
-                            [ button [ onClick <| UpdateOpponentFrequency op.name -1, class "ml-2 mr-1" ] [ text "-" ]
+                            [ button [ onClick <| UpdateOpponentFrequency name -1, class "ml-2 mr-1" ] [ text "-" ]
                             , span [ class "mr-1" ] [ text <| String.fromInt op.frequency ]
-                            , button [ onClick <| UpdateOpponentFrequency op.name 1, class "mr-1" ] [ text "+" ]
-                            , deleteIcon <| RemoveOpponent op.name
+                            , button [ onClick <| UpdateOpponentFrequency name 1, class "mr-1" ] [ text "+" ]
+                            , deleteIcon <| RemoveOpponent name
                             ]
                         ]
 
@@ -765,7 +768,7 @@ viewOpponentsChoosing model league =
                             |> L.map (viewAttackBadge model.attacks)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
-                        , div [] <| viewPokemonResistsAndWeaknesses model op.name
+                        , div [] <| viewPokemonResistsAndWeaknesses model name
                         ]
 
                     else
@@ -774,18 +777,19 @@ viewOpponentsChoosing model league =
             div [ class <| cardClass ++ " mb-2" ]
                 (headerRow :: content)
 
-        viewer op =
-            case Dict.get op.name model.pokedex of
+        viewer : ( String, Opponent ) -> Html Msg
+        viewer ( name, op ) =
+            case Dict.get name model.pokedex of
                 Just entry ->
-                    viewOpponent op entry
+                    viewOpponent ( name, op ) entry
 
                 Nothing ->
-                    text <| "Could not look up " ++ op.name
+                    text <| "Could not look up " ++ name
     in
     [ h2 [] [ text "Opponents" ]
     , chooser
-    , league.opponents
-        |> L.sortBy .name
+    , names
+        |> L.filterMap (\n -> Dict.get n league.opponents |> Maybe.map (Tuple.pair n))
         |> L.map viewer
         |> div []
     ]
@@ -826,7 +830,7 @@ viewOpponentsBattling model league =
                 , viewLst "bg-red-200" resists
                 ]
 
-        viewer { name } =
+        viewer ( name, _ ) =
             case Dict.get name model.pokedex of
                 Just entry ->
                     viewOpponent name entry
@@ -836,7 +840,8 @@ viewOpponentsBattling model league =
     in
     [ h2 [] [ text "Opponents" ]
     , league.opponents
-        |> L.sortBy (.frequency >> (*) -1)
+        |> Dict.toList
+        |> L.sortBy (Tuple.second >> .frequency >> (*) -1)
         |> L.map viewer
         |> div [ class "flex flex-col" ]
     ]
