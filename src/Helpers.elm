@@ -83,24 +83,24 @@ lookupName myPokemon name =
         |> Result.fromMaybe ("Could not lookup: " ++ name)
 
 
-calcWeightedTotal : List Opponent -> Float
+calcWeightedTotal : Dict String Opponent -> Float
 calcWeightedTotal opponents =
-    opponents |> L.map .frequency |> L.sum |> toFloat
+    opponents |> Dict.values |> L.map .frequency |> L.sum |> toFloat
 
 
 {-| Calculates the weighted sum of scores against opponents
 -}
-summariseTeam : List Opponent -> Dict String Float -> Float
+summariseTeam : Dict String Opponent -> Dict String Float -> Float
 summariseTeam opponents scores =
     let
-        go { name, frequency } acc =
+        go name { frequency } acc =
             scores
                 |> Dict.get name
                 |> Maybe.withDefault 0
                 |> (*) (toFloat frequency)
                 |> (+) acc
     in
-    L.foldl go 0 opponents
+    Dict.foldl go 0 opponents
 
 
 {-| Looks at how we a team will do against each opponent. Teams that are all weak to a particular opponent
@@ -146,8 +146,8 @@ addScoresToLeague model league =
         addScores_ : Pokemon -> Dict String Float
         addScores_ p =
             let
-                foldFn : Opponent -> Dict String Float -> Result String (Dict String Float)
-                foldFn { name } acc =
+                foldFn : ( String, Opponent ) -> Dict String Float -> Result String (Dict String Float)
+                foldFn ( name, _ ) acc =
                     case evaluateBattle model.pokedex model.attacks p name of
                         Ok score ->
                             Ok <| Dict.insert name score acc
@@ -156,7 +156,9 @@ addScoresToLeague model league =
                             Err err
 
                 mbRes =
-                    foldResult foldFn (Ok Dict.empty) league.opponents
+                    league.opponents
+                        |> Dict.toList
+                        |> foldResult foldFn (Ok Dict.empty)
             in
             case mbRes of
                 Ok res ->
