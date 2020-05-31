@@ -446,12 +446,10 @@ type alias Pokedex =
 
 
 type alias PokedexEntry =
-    { id : Int
+    { speciesName : String
     , types : List PType
     , fast : List String
-    , eliteFast : List String
     , charged : List String
-    , eliteCharged : List String
     }
 
 
@@ -459,7 +457,7 @@ decodePokedex : Decoder (Dict String PokedexEntry)
 decodePokedex =
     let
         dec =
-            Decode.map2 Tuple.pair decodeName decodePokedexEntry
+            Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodePokedexEntry
     in
     Decode.list dec
         |> Decode.map Dict.fromList
@@ -468,31 +466,27 @@ decodePokedex =
 decodePokedexEntry : Decoder PokedexEntry
 decodePokedexEntry =
     Decode.succeed PokedexEntry
-        |> andMap (Decode.field "pokemon_id" Decode.int)
-        |> andMap (Decode.field "type" <| Decode.list decodePType)
-        |> andMap (Decode.field "fast_moves" <| Decode.list Decode.string)
-        |> andMap (Decode.field "elite_fast_moves" <| Decode.list Decode.string)
-        |> andMap (Decode.field "charged_moves" <| Decode.list Decode.string)
-        |> andMap (Decode.field "elite_charged_moves" <| Decode.list Decode.string)
-
-
-decodeName : Decoder String
-decodeName =
-    let
-        mkName ( pName, pForm ) =
-            if pForm == "Normal" then
-                pName
-
-            else
-                pName ++ " - " ++ pForm
-    in
-    Decode.map2 Tuple.pair
-        (Decode.field "pokemon_name" Decode.string)
-        (Decode.oneOf [ Decode.field "form" Decode.string, Decode.succeed "Normal" ])
-        |> Decode.map mkName
+        |> andMap (Decode.field "speciesName" Decode.string)
+        |> andMap (Decode.field "types" decodeTypes)
+        |> andMap (Decode.field "fastMoves" <| Decode.list Decode.string)
+        |> andMap (Decode.field "chargedMoves" <| Decode.list Decode.string)
 
 
 
+--decodeName : Decoder String
+--decodeName =
+--    let
+--        mkName ( pName, pForm ) =
+--            if pForm == "Normal" then
+--                pName
+--
+--            else
+--                pName ++ " - " ++ pForm
+--    in
+--    Decode.map2 Tuple.pair
+--        (Decode.field "pokemon_name" Decode.string)
+--        (Decode.oneOf [ Decode.field "form" Decode.string, Decode.succeed "Normal" ])
+--        |> Decode.map mkName
 -- -----------------------
 -- Chooser / Autocomplete
 -- -----------------------

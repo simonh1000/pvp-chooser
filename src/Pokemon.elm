@@ -3,6 +3,7 @@ module Pokemon exposing (..)
 import AssocList as Dict
 import Common.CoreHelpers exposing (exactMatchString)
 import Json.Decode as Decode exposing (Decoder, Value)
+import List as L
 
 
 
@@ -30,6 +31,16 @@ type PType
     | Dragon
     | Steel
     | Dark
+
+
+decodeTypes : Decoder (List PType)
+decodeTypes =
+    [ Decode.map Just decodePType
+    , exactMatchString Decode.string "none" (Decode.succeed Nothing)
+    ]
+        |> Decode.oneOf
+        |> Decode.list
+        |> Decode.map (L.filterMap identity)
 
 
 decodePType : Decoder PType
