@@ -367,7 +367,7 @@ encodeTM teamMember =
 
 type alias Pokemon =
     { expanded : Bool
-    , name : String
+    , speciesId : String
     , fast : String -- the specific attack being used
     , charged : Set String
     , scores : Dict String Float -- opponent name => score
@@ -389,7 +389,7 @@ decodePokemon =
 
 encodePokemon : Pokemon -> Value
 encodePokemon p =
-    [ ( "name", Encode.string p.name )
+    [ ( "name", Encode.string p.speciesId )
     , ( "fast", Encode.string p.fast )
     , ( "charged", Encode.list Encode.string <| Set.toList p.charged )
     ]
@@ -455,11 +455,8 @@ type alias PokedexEntry =
 
 decodePokedex : Decoder (Dict String PokedexEntry)
 decodePokedex =
-    let
-        dec =
-            Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodePokedexEntry
-    in
-    Decode.list dec
+    Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodePokedexEntry
+        |> Decode.list
         |> Decode.map Dict.fromList
 
 
@@ -470,6 +467,33 @@ decodePokedexEntry =
         |> andMap (Decode.field "types" decodeTypes)
         |> andMap (Decode.field "fastMoves" <| Decode.list Decode.string)
         |> andMap (Decode.field "chargedMoves" <| Decode.list Decode.string)
+
+
+
+-- -----------------------
+-- MoveType
+-- -----------------------
+
+
+type alias MoveType =
+    { name : String
+    , type_ : PType
+    }
+
+
+decodeMoves : Decoder (Dict String MoveType)
+decodeMoves =
+    Decode.map2 Tuple.pair
+        (Decode.field "moveId" Decode.string)
+        decMoveType
+        |> Decode.list
+        |> Decode.map Dict.fromList
+
+
+decMoveType =
+    Decode.map2 MoveType
+        (Decode.field "name" Decode.string)
+        (Decode.field "type" decodePType)
 
 
 
@@ -532,21 +556,6 @@ type alias Effectiveness =
     Dict PType (Dict PType Float)
 
 
-decodeEffectiveness : Decoder Effectiveness
-decodeEffectiveness =
-    decPTypeDict Decode.float
-        |> decPTypeDict
-
-
-decPTypeDict : Decoder b -> Decoder (Dict PType b)
-decPTypeDict dec =
-    Decode.keyValuePairs dec
-        |> Decode.map
-            (L.filterMap (\( k, v ) -> pTypeFromString k |> Maybe.map (\tp -> ( tp, v )))
-                >> Dict.fromList
-            )
-
-
 getDefenceMeta : Effectiveness -> List PType -> Dict PType Float
 getDefenceMeta effectiveness tps =
     let
@@ -555,26 +564,6 @@ getDefenceMeta effectiveness tps =
     in
     effectiveness
         |> Dict.map go
-
-
-
--- -----------------------
--- MoveType
--- -----------------------
-
-
-type alias MoveType =
-    { type_ : PType }
-
-
-decodeMoves : Decoder (Dict String MoveType)
-decodeMoves =
-    Decode.list
-        (Decode.map2 Tuple.pair
-            (Decode.field "name" Decode.string)
-            (Decode.map MoveType (Decode.field "type" decodePType))
-        )
-        |> Decode.map Dict.fromList
 
 
 

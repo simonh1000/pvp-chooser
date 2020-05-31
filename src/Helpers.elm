@@ -42,7 +42,7 @@ evaluateTeams league =
             calcWeightedTotal league.opponents
 
         mapper (( p1, p2, p3 ) as team) =
-            ( ( p1.name, p2.name, p3.name )
+            ( ( p1.speciesId, p2.speciesId, p3.speciesId )
             , (summariseTeam league.opponents <| evaluateTeam team) / sumFreqs
             )
 
@@ -52,14 +52,14 @@ evaluateTeams league =
                 [ p1 ] ->
                     league.myPokemon
                         |> Array.toList
-                        |> L.filter (\p -> p.name /= p1.name)
+                        |> L.filter (\p -> p.speciesId /= p1.speciesId)
                         |> mkTeams2
                         |> L.map (\( p2, p3 ) -> ( p1, p2, p3 ))
 
                 [ p1, p2 ] ->
                     league.myPokemon
                         |> Array.toList
-                        |> L.filter (\p -> p.name /= p1.name && p.name /= p2.name)
+                        |> L.filter (\p -> p.speciesId /= p1.speciesId && p.speciesId /= p2.speciesId)
                         |> L.map (\p3 -> ( p1, p2, p3 ))
 
                 [ p1, p2, p3 ] ->
@@ -78,7 +78,7 @@ evaluateTeams league =
 lookupName : Array Pokemon -> String -> Result String Pokemon
 lookupName myPokemon name =
     myPokemon
-        |> Array.filter (\item -> item.name == name)
+        |> Array.filter (\item -> item.speciesId == name)
         |> Array.get 0
         |> Result.fromMaybe ("Could not lookup: " ++ name)
 
@@ -183,8 +183,8 @@ evaluateBattle pokedex attacks pokemon opName =
             in
             attackScore / defenceScore
     in
-    Maybe.map2 handler (Dict.get pokemon.name pokedex) (Dict.get opName pokedex)
-        |> Result.fromMaybe ("could not look up one of : " ++ opName ++ ", or " ++ pokemon.name)
+    Maybe.map2 handler (Dict.get pokemon.speciesId pokedex) (Dict.get opName pokedex)
+        |> Result.fromMaybe ("could not look up one of : " ++ opName ++ ", or " ++ pokemon.speciesId)
 
 
 evaluateAgainstOpponent : Dict String MoveType -> Pokemon -> List PType -> Float

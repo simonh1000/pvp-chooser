@@ -50,31 +50,25 @@ decodePType =
             exactMatchString Decode.string tgt (Decode.succeed v)
     in
     Decode.oneOf
-        [ matcher "Poison" Poison
-        , matcher "Water" Water
-        , matcher "Normal" Normal
-        , matcher "Flying" Flying
-        , matcher "Grass" Grass
-        , matcher "Ground" Ground
-        , matcher "Psychic" Psychic
-        , matcher "Fire" Fire
-        , matcher "Bug" Bug
-        , matcher "Rock" Rock
-        , matcher "Electric" Electric
-        , matcher "Fighting" Fighting
-        , matcher "Fairy" Fairy
-        , matcher "Ice" Ice
-        , matcher "Ghost" Ghost
-        , matcher "Dragon" Dragon
-        , matcher "Steel" Steel
-        , matcher "Dark" Dark
+        [ matcher "poison" Poison
+        , matcher "water" Water
+        , matcher "normal" Normal
+        , matcher "flying" Flying
+        , matcher "grass" Grass
+        , matcher "ground" Ground
+        , matcher "psychic" Psychic
+        , matcher "fire" Fire
+        , matcher "bug" Bug
+        , matcher "rock" Rock
+        , matcher "electric" Electric
+        , matcher "fighting" Fighting
+        , matcher "fairy" Fairy
+        , matcher "ice" Ice
+        , matcher "ghost" Ghost
+        , matcher "dragon" Dragon
+        , matcher "steel" Steel
+        , matcher "dark" Dark
         ]
-
-
-pTypeFromString : String -> Maybe PType
-pTypeFromString string =
-    Decode.decodeString decodePType ("\"" ++ string ++ "\"")
-        |> Result.toMaybe
 
 
 stringFromPType tp =

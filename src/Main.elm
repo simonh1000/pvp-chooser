@@ -34,7 +34,7 @@ init value =
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
                         , pokedex = flags.pokedex
-                        , attacks = Dict.union flags.fast flags.charged
+                        , attacks = flags.moves
                         , debug = flags.debug
                         , page =
                             flags.persisted
@@ -53,8 +53,7 @@ init value =
 type alias Flags =
     { persisted : Persisted
     , pokedex : Dict String PokedexEntry -- keys by lowercase name
-    , fast : Dict String MoveType
-    , charged : Dict String MoveType
+    , moves : Dict String MoveType
     , debug : Bool
     }
 
@@ -64,8 +63,7 @@ decodeFlags =
     Decode.succeed Flags
         |> andMap (Decode.field "myPokemon" decodePersisted)
         |> andMap (Decode.field "pokemon" decodePokedex)
-        |> andMap (Decode.field "fast" decodeMoves)
-        |> andMap (Decode.field "charged" decodeMoves)
+        |> andMap (Decode.field "moves" decodeMoves)
         |> andMap (Decode.field "debug" Decode.bool)
 
 
@@ -162,7 +160,7 @@ update message model =
             let
                 pokemon =
                     { blankPokemon
-                        | name = name
+                        | speciesId = name
                         , fast = model.pokedex |> Dict.get name |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
                         , charged = Set.empty
                     }
@@ -214,7 +212,7 @@ update message model =
                         Just p ->
                             { l
                                 | myPokemon = AE.removeAt idx l.myPokemon
-                                , team = removeFromTeam p.name l.team
+                                , team = removeFromTeam p.speciesId l.team
                             }
 
                         Nothing ->
@@ -472,14 +470,14 @@ viewMyPokemons model league =
 
         viewer : Int -> Pokemon -> Html Msg
         viewer idx pokemon =
-            case Dict.get pokemon.name model.pokedex of
+            case Dict.get pokemon.speciesId model.pokedex of
                 Just entry ->
                     viewMyPokemon model entry idx pokemon
 
                 Nothing ->
                     div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
-                            [ viewNameTitle pokemon.name
+                            [ viewNameTitle pokemon.speciesId
                             , deleteIcon <| RemovePokemon idx
                             ]
                         , div [] [ text <| "viewMyPokemons: no meta!" ]
@@ -498,7 +496,7 @@ viewMyPokemon : Model -> PokedexEntry -> Int -> Pokemon -> Html Msg
 viewMyPokemon model entry idx pokemon =
     let
         mainCls =
-            if Maybe.map .name model.selectedPokemon == Just pokemon.name then
+            if Maybe.map .speciesId model.selectedPokemon == Just pokemon.speciesId then
                 cardClass ++ " mb-2 bg-blue-100"
 
             else
@@ -538,7 +536,7 @@ viewMyPokemon model entry idx pokemon =
                         , onClick <| SelectCandidate pokemon
                         , title "Select for team"
                         ]
-                        [ text <| pokemon.name ]
+                        [ text <| entry.speciesName ]
                     , ppTypes entry.types
                     ]
                 , div [ class "flex flex-row items-center" ]
@@ -625,7 +623,7 @@ viewTeam model league =
 
         convertToPokedex : Pokemon -> PokedexEntry -> ( String, PokedexEntry )
         convertToPokedex pokemon pokedex =
-            ( pokemon.name, { pokedex | fast = [ pokemon.fast ], charged = Set.toList pokemon.charged } )
+            ( pokemon.speciesId, { pokedex | fast = [ pokemon.fast ], charged = Set.toList pokemon.charged } )
 
         lookupTeamMember : TeamMember -> Result String Pokemon
         lookupTeamMember teamMember =
@@ -646,9 +644,9 @@ viewTeam model league =
                         |> Result.andThen
                             (\pokemon ->
                                 model.pokedex
-                                    |> Dict.get pokemon.name
+                                    |> Dict.get pokemon.speciesId
                                     |> Maybe.map (convertToPokedex pokemon)
-                                    |> Result.fromMaybe ("Could not look up " ++ pokemon.name ++ " in pokedex")
+                                    |> Result.fromMaybe ("Could not look up " ++ pokemon.speciesId ++ " in pokedex")
                             )
                         |> Result.map (\( _, entry ) -> viewTeamMember model name entry isPinned)
                         |> RE.extract (\err -> [ text err ])
@@ -668,7 +666,7 @@ viewTeam model league =
                 Just selected ->
                     div
                         [ class "drop-zone p-1 mb-2 border-blue-500"
-                        , onClick (updater selected.name)
+                        , onClick (updater selected.speciesId)
                         ]
                         content
 
@@ -723,7 +721,7 @@ viewTeamMember model name entry isPinned =
     in
     [ div [ class "flex flex-row items-center justify-between mb-2" ]
         [ div [ class "flex flex-row items-center" ]
-            [ viewNameTitle name
+            [ viewNameTitle <| Debug.log "***" entry.speciesName
             , ppTypes entry.types
             ]
         , button [ onClick <| PinTeamMember name ]
@@ -928,7 +926,7 @@ summariseTeam2 attacks myPokemon team =
 lookupMyPokemon : Array Pokemon -> String -> Maybe Pokemon
 lookupMyPokemon myPokemon name =
     myPokemon
-        |> Array.filter (\item -> item.name == name)
+        |> Array.filter (\item -> item.speciesId == name)
         |> Array.get 0
 
 
@@ -946,7 +944,7 @@ summariseTeamInner attacks pokemons =
                 |> Set.toList
                 |> L.map (\atk -> ( atk, "**" ))
                 |> (::) ( p.fast, "*" )
-                |> L.filterMap (createItem p.name)
+                |> L.filterMap (createItem p.speciesId)
                 |> (++) acc
     in
     L.foldl go [] pokemons
@@ -1036,14 +1034,12 @@ viewAttack1 effectiveness attack =
 
 viewAttackBadge : Dict String MoveType -> String -> Html msg
 viewAttackBadge attacks attack =
-    let
-        col =
-            attacks
-                |> Dict.get attack
-                |> Maybe.map (.type_ >> stringFromPType >> Tuple.second)
-                |> Maybe.withDefault "#ffffff"
-    in
-    badge col attack
+    case Dict.get attack attacks of
+        Just mt ->
+            badge (Tuple.second <| stringFromPType mt.type_) mt.name
+
+        Nothing ->
+            text attack
 
 
 
