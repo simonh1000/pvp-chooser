@@ -449,7 +449,9 @@ type alias PokedexEntry =
     { id : Int
     , types : List PType
     , fast : List String
+    , eliteFast : List String
     , charged : List String
+    , eliteCharged : List String
     }
 
 
@@ -469,7 +471,9 @@ decodePokedexEntry =
         |> andMap (Decode.field "pokemon_id" Decode.int)
         |> andMap (Decode.field "type" <| Decode.list decodePType)
         |> andMap (Decode.field "fast_moves" <| Decode.list Decode.string)
+        |> andMap (Decode.field "elite_fast_moves" <| Decode.list Decode.string)
         |> andMap (Decode.field "charged_moves" <| Decode.list Decode.string)
+        |> andMap (Decode.field "elite_charged_moves" <| Decode.list Decode.string)
 
 
 decodeName : Decoder String
