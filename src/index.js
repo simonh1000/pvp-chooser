@@ -7,10 +7,6 @@ require("./styles.scss");
 
 const storageKey = "pokemons";
 
-// import pokemon from "./assets/pokedex.json";
-// import charged from "./assets/chargedmoves.json";
-// import fast from "./assets/fastmoves.json";
-
 import gamemaster from "./assets/gamemaster.json";
 
 const myPokemon = JSON.parse(localStorage.getItem(storageKey) || "[]");

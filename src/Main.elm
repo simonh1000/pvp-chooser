@@ -16,7 +16,7 @@ import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import List as L
 import Model exposing (..)
-import Pokemon exposing (PType, effectiveness, stringFromPType)
+import Pokemon exposing (Effectiveness, PType, effectiveness, stringFromPType)
 import Ports
 import Result.Extra as RE
 import Set
@@ -1016,6 +1016,16 @@ viewPokedexResistsAndWeaknesses entry =
     [ viewTypes (\_ f -> f > 1.1) effectivenesses "Weak to"
     , viewTypes (\_ f -> f < 0.9) effectivenesses "Resists"
     ]
+
+
+getDefenceMeta : Effectiveness -> List PType -> Dict PType Float
+getDefenceMeta effectiveness tps =
+    let
+        go _ dict =
+            L.foldl (\tp acc -> Dict.get tp dict |> Maybe.withDefault 1 |> (*) acc) 1 tps
+    in
+    effectiveness
+        |> Dict.map go
 
 
 viewTypes : (PType -> Float -> Bool) -> Dict PType Float -> String -> Html msg

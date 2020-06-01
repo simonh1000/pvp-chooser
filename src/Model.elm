@@ -253,6 +253,65 @@ decodeLeagueLegacy =
 
 
 -- -----------------------
+-- Pokemon
+-- -----------------------
+
+
+type alias Pokemon =
+    { expanded : Bool
+    , speciesId : String
+    , fast : String -- the specific attack being used
+    , charged : Set String
+    , scores : Dict String Float -- opponent name => score
+    }
+
+
+blankPokemon : Pokemon
+blankPokemon =
+    Pokemon True "" "" Set.empty Dict.empty
+
+
+decodePokemon : Decoder Pokemon
+decodePokemon =
+    Decode.succeed (\name fast charged -> Pokemon False name fast charged Dict.empty)
+        |> andMap (Decode.field "speciesId" Decode.string)
+        |> andMap (Decode.field "fast" Decode.string)
+        |> andMap (Decode.field "charged" <| decSet Decode.string)
+
+
+encodePokemon : Pokemon -> Value
+encodePokemon p =
+    [ ( "speciesId", Encode.string p.speciesId )
+    , ( "fast", Encode.string p.fast )
+    , ( "charged", Encode.list Encode.string <| Set.toList p.charged )
+    ]
+        |> Encode.object
+
+
+
+-- migration
+
+
+decodeLegacyPokemon : Decoder Pokemon
+decodeLegacyPokemon =
+    Decode.succeed (\name fast charged -> Pokemon False (convertNameToId name) (convertAttack fast) (Set.map convertAttack charged) Dict.empty)
+        |> andMap (Decode.field "name" Decode.string)
+        |> andMap (Decode.field "fast" Decode.string)
+        |> andMap (Decode.field "charged" <| decSet Decode.string)
+
+
+convertNameToId : String -> String
+convertNameToId =
+    String.toLower >> String.replace " - " "_" >> String.replace "alola" "alolan"
+
+
+convertAttack : String -> String
+convertAttack =
+    String.replace " " "_" >> String.toUpper
+
+
+
+-- -----------------------
 -- Team
 -- -----------------------
 
@@ -330,7 +389,9 @@ encodeTeam t =
 
 
 
---
+-- -----------------------
+-- TeamMember
+-- -----------------------
 
 
 type TeamMember
@@ -412,60 +473,6 @@ encodeTM teamMember =
 
 
 -- -----------------------
--- Pokemon
--- -----------------------
-
-
-type alias Pokemon =
-    { expanded : Bool
-    , speciesId : String
-    , fast : String -- the specific attack being used
-    , charged : Set String
-    , scores : Dict String Float -- opponent name => score
-    }
-
-
-blankPokemon : Pokemon
-blankPokemon =
-    Pokemon True "" "" Set.empty Dict.empty
-
-
-decodePokemon : Decoder Pokemon
-decodePokemon =
-    Decode.succeed (\name fast charged -> Pokemon False name fast charged Dict.empty)
-        |> andMap (Decode.field "speciesId" Decode.string)
-        |> andMap (Decode.field "fast" Decode.string)
-        |> andMap (Decode.field "charged" <| decSet Decode.string)
-
-
-encodePokemon : Pokemon -> Value
-encodePokemon p =
-    [ ( "speciesId", Encode.string p.speciesId )
-    , ( "fast", Encode.string p.fast )
-    , ( "charged", Encode.list Encode.string <| Set.toList p.charged )
-    ]
-        |> Encode.object
-
-
-decodeLegacyPokemon =
-    Decode.succeed (\name fast charged -> Pokemon False (convertNameToId name) (convertAttack fast) (Set.map convertAttack charged) Dict.empty)
-        |> andMap (Decode.field "name" Decode.string)
-        |> andMap (Decode.field "fast" Decode.string)
-        |> andMap (Decode.field "charged" <| decSet Decode.string)
-
-
-convertNameToId : String -> String
-convertNameToId =
-    String.toLower >> String.replace " - " "_" >> String.replace "alola" "alolan"
-
-
-convertAttack : String -> String
-convertAttack =
-    String.replace " " "_" >> String.toUpper
-
-
-
--- -----------------------
 -- Opponent
 -- -----------------------
 
@@ -504,7 +511,7 @@ encodeOpponent ( name, { frequency } ) =
 
 
 -- -----------------------
--- PokedexEntry
+-- Gamemaster: Pokedex
 -- -----------------------
 
 
@@ -539,7 +546,7 @@ decodePokedexEntry =
 
 
 -- -----------------------
--- MoveType
+-- Gamemaster: Moves
 -- -----------------------
 
 
@@ -558,6 +565,7 @@ decodeMoves =
         |> Decode.map Dict.fromList
 
 
+decMoveType : Decoder MoveType
 decMoveType =
     Decode.map2 MoveType
         (Decode.field "name" Decode.string)
@@ -565,20 +573,6 @@ decMoveType =
 
 
 
---decodeName : Decoder String
---decodeName =
---    let
---        mkName ( pName, pForm ) =
---            if pForm == "Normal" then
---                pName
---
---            else
---                pName ++ " - " ++ pForm
---    in
---    Decode.map2 Tuple.pair
---        (Decode.field "pokemon_name" Decode.string)
---        (Decode.oneOf [ Decode.field "form" Decode.string, Decode.succeed "Normal" ])
---        |> Decode.map mkName
 -- -----------------------
 -- Chooser / Autocomplete
 -- -----------------------
@@ -615,29 +609,26 @@ mapSearch fn chooser =
 --
 --        NoChooser ->
 --            NoChooser
--- -----------------------
--- Effectiveness
--- -----------------------
-
-
-type alias Effectiveness =
-    Dict PType (Dict PType Float)
-
-
-getDefenceMeta : Effectiveness -> List PType -> Dict PType Float
-getDefenceMeta effectiveness tps =
-    let
-        go _ dict =
-            L.foldl (\tp acc -> Dict.get tp dict |> Maybe.withDefault 1 |> (*) acc) 1 tps
-    in
-    effectiveness
-        |> Dict.map go
-
-
-
---
+-- Helpers
 
 
 decSet : Decoder comparable -> Decoder (Set comparable)
 decSet =
     Decode.list >> Decode.map Set.fromList
+
+
+
+--decodeName : Decoder String
+--decodeName =
+--    let
+--        mkName ( pName, pForm ) =
+--            if pForm == "Normal" then
+--                pName
+--
+--            else
+--                pName ++ " - " ++ pForm
+--    in
+--    Decode.map2 Tuple.pair
+--        (Decode.field "pokemon_name" Decode.string)
+--        (Decode.oneOf [ Decode.field "form" Decode.string, Decode.succeed "Normal" ])
+--        |> Decode.map mkName

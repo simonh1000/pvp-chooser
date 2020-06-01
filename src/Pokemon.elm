@@ -1,6 +1,6 @@
 module Pokemon exposing (..)
 
-import AssocList as Dict
+import AssocList as Dict exposing (Dict)
 import Common.CoreHelpers exposing (exactMatchString)
 import Json.Decode as Decode exposing (Decoder, Value)
 import List as L
@@ -33,12 +33,11 @@ type PType
     | Dark
 
 
+{-| We want to drop "none"s
+-}
 decodeTypes : Decoder (List PType)
 decodeTypes =
-    [ Decode.map Just decodePType
-    , exactMatchString Decode.string "none" (Decode.succeed Nothing)
-    ]
-        |> Decode.oneOf
+    Decode.maybe decodePType
         |> Decode.list
         |> Decode.map (L.filterMap identity)
 
@@ -128,6 +127,17 @@ stringFromPType tp =
             ( "Dark", "#707070" )
 
 
+
+-- -----------------------
+-- Effectiveness
+-- -----------------------
+
+
+type alias Effectiveness =
+    Dict PType (Dict PType Float)
+
+
+effectiveness : Effectiveness
 effectiveness =
     Dict.fromList
         [ ( Water, Dict.fromList [ ( Water, 0.625 ), ( Steel, 1 ), ( Rock, 1.6 ), ( Psychic, 1 ), ( Poison, 1 ), ( Normal, 1 ), ( Ice, 1 ), ( Ground, 1.6 ), ( Grass, 0.625 ), ( Ghost, 1 ), ( Flying, 1 ), ( Fire, 1.6 ), ( Fighting, 1 ), ( Fairy, 1 ), ( Electric, 1 ), ( Dragon, 0.625 ), ( Dark, 1 ), ( Bug, 1 ) ] )
