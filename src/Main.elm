@@ -425,7 +425,7 @@ sortOpponents opponents =
 pvpHeader : List String -> Page -> Html Msg
 pvpHeader lst tgt =
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
-        [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon" ]
+        [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon PVP team manager" ]
         , mkRadioButtons
             [ ( SwitchPage <| Registering lst, "Registering", isRegistering tgt )
             , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
@@ -436,8 +436,9 @@ pvpHeader lst tgt =
 
 pvpFooter : Season -> Html Msg
 pvpFooter tgt =
-    footer [ class "flex flex-row items-center justify-end p-3 bg-gray-400" ]
-        [ mkRadioButtons
+    footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
+        [ span [ class "text-sm" ] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "pvpoke" ] ]
+        , mkRadioButtons
             [ ( SwitchSeason Great, "Great", Great == tgt )
             , ( SwitchSeason Ultra, "Ultra", Ultra == tgt )
             , ( SwitchSeason Master, "Master", Master == tgt )
@@ -571,11 +572,12 @@ viewMyPokemon model entry idx pokemon =
             [ topLine ]
 
 
+getAttackTypes : Dict String MoveType -> PokedexEntry -> Html msg
 getAttackTypes attacks entry =
     let
         fn : String -> List PType -> List PType
         fn attk acc =
-            case Dict.get attk attacks |> Maybe.map .type_ of
+            case attackToType attacks attk of
                 Just tp ->
                     if L.member tp acc then
                         acc
@@ -821,7 +823,9 @@ viewOpponentsRegistering model league names =
 
                 Nothing ->
                     div [ class "flex flex-row justify-between" ]
-                        [ text <| "Could not look up " ++ speciesId, deleteIcon <| RemoveOpponent speciesId ]
+                        [ text <| "Could not look up " ++ speciesId
+                        , deleteIcon <| RemoveOpponent speciesId
+                        ]
     in
     [ h2 [] [ text "Opponents" ]
     , chooser
@@ -965,7 +969,7 @@ summariseTeamInner : Dict String MoveType -> List Pokemon -> List ( String, PTyp
 summariseTeamInner attacks pokemons =
     let
         createItem : String -> ( String, String ) -> Maybe ( String, PType )
-        createItem name ( attack, suffix ) =
+        createItem name ( attack, _ ) =
             Dict.get attack attacks
                 |> Maybe.map (\{ type_ } -> ( name, type_ ))
 
@@ -1032,10 +1036,15 @@ viewTypes fn weaknesses title =
         ]
 
 
+attackToType : Dict String MoveType -> String -> Maybe PType
 attackToType attacks attack =
-    attacks
-        |> Dict.get attack
-        |> Maybe.map .type_
+    if String.startsWith "HIDDEN" attack then
+        Nothing
+
+    else
+        attacks
+            |> Dict.get attack
+            |> Maybe.map .type_
 
 
 viewAttack1 : Dict PType (Dict PType Float) -> PType -> Html msg
