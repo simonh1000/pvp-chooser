@@ -175,8 +175,24 @@ update message model =
 
                 newModel =
                     updateLeague updater model
+
+                page =
+                    case model.page of
+                        Registering lst ->
+                            if isMyPokemon then
+                                Registering lst
+
+                            else
+                                Registering <| lst ++ [ speciesId ]
+
+                        p ->
+                            p
             in
-            { newModel | chooser = mapSearch (\_ -> "") model.chooser } |> andPersist
+            { newModel
+                | chooser = mapSearch (\_ -> "") model.chooser
+                , page = page
+            }
+                |> andPersist
 
         SetAutoComplete chooser ->
             ( { model | chooser = chooser }, Cmd.none )
@@ -583,13 +599,18 @@ getAttackTypes attacks entry =
 
 
 viewTeamOptions : Model -> League -> List (Html Msg)
-viewTeamOptions _ league =
+viewTeamOptions model league =
     let
         viewOption : ( ( String, String, String ), Float ) -> Html Msg
         viewOption ( ( c1, c2, c3 ), score ) =
             let
                 selected =
                     hasMember c1 league.team && hasMember c2 league.team && hasMember c3 league.team
+
+                title =
+                    [ c1, c2, c3 ]
+                        |> L.filterMap (\c -> Dict.get c model.pokedex |> Maybe.map .speciesName)
+                        |> String.join ", "
             in
             div
                 [ classList
@@ -599,7 +620,7 @@ viewTeamOptions _ league =
                     ]
                 , onClick <| SetTeam ( c1, c2, c3 )
                 ]
-                [ span [] [ [ c1, c2, c3 ] |> String.join ", " |> text ]
+                [ span [] [ text title ]
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
                 ]
     in
@@ -633,11 +654,11 @@ viewTeam model league =
                 Unset ->
                     Err "Team member not chosen"
 
-                Chosen name ->
-                    lookupName league.myPokemon name
+                Chosen speciesId ->
+                    lookupName league.myPokemon speciesId
 
-                Pinned name ->
-                    lookupName league.myPokemon name
+                Pinned speciesId ->
+                    lookupName league.myPokemon speciesId
 
         viewMbCand updater mbCand =
             let
@@ -696,7 +717,7 @@ viewTeam model league =
 
 
 viewTeamMember : Model -> String -> PokedexEntry -> Bool -> List (Html Msg)
-viewTeamMember model name entry isPinned =
+viewTeamMember model speciesId entry isPinned =
     let
         go attk acc =
             case attackToType model.attacks attk of
@@ -723,10 +744,10 @@ viewTeamMember model name entry isPinned =
     in
     [ div [ class "flex flex-row items-center justify-between mb-2" ]
         [ div [ class "flex flex-row items-center" ]
-            [ viewNameTitle <| Debug.log "***" entry.speciesName
+            [ viewNameTitle entry.speciesName
             , ppTypes entry.types
             ]
-        , button [ onClick <| PinTeamMember name ]
+        , button [ onClick <| PinTeamMember speciesId ]
             [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
         ]
     , if isRegistering model.page then
@@ -755,21 +776,21 @@ viewOpponentsRegistering model league names =
                 _ ->
                     viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
 
-        viewOpponent ( name, op ) entry =
+        viewOpponent ( speciesId, op ) entry =
             let
                 headerRow =
                     div [ class "flex flex-row align-items justify-between" ]
                         [ div
                             [ class "flex flex-row items-center" ]
-                            [ toggleBtn (ToggleOpponent name) op.expanded
-                            , viewNameTitle name
+                            [ toggleBtn (ToggleOpponent speciesId) op.expanded
+                            , viewNameTitle entry.speciesName
                             , ppTypes entry.types
                             ]
                         , div [ class "flex flex-row items-center" ]
-                            [ button [ onClick <| UpdateOpponentFrequency name -1, class "ml-2 mr-1" ] [ text "-" ]
+                            [ button [ onClick <| UpdateOpponentFrequency speciesId -1, class "ml-2 mr-1" ] [ text "-" ]
                             , span [ class "mr-1" ] [ text <| String.fromInt op.frequency ]
-                            , button [ onClick <| UpdateOpponentFrequency name 1, class "mr-1" ] [ text "+" ]
-                            , deleteIcon <| RemoveOpponent name
+                            , button [ onClick <| UpdateOpponentFrequency speciesId 1, class "mr-1" ] [ text "+" ]
+                            , deleteIcon <| RemoveOpponent speciesId
                             ]
                         ]
 
@@ -783,7 +804,7 @@ viewOpponentsRegistering model league names =
                             |> L.map (viewAttackBadge model.attacks)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
-                        , div [] <| viewPokemonResistsAndWeaknesses model name
+                        , div [] <| viewPokemonResistsAndWeaknesses model speciesId
                         ]
 
                     else
@@ -793,13 +814,14 @@ viewOpponentsRegistering model league names =
                 (headerRow :: content)
 
         viewer : ( String, Opponent ) -> Html Msg
-        viewer ( name, op ) =
-            case Dict.get name model.pokedex of
+        viewer ( speciesId, op ) =
+            case Dict.get speciesId model.pokedex of
                 Just entry ->
-                    viewOpponent ( name, op ) entry
+                    viewOpponent ( speciesId, op ) entry
 
                 Nothing ->
-                    text <| "Could not look up " ++ name
+                    div [ class "flex flex-row justify-between" ]
+                        [ text <| "Could not look up " ++ speciesId, deleteIcon <| RemoveOpponent speciesId ]
     in
     [ h2 [] [ text "Opponents" ]
     , chooser
@@ -817,7 +839,14 @@ viewOpponentsBattling model league =
         team =
             summariseTeam model league
 
-        viewOpponent name entry =
+        mkBadge ( mySpeciesId, pType ) =
+            model.pokedex
+                |> Dict.get mySpeciesId
+                |> Maybe.map .speciesName
+                |> Maybe.withDefault mySpeciesId
+                |> colouredBadge pType
+
+        viewOpponent speciesId entry =
             let
                 ( weak, resists ) =
                     checkAttackAgainstDefenderType effectiveness team entry.types
@@ -828,14 +857,14 @@ viewOpponentsBattling model league =
 
                     else
                         div [ class <| "flex flex-row flex-wrap items-baseline ml-4 p-1 " ++ cls ] <|
-                            L.map (\( title, pType ) -> colouredBadge pType title) lst
+                            L.map mkBadge lst
             in
             div [ class <| cardClass ++ " flex flex-row  items-center justify-between mb-1" ]
                 [ div [ class "flex flex-row items-center" ]
                     [ div []
-                        [ viewNameTitle name
+                        [ viewNameTitle entry.speciesName
                         , if model.debug then
-                            small [ class "text-xs" ] [ text <| calcTeamScores model league name ]
+                            small [ class "text-xs" ] [ text <| calcTeamScores model league speciesId ]
 
                           else
                             text ""
@@ -845,13 +874,13 @@ viewOpponentsBattling model league =
                 , viewLst "bg-red-200" resists
                 ]
 
-        viewer ( name, _ ) =
-            case Dict.get name model.pokedex of
+        viewer ( speciesId, _ ) =
+            case Dict.get speciesId model.pokedex of
                 Just entry ->
-                    viewOpponent name entry
+                    viewOpponent speciesId entry
 
                 Nothing ->
-                    text <| "Could not look up " ++ name
+                    text <| "Could not look up " ++ speciesId
     in
     [ h2 [] [ text "Opponents" ]
     , league.opponents
@@ -938,7 +967,7 @@ summariseTeamInner attacks pokemons =
         createItem : String -> ( String, String ) -> Maybe ( String, PType )
         createItem name ( attack, suffix ) =
             Dict.get attack attacks
-                |> Maybe.map (\{ type_ } -> ( name ++ " " ++ suffix, type_ ))
+                |> Maybe.map (\{ type_ } -> ( name, type_ ))
 
         go : Pokemon -> List ( String, PType ) -> List ( String, PType )
         go p acc =

@@ -147,10 +147,10 @@ addScoresToLeague model league =
         addScores_ p =
             let
                 foldFn : ( String, Opponent ) -> Dict String Float -> Result String (Dict String Float)
-                foldFn ( name, _ ) acc =
-                    case evaluateBattle model.pokedex model.attacks p name of
+                foldFn ( speciesId, _ ) acc =
+                    case evaluateBattle model.pokedex model.attacks p speciesId of
                         Ok score ->
-                            Ok <| Dict.insert name score acc
+                            Ok <| Dict.insert speciesId score acc
 
                         Err err ->
                             Err err
@@ -165,13 +165,13 @@ addScoresToLeague model league =
                     res
 
                 Err _ ->
-                    Dict.empty
+                    Debug.todo "add scores"
     in
     { league | myPokemon = Array.map (\p -> { p | scores = addScores_ p }) league.myPokemon }
 
 
 evaluateBattle : Pokedex -> Dict String MoveType -> Pokemon -> String -> Result String Float
-evaluateBattle pokedex attacks pokemon opName =
+evaluateBattle pokedex attacks pokemon opSpeciesId =
     let
         handler myPokedexEntry opponent =
             let
@@ -183,8 +183,8 @@ evaluateBattle pokedex attacks pokemon opName =
             in
             attackScore / defenceScore
     in
-    Maybe.map2 handler (Dict.get pokemon.speciesId pokedex) (Dict.get opName pokedex)
-        |> Result.fromMaybe ("could not look up one of : " ++ opName ++ ", or " ++ pokemon.speciesId)
+    Maybe.map2 handler (Dict.get pokemon.speciesId pokedex) (Dict.get opSpeciesId pokedex)
+        |> Result.fromMaybe ("could not look up one of : " ++ opSpeciesId ++ ", or " ++ pokemon.speciesId)
 
 
 evaluateAgainstOpponent : Dict String MoveType -> Pokemon -> List PType -> Float
