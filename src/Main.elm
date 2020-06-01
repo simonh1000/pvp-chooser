@@ -499,15 +499,23 @@ viewMyPokemons model league =
                             [ viewNameTitle pokemon.speciesId
                             , deleteIcon <| RemovePokemon idx
                             ]
-                        , div [] [ text <| "No meta for: " ++ pokemon.speciesId ]
+                        , div [] [ text <| "Unexpected error looking up " ++ pokemon.speciesId ++ ". Please delete and re-add" ]
                         ]
     in
     [ h2 [] [ text "My Pokemons" ]
     , chooser
-    , league.myPokemon
-        |> Array.indexedMap viewer
-        |> Array.toList
-        |> div []
+    , if Array.isEmpty league.myPokemon then
+        ul []
+            [ ol [] [ text "Add you pokemon using the form above" ]
+            , ol [] [ text "Select the attacks you are using" ]
+            , ol [] [ text "Click on a title and then on one of the 'My Team' areas to add strt creating a team" ]
+            ]
+
+      else
+        league.myPokemon
+            |> Array.indexedMap viewer
+            |> Array.toList
+            |> div []
     ]
 
 
@@ -1113,9 +1121,12 @@ viewChooser pokedex search autocomplete =
 
 viewChooserPlaceholder : PokedexChooser -> Html Msg
 viewChooserPlaceholder chooser =
-    div [ class "flex flex-row justify-between mb-2" ]
-        [ text "Add pokemon"
-        , span [ onClick <| SetAutoComplete chooser ] [ matIcon "pencil" ]
+    div
+        [ class "flex flex-row mb-2 cursor-pointer"
+        , onClick <| SetAutoComplete chooser
+        ]
+        [ span [ class "mr-2" ] [ matIcon "pencil" ]
+        , text "Add pokemon"
         ]
 
 

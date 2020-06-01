@@ -20,6 +20,7 @@ h2 {
 }
 
 .my-team {
+    flex-basis: 300px;
     overflow: hidden;
 }
 /*.battling .my-team {*/
