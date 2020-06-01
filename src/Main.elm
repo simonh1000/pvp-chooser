@@ -156,25 +156,25 @@ update message model =
         ACSearch search ->
             ( { model | chooser = mapSearch (\_ -> search) model.chooser }, Cmd.none )
 
-        ACSelect isMyPokemon name ->
+        ACSelect isMyPokemon speciesId ->
             let
-                pokemon =
-                    { blankPokemon
-                        | speciesId = name
-                        , fast = model.pokedex |> Dict.get name |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
-                        , charged = Set.empty
-                    }
+                updater l =
+                    if isMyPokemon then
+                        let
+                            pokemon =
+                                { blankPokemon
+                                    | speciesId = speciesId
+                                    , fast = model.pokedex |> Dict.get speciesId |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
+                                    , charged = Set.empty
+                                }
+                        in
+                        { l | myPokemon = Array.push pokemon l.myPokemon }
+
+                    else
+                        { l | opponents = Dict.insert speciesId (Opponent False 1) l.opponents }
 
                 newModel =
-                    model
-                        |> updateLeague
-                            (\l ->
-                                if isMyPokemon then
-                                    { l | myPokemon = Array.push pokemon l.myPokemon }
-
-                                else
-                                    { l | opponents = Dict.insert name (Opponent False 1) l.opponents }
-                            )
+                    updateLeague updater model
             in
             { newModel | chooser = mapSearch (\_ -> "") model.chooser } |> andPersist
 
@@ -300,7 +300,7 @@ andPersist model =
     )
 
 
-updateConfig : Bool -> UpdateConfig Msg String
+updateConfig : Bool -> UpdateConfig Msg ( String, PokedexEntry )
 updateConfig isMyPokemon =
     { onKeyDown =
         \code maybeId ->
@@ -323,19 +323,21 @@ updateConfig isMyPokemon =
     }
 
 
-getRelevantChoices : String -> Dict String PokedexEntry -> List String
+getRelevantChoices : String -> Dict String PokedexEntry -> List ( String, PokedexEntry )
 getRelevantChoices search pokedex =
     let
         search_ =
             String.toLower search
     in
     pokedex
-        |> Dict.keys
-        |> L.filter (\name -> String.contains search_ (String.toLower name))
+        --|> Dict.keys
+        |> Dict.filter (\_ { speciesName } -> String.contains search_ (String.toLower speciesName))
+        |> Dict.toList
 
 
+toId : ( String, PokedexEntry ) -> String
 toId =
-    identity
+    Tuple.first
 
 
 
@@ -1069,10 +1071,10 @@ viewChooserPlaceholder chooser =
         ]
 
 
-viewConfig : Autocomplete.ViewConfig String
+viewConfig : Autocomplete.ViewConfig ( String, PokedexEntry )
 viewConfig =
     let
-        customizedLi keySelected mouseSelected item =
+        customizedLi keySelected mouseSelected ( _, item ) =
             { attributes =
                 [ classList
                     [ ( "autocomplete-item", True )
@@ -1080,7 +1082,7 @@ viewConfig =
                     , ( "mouse-selected", mouseSelected )
                     ]
                 ]
-            , children = [ Html.text item ]
+            , children = [ Html.text item.speciesName ]
             }
     in
     { toId = toId
