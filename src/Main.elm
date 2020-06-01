@@ -498,7 +498,7 @@ viewMyPokemons model league =
                             [ viewNameTitle pokemon.speciesId
                             , deleteIcon <| RemovePokemon idx
                             ]
-                        , div [] [ text <| "viewMyPokemons: no meta!" ]
+                        , div [] [ text <| "No meta for: " ++ pokemon.speciesId ]
                         ]
     in
     [ h2 [] [ text "My Pokemons" ]

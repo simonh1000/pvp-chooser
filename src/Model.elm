@@ -143,6 +143,8 @@ decodePersisted =
         dec s =
             Decode.oneOf
                 [ Decode.field s decodeLeague
+                , -- todo remove
+                  Decode.field s decodeLeagueLegacy
                 , Decode.succeed blankLeague
                 ]
     in
@@ -196,7 +198,8 @@ decodeLeague =
         |> andMap
             (Decode.oneOf
                 [ Decode.field "myPokemon" <| Decode.list decodePokemon
-                , Decode.succeed []
+
+                --, Decode.succeed []
                 ]
                 |> Decode.map Array.fromList
             )
@@ -207,6 +210,45 @@ decodeLeague =
                 ]
             )
         |> andMap (Decode.field "opponents" decodeOpponents)
+
+
+decodeLeagueLegacy : Decoder League
+decodeLeagueLegacy =
+    let
+        mapTp tm =
+            case tm of
+                Pinned x ->
+                    Pinned <| convertNameToId x
+
+                Chosen x ->
+                    Chosen <| convertNameToId x
+
+                Unset ->
+                    Unset
+
+        mapOp ops =
+            let
+                go k v acc =
+                    Dict.insert (convertNameToId k) v acc
+            in
+            Dict.foldl go Dict.empty ops
+    in
+    Decode.succeed League
+        |> andMap
+            (Decode.oneOf
+                [ Decode.field "myPokemon" <| Decode.list decodeLegacyPokemon
+                , Decode.succeed []
+                ]
+                |> Decode.map Array.fromList
+            )
+        |> andMap
+            (Decode.oneOf
+                [ Decode.field "team" decodeTeam
+                , Decode.succeed blankTeam
+                ]
+                |> Decode.map (mapTeam mapTp)
+            )
+        |> andMap (Decode.field "opponents" decodeOpponents |> Decode.map mapOp)
 
 
 
@@ -222,10 +264,19 @@ type alias Team =
     }
 
 
+blankTeam : Team
 blankTeam =
     { cand1 = Unset
     , cand2 = Unset
     , cand3 = Unset
+    }
+
+
+mapTeam : (TeamMember -> TeamMember) -> Team -> Team
+mapTeam fn team =
+    { cand1 = fn team.cand1
+    , cand2 = fn team.cand2
+    , cand3 = fn team.cand3
     }
 
 
@@ -382,18 +433,35 @@ blankPokemon =
 decodePokemon : Decoder Pokemon
 decodePokemon =
     Decode.succeed (\name fast charged -> Pokemon False name fast charged Dict.empty)
-        |> andMap (Decode.field "name" Decode.string)
+        |> andMap (Decode.field "speciesId" Decode.string)
         |> andMap (Decode.field "fast" Decode.string)
         |> andMap (Decode.field "charged" <| decSet Decode.string)
 
 
 encodePokemon : Pokemon -> Value
 encodePokemon p =
-    [ ( "name", Encode.string p.speciesId )
+    [ ( "speciesId", Encode.string p.speciesId )
     , ( "fast", Encode.string p.fast )
     , ( "charged", Encode.list Encode.string <| Set.toList p.charged )
     ]
         |> Encode.object
+
+
+decodeLegacyPokemon =
+    Decode.succeed (\name fast charged -> Pokemon False (convertNameToId name) (convertAttack fast) (Set.map convertAttack charged) Dict.empty)
+        |> andMap (Decode.field "name" Decode.string)
+        |> andMap (Decode.field "fast" Decode.string)
+        |> andMap (Decode.field "charged" <| decSet Decode.string)
+
+
+convertNameToId : String -> String
+convertNameToId =
+    String.toLower >> String.replace " - " "_" >> String.replace "alola" "alolan"
+
+
+convertAttack : String -> String
+convertAttack =
+    String.replace " " "_" >> String.toUpper
 
 
 
