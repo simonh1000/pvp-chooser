@@ -177,8 +177,24 @@ update message model =
                                 else
                                     { l | opponents = Dict.insert name (Opponent False 1) l.opponents }
                             )
+
+                page =
+                    case model.page of
+                        Registering lst ->
+                            if isMyPokemon then
+                                Registering lst
+
+                            else
+                                Registering <| lst ++ [ name ]
+
+                        p ->
+                            p
             in
-            { newModel | chooser = mapSearch (\_ -> "") model.chooser } |> andPersist
+            { newModel
+                | chooser = mapSearch (\_ -> "") model.chooser
+                , page = page
+            }
+                |> andPersist
 
         SetAutoComplete chooser ->
             ( { model | chooser = chooser }, Cmd.none )
