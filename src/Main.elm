@@ -35,6 +35,7 @@ init value =
                         , master = flags.persisted.master
                         , pokedex = flags.pokedex
                         , attacks = flags.moves
+                        , rankings2500 = flags.rankings2500
                         , debug = flags.debug
                         , page =
                             flags.persisted
@@ -52,8 +53,10 @@ init value =
 
 type alias Flags =
     { persisted : Persisted
-    , pokedex : Dict String PokedexEntry -- keys by lowercase name
+    , --gamemaster
+      pokedex : Dict String PokedexEntry -- keys by lowercase name
     , moves : Dict String MoveType
+    , rankings2500 : Dict String RankingEntry
     , debug : Bool
     }
 
@@ -64,6 +67,7 @@ decodeFlags =
         |> andMap (Decode.field "myPokemon" decodePersisted)
         |> andMap (Decode.field "pokemon" decodePokedex)
         |> andMap (Decode.field "moves" decodeMoves)
+        |> andMap (Decode.field "rankings2500" decodeRankings)
         |> andMap (Decode.field "debug" Decode.bool)
 
 

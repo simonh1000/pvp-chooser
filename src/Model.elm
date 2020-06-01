@@ -24,7 +24,9 @@ type alias Model =
     , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
-    , attacks : Dict String MoveType
+    , rankings2500 : Dict String RankingEntry
+    , -- todo move to
+      attacks : Dict String MoveType
     }
 
 
@@ -39,6 +41,7 @@ defaultModel =
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
     , pokedex = Dict.empty
+    , rankings2500 = Dict.empty
     , attacks = Dict.empty
     }
 
@@ -570,6 +573,39 @@ decMoveType =
     Decode.map2 MoveType
         (Decode.field "name" Decode.string)
         (Decode.field "type" decodePType)
+
+
+
+-- -----------------------
+-- Rankings
+-- -----------------------
+--type alias Pokedex =
+--    -- keyed on Name
+--    Dict String PokedexEntry
+
+
+type alias RankingEntry =
+    { fastMoves : List String
+    , chargedMoves : List String
+    , moveStr : String
+    , score : Float
+    }
+
+
+decodeRankings : Decoder (Dict String RankingEntry)
+decodeRankings =
+    Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodeRankingEntry
+        |> Decode.list
+        |> Decode.map Dict.fromList
+
+
+decodeRankingEntry : Decoder RankingEntry
+decodeRankingEntry =
+    Decode.succeed RankingEntry
+        |> andMap (Decode.at [ "moves", "fastMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
+        |> andMap (Decode.at [ "moves", "chargedMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
+        |> andMap (Decode.field "moveStr" Decode.string)
+        |> andMap (Decode.field "score" Decode.float)
 
 
 
