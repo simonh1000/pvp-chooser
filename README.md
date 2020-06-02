@@ -1,5 +1,8 @@
 # Pokemon PVP team manager
 
+Working version: https://pvp.netlify.app/
+
+This app
 Helps analyse type effectiveness: You provide details of your best pokemon in each league, and the competitors you experience,
 and it will help identify teams of 3 that offer the best counters.
 

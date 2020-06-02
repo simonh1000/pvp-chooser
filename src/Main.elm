@@ -491,20 +491,24 @@ viewMyPokemons model league =
                 _ ->
                     viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
 
-        viewer : Int -> Pokemon -> Html Msg
-        viewer idx pokemon =
-            case Dict.get pokemon.speciesId model.pokedex of
-                Just entry ->
-                    viewMyPokemon model entry idx pokemon
+        addData pokemon =
+            ( pokemon
+            , Dict.get pokemon.speciesId model.pokedex
+            , Dict.get pokemon.speciesId model.rankings2500
+            )
 
-                Nothing ->
-                    div [ class <| cardClass ++ " mb-2 bg-red-200" ]
+        viewer : Int -> ( Pokemon, Maybe PokedexEntry, Maybe RankingEntry ) -> Html Msg
+        viewer idx ( p, mbDex, mbRank ) =
+            Maybe.map2 (viewMyPokemon model idx p) mbDex mbRank
+                |> Maybe.withDefault
+                    (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
-                            [ viewNameTitle pokemon.speciesId
+                            [ viewNameTitle "pokemon.speciesId"
                             , deleteIcon <| RemovePokemon idx
                             ]
-                        , div [] [ text <| "Unexpected error looking up " ++ pokemon.speciesId ++ ". Please delete and re-add" ]
+                        , div [] [ text <| "Unexpected error looking up . Please delete and re-add" ]
                         ]
+                    )
     in
     [ h2 [] [ text "My Pokemons" ]
     , chooser
@@ -517,14 +521,16 @@ viewMyPokemons model league =
 
       else
         league.myPokemon
-            |> Array.indexedMap viewer
             |> Array.toList
+            |> L.map addData
+            |> L.sortBy (\( _, _, mbRank ) -> mbRank |> Maybe.map .score |> Maybe.withDefault 0 |> (*) -1)
+            |> L.indexedMap viewer
             |> div []
     ]
 
 
-viewMyPokemon : Model -> PokedexEntry -> Int -> Pokemon -> Html Msg
-viewMyPokemon model entry idx pokemon =
+viewMyPokemon : Model -> Int -> Pokemon -> PokedexEntry -> RankingEntry -> Html Msg
+viewMyPokemon model idx pokemon entry ranking =
     let
         mainCls =
             if Maybe.map .speciesId model.selectedPokemon == Just pokemon.speciesId then
@@ -556,6 +562,7 @@ viewMyPokemon model entry idx pokemon =
                 |> L.map (viewAttack_ SelectChargedMove (\atk -> Set.member atk pokemon.charged))
                 |> (::) (text "Charged: ")
                 |> div [ class "flex flex-row flex-wrap items-center" ]
+            , deleteIcon <| RemovePokemon idx
             ]
 
         topLine =
@@ -571,8 +578,17 @@ viewMyPokemon model entry idx pokemon =
                     , ppTypes entry.types
                     ]
                 , div [ class "flex flex-row items-center" ]
-                    [ attacksSummary
-                    , deleteIcon <| RemovePokemon idx
+                    [ span [ class "flex flex-row items-center text-sm" ]
+                        [ img
+                            [ src "images/pvpoke.png"
+                            , style "height" "20px"
+                            , class "mr-1"
+                            ]
+                            []
+                        , ranking.score |> ppFloat |> text
+                        ]
+
+                    --attacksSummary
                     ]
                 ]
     in
@@ -718,15 +734,13 @@ viewTeam model league =
             Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookupTeamMember team.cand1) (lookupTeamMember team.cand2) (lookupTeamMember team.cand3)
                 |> Result.map (Helpers.summariseTeam league.opponents)
                 |> Result.map (\x -> x / sumFreqs)
-                |> Result.map ppFloat
+                |> Result.map (ppFloat >> (\s -> " (score: " ++ s ++ ")"))
+                |> Result.withDefault ""
     in
-    [ h2 [] [ text "My Team" ]
+    [ h2 [] [ text <| "My Team" ++ mbScore ]
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3
-    , mbScore
-        |> Result.map (\score -> div [] [ text <| "team score: " ++ score ])
-        |> Result.withDefault (text "")
     ]
 
 
