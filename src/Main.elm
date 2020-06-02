@@ -405,7 +405,7 @@ view model =
 
             Battling ->
                 div [ cls "battling" ]
-                    [ div [ class "my-team flex flex-col mr-2" ] (viewTeam model league)
+                    [ div [ class "my-team flex flex-col flex-grow mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
                     ]
 
