@@ -489,17 +489,25 @@ viewMyPokemons model league =
                     viewChooser model.pokedex search state
 
                 _ ->
-                    viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
+                    div [ class "flex flex-row items-center justify-between" ]
+                        [ viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
+                        , img
+                            [ src "images/pvpoke.png"
+                            , style "height" "20px"
+                            , class "mr-2"
+                            ]
+                            []
+                        ]
 
-        addData pokemon =
-            ( pokemon
-            , Dict.get pokemon.speciesId model.pokedex
-            , Dict.get pokemon.speciesId model.rankings2500
-            )
+        addData idx pokemon =
+            MyPokemonData idx
+                pokemon
+                (Dict.get pokemon.speciesId model.pokedex)
+                (Dict.get pokemon.speciesId model.rankings2500)
 
-        viewer : Int -> ( Pokemon, Maybe PokedexEntry, Maybe RankingEntry ) -> Html Msg
-        viewer idx ( p, mbDex, mbRank ) =
-            Maybe.map2 (viewMyPokemon model idx p) mbDex mbRank
+        viewer : MyPokemonData -> Html Msg
+        viewer { idx, pokemon, dex, mbRank } =
+            Maybe.map2 (viewMyPokemon model idx pokemon) dex mbRank
                 |> Maybe.withDefault
                     (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
@@ -522,11 +530,19 @@ viewMyPokemons model league =
       else
         league.myPokemon
             |> Array.toList
-            |> L.map addData
-            |> L.sortBy (\( _, _, mbRank ) -> mbRank |> Maybe.map .score |> Maybe.withDefault 0 |> (*) -1)
-            |> L.indexedMap viewer
+            |> L.indexedMap addData
+            |> L.sortBy (\{ mbRank } -> mbRank |> Maybe.map .score |> Maybe.withDefault 0 |> (*) -1)
+            |> L.map viewer
             |> div []
     ]
+
+
+type alias MyPokemonData =
+    { idx : Int
+    , pokemon : Pokemon
+    , dex : Maybe PokedexEntry
+    , mbRank : Maybe RankingEntry
+    }
 
 
 viewMyPokemon : Model -> Int -> Pokemon -> PokedexEntry -> RankingEntry -> Html Msg
@@ -550,9 +566,6 @@ viewMyPokemon model idx pokemon entry ranking =
                 ]
                 [ viewAttackBadge model.attacks attack ]
 
-        attacksSummary =
-            getAttackTypes model.attacks entry
-
         attacksDetail =
             [ entry.fast
                 |> L.map (viewAttack_ SelectFastMove ((==) pokemon.fast))
@@ -562,7 +575,6 @@ viewMyPokemon model idx pokemon entry ranking =
                 |> L.map (viewAttack_ SelectChargedMove (\atk -> Set.member atk pokemon.charged))
                 |> (::) (text "Charged: ")
                 |> div [ class "flex flex-row flex-wrap items-center" ]
-            , deleteIcon <| RemovePokemon idx
             ]
 
         topLine =
@@ -577,19 +589,15 @@ viewMyPokemon model idx pokemon entry ranking =
                         [ text <| entry.speciesName ]
                     , ppTypes entry.types
                     ]
-                , div [ class "flex flex-row items-center" ]
-                    [ span [ class "flex flex-row items-center text-sm" ]
-                        [ img
-                            [ src "images/pvpoke.png"
-                            , style "height" "20px"
-                            , class "mr-1"
-                            ]
-                            []
-                        , ranking.score |> ppFloat |> text
-                        ]
+                , div [ class "flex flex-row items-center text-sm" ]
+                    [ if pokemon.expanded then
+                        deleteIcon <| RemovePokemon idx
 
-                    --attacksSummary
+                      else
+                        ranking.score |> ppFloat |> text
                     ]
+
+                -- getAttackTypes model.attacks entry
                 ]
     in
     div [ class mainCls ] <|
@@ -802,7 +810,10 @@ viewOpponentsRegistering model league names =
                     viewChooser model.pokedex search state
 
                 _ ->
-                    viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
+                    div [ class "flex flex-row items-center justify-between" ]
+                        [ viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
+                        , span [ class "text-sm" ] [ text "Frequency" ]
+                        ]
 
         viewOpponent ( speciesId, op ) entry =
             let
@@ -818,7 +829,11 @@ viewOpponentsRegistering model league names =
                             [ button [ onClick <| UpdateOpponentFrequency speciesId -1, class "ml-2 mr-1" ] [ text "-" ]
                             , span [ class "mr-1" ] [ text <| String.fromInt op.frequency ]
                             , button [ onClick <| UpdateOpponentFrequency speciesId 1, class "mr-1" ] [ text "+" ]
-                            , deleteIcon <| RemoveOpponent speciesId
+                            , if op.expanded then
+                                deleteIcon <| RemoveOpponent speciesId
+
+                              else
+                                text ""
                             ]
                         ]
 
@@ -1189,7 +1204,7 @@ cardClass =
 deleteIcon : Msg -> Html Msg
 deleteIcon msg =
     span
-        [ class "btn-delete ml-1"
+        [ class "btn-delete ml-1 cursor-pointer"
         , onClick msg
         ]
         [ matIcon "delete-outline" ]
