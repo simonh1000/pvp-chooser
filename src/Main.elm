@@ -571,18 +571,18 @@ viewMyPokemon model idx pokemon entry ranking =
             ranking.moveStr
 
         recFast =
-            LE.getAt p1 entry.fast
+            LE.getAt p1 <| L.sort ranking.fastMoves
 
         recsCharged =
-            [ p2, p3 ] |> L.filterMap (\p -> LE.getAt p ("RETURN" :: entry.charged))
+            [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
 
         attacksDetail =
             [ entry.fast
-                |> L.map (\attack -> viewAttack_ SelectFastMove False (attack == pokemon.fast) attack)
+                |> L.map (\attack -> viewAttack_ SelectFastMove (Just attack == recFast) (attack == pokemon.fast) attack)
                 |> (::) (text "Fast: ")
                 |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
             , entry.charged
-                |> L.map (\attack -> viewAttack_ SelectChargedMove False (Set.member attack pokemon.charged) attack)
+                |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member (Just attack) recsCharged) (Set.member attack pokemon.charged) attack)
                 |> (::) (text "Charged: ")
                 |> div [ class "flex flex-row flex-wrap items-center" ]
             ]
