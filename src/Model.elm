@@ -579,15 +579,12 @@ decMoveType =
 -- -----------------------
 -- Rankings
 -- -----------------------
---type alias Pokedex =
---    -- keyed on Name
---    Dict String PokedexEntry
 
 
 type alias RankingEntry =
     { fastMoves : List String
     , chargedMoves : List String
-    , moveStr : String
+    , moveStr : ( Int, Int, Int )
     , score : Float
     }
 
@@ -604,8 +601,21 @@ decodeRankingEntry =
     Decode.succeed RankingEntry
         |> andMap (Decode.at [ "moves", "fastMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
         |> andMap (Decode.at [ "moves", "chargedMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
-        |> andMap (Decode.field "moveStr" Decode.string)
+        |> andMap (Decode.field "moveStr" decodeMoveStr)
         |> andMap (Decode.field "score" Decode.float)
+
+
+decodeMoveStr =
+    Decode.string
+        |> Decode.andThen
+            (\s ->
+                case String.split "-" s |> L.filterMap String.toInt of
+                    [ s1, s2, s3 ] ->
+                        Decode.succeed ( s1, s2, s3 )
+
+                    _ ->
+                        Decode.fail "could not parse moveStr"
+            )
 
 
 

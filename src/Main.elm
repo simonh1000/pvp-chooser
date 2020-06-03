@@ -15,6 +15,7 @@ import Html.Events exposing (..)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import List as L
+import List.Extra as LE
 import Model exposing (..)
 import Pokemon exposing (Effectiveness, PType, effectiveness, stringFromPType)
 import Ports
@@ -491,12 +492,7 @@ viewMyPokemons model league =
                 _ ->
                     div [ class "flex flex-row items-center justify-between" ]
                         [ viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
-                        , img
-                            [ src "images/pvpoke.png"
-                            , style "height" "20px"
-                            , class "mr-2"
-                            ]
-                            []
+                        , pvpPokeLogo
                         ]
 
         addData idx pokemon =
@@ -555,24 +551,38 @@ viewMyPokemon model idx pokemon entry ranking =
             else
                 cardClass ++ " mb-2 bg-white"
 
-        viewAttack_ selectMove isSelected attack =
+        viewAttack_ selectMove isRec isSelected attack =
             let
                 cls c =
-                    class <| "ml-1 cursor-pointer rounded border-4 " ++ c
+                    class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ c
             in
             span
-                [ cls <| ifThenElse (isSelected attack) "border-teal-300" "border-transparent"
+                [ cls <| ifThenElse isSelected "bg-teal-300" "bg-gray-300"
                 , onClick <| selectMove idx attack
                 ]
-                [ viewAttackBadge model.attacks attack ]
+            <|
+                if isRec then
+                    [ pvpPokeLogo, viewAttackBadge model.attacks attack ]
+
+                else
+                    [ viewAttackBadge model.attacks attack ]
+
+        ( p1, p2, p3 ) =
+            ranking.moveStr
+
+        recFast =
+            LE.getAt p1 entry.fast
+
+        recsCharged =
+            [ p2, p3 ] |> L.filterMap (\p -> LE.getAt p ("RETURN" :: entry.charged))
 
         attacksDetail =
             [ entry.fast
-                |> L.map (viewAttack_ SelectFastMove ((==) pokemon.fast))
+                |> L.map (\attack -> viewAttack_ SelectFastMove False (attack == pokemon.fast) attack)
                 |> (::) (text "Fast: ")
                 |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
             , entry.charged
-                |> L.map (viewAttack_ SelectChargedMove (\atk -> Set.member atk pokemon.charged))
+                |> L.map (\attack -> viewAttack_ SelectChargedMove False (Set.member attack pokemon.charged) attack)
                 |> (::) (text "Charged: ")
                 |> div [ class "flex flex-row flex-wrap items-center" ]
             ]
@@ -1199,6 +1209,15 @@ toggleBtn msg expanded =
 
 cardClass =
     "rounded overflow-hidden shadow-lg p-1 bg-white"
+
+
+pvpPokeLogo =
+    img
+        [ src "images/pvpoke.png"
+        , style "height" "20px"
+        , class "mr-1"
+        ]
+        []
 
 
 deleteIcon : Msg -> Html Msg
