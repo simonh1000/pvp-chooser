@@ -793,10 +793,14 @@ viewTeamMember model speciesId entry isPinned =
             [ viewNameTitle entry.speciesName
             , ppTypes entry.types
             ]
-        , button [ onClick <| PinTeamMember speciesId ]
-            [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
+        , if model.page == TeamOptions then
+            button [ onClick <| PinTeamMember speciesId ]
+                [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
+
+          else
+            text ""
         ]
-    , if isRegistering model.page then
+    , if model.page == Battling then
         attacks |> L.map viewAttk |> div []
 
       else
