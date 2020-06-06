@@ -24,7 +24,9 @@ type alias Model =
     , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
-    , attacks : Dict String MoveType
+    , rankings2500 : Dict String RankingEntry
+    , -- todo move to
+      attacks : Dict String MoveType
     }
 
 
@@ -39,6 +41,7 @@ defaultModel =
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
     , pokedex = Dict.empty
+    , rankings2500 = Dict.empty
     , attacks = Dict.empty
     }
 
@@ -107,7 +110,8 @@ encodeSeason s =
 
 
 type Page
-    = Registering (List String)
+    = Intro
+    | Registering (List String)
     | TeamOptions
     | Battling
     | FatalError String
@@ -130,7 +134,7 @@ isRegistering page =
 
 
 type alias Persisted =
-    { season : Season
+    { season : Maybe Season -- Nothing on first load
     , great : League
     , ultra : League
     , master : League
@@ -149,7 +153,7 @@ decodePersisted =
                 ]
     in
     Decode.succeed Persisted
-        |> andMap (Decode.oneOf [ Decode.field "season" decodeSeason, Decode.succeed Great ])
+        |> andMap (Decode.maybe <| Decode.field "season" decodeSeason)
         |> andMap (dec "great")
         |> andMap (dec "ultra")
         |> andMap (dec "master")
@@ -570,6 +574,49 @@ decMoveType =
     Decode.map2 MoveType
         (Decode.field "name" Decode.string)
         (Decode.field "type" decodePType)
+
+
+
+-- -----------------------
+-- Rankings
+-- -----------------------
+
+
+type alias RankingEntry =
+    { fastMoves : List String
+    , chargedMoves : List String
+    , moveStr : ( Int, Int, Int )
+    , score : Float
+    }
+
+
+decodeRankings : Decoder (Dict String RankingEntry)
+decodeRankings =
+    Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodeRankingEntry
+        |> Decode.list
+        |> Decode.map Dict.fromList
+
+
+decodeRankingEntry : Decoder RankingEntry
+decodeRankingEntry =
+    Decode.succeed RankingEntry
+        |> andMap (Decode.at [ "moves", "fastMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
+        |> andMap (Decode.at [ "moves", "chargedMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
+        |> andMap (Decode.field "moveStr" decodeMoveStr)
+        |> andMap (Decode.field "score" Decode.float)
+
+
+decodeMoveStr =
+    Decode.string
+        |> Decode.andThen
+            (\s ->
+                case String.split "-" s |> L.filterMap String.toInt of
+                    [ s1, s2, s3 ] ->
+                        Decode.succeed ( s1, s2, s3 )
+
+                    _ ->
+                        Decode.fail "could not parse moveStr"
+            )
 
 
 

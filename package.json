@@ -1,6 +1,6 @@
 {
     "author": "Simon Hampton",
-    "name": "elm-webpack-starter",
+    "name": "elm-pvp-manager",
     "version": "1.0.0",
     "description": "Pokemon PVP team manager",
     "main": "index.js",
@@ -10,7 +10,7 @@
         "dev": "webpack-dev-server --hot --colors --port 3000",
         "build": "webpack",
         "prod": "webpack -p",
-        "deploy-local": "webpack -p && cp dist/* ~/Sites",
+        "deploy-local": "npm run prod && cp -r dist/* ~/Sites",
         "analyse": "elm-analyse -s -p 3001 -o"
     },
     "repository": {

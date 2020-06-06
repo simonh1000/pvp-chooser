@@ -15,6 +15,7 @@ import Html.Events exposing (..)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import List as L
+import List.Extra as LE
 import Model exposing (..)
 import Pokemon exposing (Effectiveness, PType, effectiveness, stringFromPType)
 import Ports
@@ -29,22 +30,29 @@ init value =
             let
                 model =
                     { defaultModel
-                        | season = flags.persisted.season
+                        | season = Maybe.withDefault Ultra flags.persisted.season
                         , great = flags.persisted.great
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
                         , pokedex = flags.pokedex
                         , attacks = flags.moves
+                        , rankings2500 = flags.rankings2500
                         , debug = flags.debug
-                        , page =
-                            flags.persisted
+                    }
+
+                page =
+                    case flags.persisted.season of
+                        Just _ ->
+                            model
                                 |> getCurrentLeague
                                 |> .opponents
                                 |> sortOpponents
                                 |> Registering
-                    }
+
+                        Nothing ->
+                            Intro
             in
-            ( addScores model, Cmd.none )
+            ( addScores { model | page = page }, Cmd.none )
 
         Err err ->
             ( { defaultModel | page = FatalError <| Decode.errorToString err }, Cmd.none )
@@ -52,8 +60,10 @@ init value =
 
 type alias Flags =
     { persisted : Persisted
-    , pokedex : Dict String PokedexEntry -- keys by lowercase name
+    , --gamemaster
+      pokedex : Dict String PokedexEntry -- keys by lowercase name
     , moves : Dict String MoveType
+    , rankings2500 : Dict String RankingEntry
     , debug : Bool
     }
 
@@ -64,6 +74,7 @@ decodeFlags =
         |> andMap (Decode.field "myPokemon" decodePersisted)
         |> andMap (Decode.field "pokemon" decodePokedex)
         |> andMap (Decode.field "moves" decodeMoves)
+        |> andMap (Decode.field "rankings2500" decodeRankings)
         |> andMap (Decode.field "debug" Decode.bool)
 
 
@@ -385,6 +396,17 @@ view model =
     div [ class "h-screen flex flex-col" ]
         [ pvpHeader lst model.page
         , case model.page of
+            Intro ->
+                div [ class "intro flex-grow p-3" ]
+                    [ h2 [] [ text "Introduction" ]
+                    , p [] [ text "This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and no where else." ]
+                    , img [ src "images/screenshot.png", class "mb-2" ] []
+                    , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present)." ]
+                    , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. It is also unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
+                    , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
+                    , div [] [ mkStyledButton ( SwitchPage <| Registering [], "Start", True ) ]
+                    ]
+
             Registering names ->
                 div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
@@ -401,7 +423,7 @@ view model =
 
             Battling ->
                 div [ cls "battling" ]
-                    [ div [ class "my-team flex flex-col mr-2" ] (viewTeam model league)
+                    [ div [ class "my-team flex flex-col flex-grow mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
                     ]
 
@@ -437,7 +459,15 @@ pvpHeader lst tgt =
 pvpFooter : Season -> Html Msg
 pvpFooter tgt =
     footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
-        [ span [ class "text-sm" ] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "pvpoke" ] ]
+        [ span [ class "text-sm" ]
+            [ text "Credits: Meta data from "
+            , a
+                [ href "https://pvpoke.com/"
+                , class "underline"
+                ]
+                [ text "PvPoke" ]
+            , span [] [ text ", Privacy: Uses Google Analytics" ]
+            ]
         , mkRadioButtons
             [ ( SwitchSeason Great, "Great", Great == tgt )
             , ( SwitchSeason Ultra, "Ultra", Ultra == tgt )
@@ -448,26 +478,26 @@ pvpFooter tgt =
 
 mkRadioButtons : List ( msg, String, Bool ) -> Html msg
 mkRadioButtons list =
+    list
+        |> L.map (mkStyledButton >> (\htm -> li [ class "mr-3" ] [ htm ]))
+        |> ul [ class "flex" ]
+
+
+mkStyledButton : ( msg, String, Bool ) -> Html msg
+mkStyledButton ( msg, txt, selected ) =
     let
-        cls selected =
-            if selected then
+        cls b =
+            if b then
                 "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
 
             else
                 "inline-block border border-white rounded hover:border-gray-200 text-blue-500 hover:bg-gray-200 py-1 px-3"
-
-        mkButton ( msg, txt, selected ) =
-            li [ class "mr-3" ]
-                [ button
-                    [ class <| cls selected
-                    , onClick msg
-                    ]
-                    [ text txt ]
-                ]
     in
-    list
-        |> L.map mkButton
-        |> ul [ class "flex" ]
+    button
+        [ class <| cls selected
+        , onClick msg
+        ]
+        [ text txt ]
 
 
 
@@ -485,22 +515,36 @@ viewMyPokemons model league =
                     viewChooser model.pokedex search state
 
                 _ ->
-                    viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
+                    div [ class "flex flex-row items-center justify-between" ]
+                        [ viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
+                        , pvpPokeLogo
+                        ]
 
-        viewer : Int -> Pokemon -> Html Msg
-        viewer idx pokemon =
-            case Dict.get pokemon.speciesId model.pokedex of
-                Just entry ->
-                    viewMyPokemon model entry idx pokemon
+        rankings =
+            if model.season == Ultra then
+                model.rankings2500
 
-                Nothing ->
-                    div [ class <| cardClass ++ " mb-2 bg-red-200" ]
+            else
+                Dict.empty
+
+        addData idx pokemon =
+            MyPokemonData idx
+                pokemon
+                (Dict.get pokemon.speciesId model.pokedex)
+                (Dict.get pokemon.speciesId rankings)
+
+        viewer : MyPokemonData -> Html Msg
+        viewer { idx, pokemon, dex, mbRank } =
+            Maybe.map (viewMyPokemon model idx pokemon mbRank) dex
+                |> Maybe.withDefault
+                    (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
                             [ viewNameTitle pokemon.speciesId
                             , deleteIcon <| RemovePokemon idx
                             ]
-                        , div [] [ text <| "Unexpected error looking up " ++ pokemon.speciesId ++ ". Please delete and re-add" ]
+                        , div [] [ text <| "Unexpected error looking up. Please delete and re-add" ]
                         ]
+                    )
     in
     [ h2 [] [ text "My Pokemons" ]
     , chooser
@@ -513,14 +557,24 @@ viewMyPokemons model league =
 
       else
         league.myPokemon
-            |> Array.indexedMap viewer
             |> Array.toList
+            |> L.indexedMap addData
+            |> L.sortBy (\{ mbRank } -> mbRank |> Maybe.map .score |> Maybe.withDefault 0 |> (*) -1)
+            |> L.map viewer
             |> div []
     ]
 
 
-viewMyPokemon : Model -> PokedexEntry -> Int -> Pokemon -> Html Msg
-viewMyPokemon model entry idx pokemon =
+type alias MyPokemonData =
+    { idx : Int
+    , pokemon : Pokemon
+    , dex : Maybe PokedexEntry
+    , mbRank : Maybe RankingEntry
+    }
+
+
+viewMyPokemon : Model -> Int -> Pokemon -> Maybe RankingEntry -> PokedexEntry -> Html Msg
+viewMyPokemon model idx pokemon mbRanking entry =
     let
         mainCls =
             if Maybe.map .speciesId model.selectedPokemon == Just pokemon.speciesId then
@@ -529,27 +583,45 @@ viewMyPokemon model entry idx pokemon =
             else
                 cardClass ++ " mb-2 bg-white"
 
-        viewAttack_ selectMove isSelected attack =
+        viewAttack_ selectMove isRec isSelected attack =
             let
                 cls c =
-                    class <| "ml-1 cursor-pointer rounded border-4 " ++ c
+                    class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ c
             in
             span
-                [ cls <| ifThenElse (isSelected attack) "border-teal-300" "border-transparent"
+                [ cls <| ifThenElse isSelected "bg-teal-300" "bg-gray-300"
                 , onClick <| selectMove idx attack
                 ]
-                [ viewAttackBadge model.attacks attack ]
+            <|
+                if isRec then
+                    [ pvpPokeLogo, viewAttackBadge model.attacks attack ]
 
-        attacksSummary =
-            getAttackTypes model.attacks entry
+                else
+                    [ viewAttackBadge model.attacks attack ]
+
+        getRanks ranking =
+            let
+                ( p1, p2, p3 ) =
+                    ranking.moveStr
+
+                rFast =
+                    LE.getAt p1 <| L.sort ranking.fastMoves
+
+                rsCharged =
+                    [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
+            in
+            ( rFast, rsCharged )
+
+        ( recFast, recsCharged ) =
+            mbRanking |> Maybe.map getRanks |> Maybe.withDefault ( Nothing, [] )
 
         attacksDetail =
             [ entry.fast
-                |> L.map (viewAttack_ SelectFastMove ((==) pokemon.fast))
+                |> L.map (\attack -> viewAttack_ SelectFastMove (Just attack == recFast) (attack == pokemon.fast) attack)
                 |> (::) (text "Fast: ")
                 |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
             , entry.charged
-                |> L.map (viewAttack_ SelectChargedMove (\atk -> Set.member atk pokemon.charged))
+                |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member (Just attack) recsCharged) (Set.member attack pokemon.charged) attack)
                 |> (::) (text "Charged: ")
                 |> div [ class "flex flex-row flex-wrap items-center" ]
             ]
@@ -566,10 +638,15 @@ viewMyPokemon model entry idx pokemon =
                         [ text <| entry.speciesName ]
                     , ppTypes entry.types
                     ]
-                , div [ class "flex flex-row items-center" ]
-                    [ attacksSummary
-                    , deleteIcon <| RemovePokemon idx
+                , div [ class "flex flex-row items-center text-sm" ]
+                    [ if pokemon.expanded then
+                        deleteIcon <| RemovePokemon idx
+
+                      else
+                        mbRanking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
                     ]
+
+                -- getAttackTypes model.attacks entry
                 ]
     in
     div [ class mainCls ] <|
@@ -578,28 +655,6 @@ viewMyPokemon model entry idx pokemon =
 
         else
             [ topLine ]
-
-
-getAttackTypes : Dict String MoveType -> PokedexEntry -> Html msg
-getAttackTypes attacks entry =
-    let
-        fn : String -> List PType -> List PType
-        fn attk acc =
-            case attackToType attacks attk of
-                Just tp ->
-                    if L.member tp acc then
-                        acc
-
-                    else
-                        tp :: acc
-
-                Nothing ->
-                    acc
-    in
-    (entry.fast ++ entry.charged)
-        |> L.foldl fn []
-        |> L.map ppTypeShort
-        |> div [ class "flex flex-row text-xs" ]
 
 
 
@@ -710,19 +765,17 @@ viewTeam model league =
         sumFreqs =
             Helpers.calcWeightedTotal league.opponents
 
-        mbScore =
+        score =
             Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookupTeamMember team.cand1) (lookupTeamMember team.cand2) (lookupTeamMember team.cand3)
                 |> Result.map (Helpers.summariseTeam league.opponents)
                 |> Result.map (\x -> x / sumFreqs)
-                |> Result.map ppFloat
+                |> Result.map (ppFloat >> (\s -> " (score: " ++ s ++ ")"))
+                |> Result.withDefault ""
     in
-    [ h2 [] [ text "My Team" ]
+    [ h2 [] [ text <| "My Team" ++ ifThenElse (model.page == Battling) "" score ]
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3
-    , mbScore
-        |> Result.map (\score -> div [] [ text <| "team score: " ++ score ])
-        |> Result.withDefault (text "")
     ]
 
 
@@ -757,14 +810,19 @@ viewTeamMember model speciesId entry isPinned =
             [ viewNameTitle entry.speciesName
             , ppTypes entry.types
             ]
-        , button [ onClick <| PinTeamMember speciesId ]
-            [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
-        ]
-    , if isRegistering model.page then
-        attacks |> L.map viewAttk |> div []
+        , if model.page == TeamOptions then
+            button [ onClick <| PinTeamMember speciesId ]
+                [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
 
-      else
-        text ""
+          else
+            text ""
+        ]
+
+    --, if model.page == Battling then
+    --    attacks |> L.map viewAttk |> div []
+    --
+    --  else
+    --    text ""
     ]
         ++ viewPokedexResistsAndWeaknesses entry
 
@@ -784,7 +842,10 @@ viewOpponentsRegistering model league names =
                     viewChooser model.pokedex search state
 
                 _ ->
-                    viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
+                    div [ class "flex flex-row items-center justify-between" ]
+                        [ viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
+                        , span [ class "text-sm" ] [ text "Frequency" ]
+                        ]
 
         viewOpponent ( speciesId, op ) entry =
             let
@@ -800,7 +861,11 @@ viewOpponentsRegistering model league names =
                             [ button [ onClick <| UpdateOpponentFrequency speciesId -1, class "ml-2 mr-1" ] [ text "-" ]
                             , span [ class "mr-1" ] [ text <| String.fromInt op.frequency ]
                             , button [ onClick <| UpdateOpponentFrequency speciesId 1, class "mr-1" ] [ text "+" ]
-                            , deleteIcon <| RemoveOpponent speciesId
+                            , if op.expanded then
+                                deleteIcon <| RemoveOpponent speciesId
+
+                              else
+                                text ""
                             ]
                         ]
 
@@ -1054,6 +1119,28 @@ viewTypes fn weaknesses title =
         ]
 
 
+getAttackTypes : Dict String MoveType -> PokedexEntry -> Html msg
+getAttackTypes attacks entry =
+    let
+        fn : String -> List PType -> List PType
+        fn attk acc =
+            case attackToType attacks attk of
+                Just tp ->
+                    if L.member tp acc then
+                        acc
+
+                    else
+                        tp :: acc
+
+                Nothing ->
+                    acc
+    in
+    (entry.fast ++ entry.charged)
+        |> L.foldl fn []
+        |> L.map ppTypeShort
+        |> div [ class "flex flex-row text-xs" ]
+
+
 attackToType : Dict String MoveType -> String -> Maybe PType
 attackToType attacks attack =
     if String.startsWith "HIDDEN" attack then
@@ -1168,10 +1255,19 @@ cardClass =
     "rounded overflow-hidden shadow-lg p-1 bg-white"
 
 
+pvpPokeLogo =
+    img
+        [ src "images/pvpoke.png"
+        , style "height" "20px"
+        , class "mr-1"
+        ]
+        []
+
+
 deleteIcon : Msg -> Html Msg
 deleteIcon msg =
     span
-        [ class "btn-delete ml-1"
+        [ class "btn-delete ml-1 cursor-pointer"
         , onClick msg
         ]
         [ matIcon "delete-outline" ]
