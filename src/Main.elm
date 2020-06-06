@@ -749,14 +749,18 @@ viewTeam model league =
 
                         Pinned name ->
                             handler name True
+
+                overlay =
+                    div [ class "overlay flex flex-row items-center justify-center" ]
+                        [ text "Click here to insert into team" ]
             in
             case model.selectedPokemon of
                 Just selected ->
                     div
-                        [ class "drop-zone p-1 mb-2 border-blue-500"
+                        [ class "drop-zone p-1 mb-2 border-blue-500 relative"
                         , onClick (updater selected.speciesId)
                         ]
-                        content
+                        (overlay :: content)
 
                 Nothing ->
                     div [ class "drop-zone p-1 mb-2 border-gray-500" ]
