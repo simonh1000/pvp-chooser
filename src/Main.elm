@@ -549,7 +549,7 @@ viewMyPokemons model league =
         ul []
             [ ol [] [ text "Add you pokemon using the form above" ]
             , ol [] [ text "Select the attacks you are using" ]
-            , ol [] [ text "Click on a title and then on one of the 'My Team' areas to add strt creating a team" ]
+            , ol [] [ text "Click on a Pokemon's name and then on one of the 'My Team' drop-zones to add to your team" ]
             ]
 
       else
@@ -612,28 +612,22 @@ viewMyPokemon model idx pokemon mbRanking entry =
         ( recFast, recsCharged ) =
             mbRanking |> Maybe.map getRanks |> Maybe.withDefault ( Nothing, [] )
 
-        attacksDetail =
-            [ entry.fast
-                |> L.map (\attack -> viewAttack_ SelectFastMove (Just attack == recFast) (attack == pokemon.fast) attack)
-                |> (::) (text "Fast: ")
-                |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
-            , entry.charged
-                |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member (Just attack) recsCharged) (Set.member attack pokemon.charged) attack)
-                |> (::) (text "Charged: ")
-                |> div [ class "flex flex-row flex-wrap items-center" ]
-            ]
-
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
                 [ div [ class "flex flex-row items-center" ]
                     [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
+                    , ppTypes entry.types
                     , h3
                         [ class "text-xl font-bold cursor-pointer truncate"
                         , onClick <| SelectCandidate pokemon
                         , title "Select for team"
                         ]
-                        [ text <| entry.speciesName ]
-                    , ppTypes entry.types
+                        [ text entry.speciesName ]
+                    , if not pokemon.expanded then
+                        summariseMoves model.attacks pokemon
+
+                      else
+                        text ""
                     ]
                 , div [ class "flex flex-row items-center text-sm" ]
                     [ if pokemon.expanded then
@@ -648,10 +642,36 @@ viewMyPokemon model idx pokemon mbRanking entry =
     in
     div [ class mainCls ] <|
         if pokemon.expanded then
-            topLine :: attacksDetail
+            topLine
+                :: [ entry.fast
+                        |> L.map (\attack -> viewAttack_ SelectFastMove (Just attack == recFast) (attack == pokemon.fast) attack)
+                        |> (::) (text "Fast: ")
+                        |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
+                   , entry.charged
+                        |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member (Just attack) recsCharged) (Set.member attack pokemon.charged) attack)
+                        |> (::) (text "Charged: ")
+                        |> div [ class "flex flex-row flex-wrap items-center" ]
+                   ]
 
         else
             [ topLine ]
+
+
+summariseMoves : Dict String MoveType -> Pokemon -> Html msg
+summariseMoves attacks pokemon =
+    let
+        convert attk =
+            case attackToType attacks attk of
+                Just tp ->
+                    ppTypeShort tp
+
+                Nothing ->
+                    text "?"
+    in
+    div [ class "flex flex-row border border-gray-400 rounded-sm divide-x divide-gray-400 ml-2" ]
+        [ span [ class "mr-2 p-1" ] [ convert pokemon.fast ]
+        , pokemon.charged |> Set.toList |> L.map convert |> span [ class "flex flex-row p-1" ]
+        ]
 
 
 
@@ -808,8 +828,8 @@ viewTeamMember model speciesId entry isPinned =
     in
     [ div [ class "flex flex-row items-center justify-between mb-2" ]
         [ div [ class "flex flex-row items-center" ]
-            [ viewNameTitle entry.speciesName
-            , ppTypes entry.types
+            [ ppTypes entry.types
+            , viewNameTitle entry.speciesName
             ]
         , if model.page == TeamOptions then
             button [ onClick <| PinTeamMember speciesId ]
@@ -855,8 +875,8 @@ viewOpponentsRegistering model league names =
                         [ div
                             [ class "flex flex-row items-center" ]
                             [ toggleBtn (ToggleOpponent speciesId) op.expanded
-                            , viewNameTitle entry.speciesName
                             , ppTypes entry.types
+                            , viewNameTitle entry.speciesName
                             ]
                         , div [ class "flex flex-row items-center" ]
                             [ button [ onClick <| UpdateOpponentFrequency speciesId -1, class "ml-2 mr-1" ] [ text "-" ]
@@ -1120,28 +1140,6 @@ viewTypes fn weaknesses title =
         ]
 
 
-getAttackTypes : Dict String MoveType -> PokedexEntry -> Html msg
-getAttackTypes attacks entry =
-    let
-        fn : String -> List PType -> List PType
-        fn attk acc =
-            case attackToType attacks attk of
-                Just tp ->
-                    if L.member tp acc then
-                        acc
-
-                    else
-                        tp :: acc
-
-                Nothing ->
-                    acc
-    in
-    (entry.fast ++ entry.charged)
-        |> L.foldl fn []
-        |> L.map ppTypeShort
-        |> div [ class "flex flex-row text-xs" ]
-
-
 attackToType : Dict String MoveType -> String -> Maybe PType
 attackToType attacks attack =
     if String.startsWith "HIDDEN" attack then
@@ -1276,7 +1274,19 @@ deleteIcon msg =
 
 ppTypes : List PType -> Html msg
 ppTypes types =
-    types |> L.map (\tp -> span [ class "ml-2" ] [ ppType tp ]) |> div [ class "flex flex-row items-center" ]
+    let
+        base =
+            types |> L.map (\tp -> span [ class "ml-1 mr-1" ] [ ppTypeShort tp ])
+
+        placeholder =
+            span [ class "flex flex-row items-center justify-center badge round small ml-1 mr-1" ] []
+    in
+    div [ class "flex flex-row items-center" ] <|
+        if L.length types == 1 then
+            base ++ [ placeholder ]
+
+        else
+            base
 
 
 ppType : PType -> Html msg
@@ -1294,7 +1304,7 @@ ppTypeShort pType =
         ( str, col ) =
             stringFromPType pType
     in
-    div
+    span
         [ style "background-color" col
         , class "flex flex-row items-center justify-center badge round small"
         ]
