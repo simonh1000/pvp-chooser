@@ -442,7 +442,14 @@ pvpHeader lst tgt =
 pvpFooter : Season -> Html Msg
 pvpFooter tgt =
     footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
-        [ span [ class "text-sm" ] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "pvpoke" ] ]
+        [ span [ class "text-sm" ]
+            [ text "Credits: Meta data from "
+            , a
+                [ href "https://pvpoke.com/"
+                , class "underline"
+                ]
+                [ text "PvPoke" ]
+            ]
         , mkRadioButtons
             [ ( SwitchSeason Great, "Great", Great == tgt )
             , ( SwitchSeason Ultra, "Ultra", Ultra == tgt )
@@ -495,22 +502,29 @@ viewMyPokemons model league =
                         , pvpPokeLogo
                         ]
 
+        rankings =
+            if model.season == Ultra then
+                model.rankings2500
+
+            else
+                Dict.empty
+
         addData idx pokemon =
             MyPokemonData idx
                 pokemon
                 (Dict.get pokemon.speciesId model.pokedex)
-                (Dict.get pokemon.speciesId model.rankings2500)
+                (Dict.get pokemon.speciesId rankings)
 
         viewer : MyPokemonData -> Html Msg
         viewer { idx, pokemon, dex, mbRank } =
-            Maybe.map2 (viewMyPokemon model idx pokemon) dex mbRank
+            Maybe.map (viewMyPokemon model idx pokemon mbRank) dex
                 |> Maybe.withDefault
                     (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
-                            [ viewNameTitle "pokemon.speciesId"
+                            [ viewNameTitle pokemon.speciesId
                             , deleteIcon <| RemovePokemon idx
                             ]
-                        , div [] [ text <| "Unexpected error looking up . Please delete and re-add" ]
+                        , div [] [ text <| "Unexpected error looking up. Please delete and re-add" ]
                         ]
                     )
     in
@@ -541,8 +555,8 @@ type alias MyPokemonData =
     }
 
 
-viewMyPokemon : Model -> Int -> Pokemon -> PokedexEntry -> RankingEntry -> Html Msg
-viewMyPokemon model idx pokemon entry ranking =
+viewMyPokemon : Model -> Int -> Pokemon -> Maybe RankingEntry -> PokedexEntry -> Html Msg
+viewMyPokemon model idx pokemon mbRanking entry =
     let
         mainCls =
             if Maybe.map .speciesId model.selectedPokemon == Just pokemon.speciesId then
@@ -567,14 +581,21 @@ viewMyPokemon model idx pokemon entry ranking =
                 else
                     [ viewAttackBadge model.attacks attack ]
 
-        ( p1, p2, p3 ) =
-            ranking.moveStr
+        getRanks ranking =
+            let
+                ( p1, p2, p3 ) =
+                    ranking.moveStr
 
-        recFast =
-            LE.getAt p1 <| L.sort ranking.fastMoves
+                rFast =
+                    LE.getAt p1 <| L.sort ranking.fastMoves
 
-        recsCharged =
-            [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
+                rsCharged =
+                    [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
+            in
+            ( rFast, rsCharged )
+
+        ( recFast, recsCharged ) =
+            mbRanking |> Maybe.map getRanks |> Maybe.withDefault ( Nothing, [] )
 
         attacksDetail =
             [ entry.fast
@@ -604,7 +625,7 @@ viewMyPokemon model idx pokemon entry ranking =
                         deleteIcon <| RemovePokemon idx
 
                       else
-                        ranking.score |> ppFloat |> text
+                        mbRanking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
                     ]
 
                 -- getAttackTypes model.attacks entry
@@ -800,11 +821,12 @@ viewTeamMember model speciesId entry isPinned =
           else
             text ""
         ]
-    , if model.page == Battling then
-        attacks |> L.map viewAttk |> div []
 
-      else
-        text ""
+    --, if model.page == Battling then
+    --    attacks |> L.map viewAttk |> div []
+    --
+    --  else
+    --    text ""
     ]
         ++ viewPokedexResistsAndWeaknesses entry
 
