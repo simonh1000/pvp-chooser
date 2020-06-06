@@ -460,8 +460,7 @@ pvpFooter : Season -> Html Msg
 pvpFooter tgt =
     footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
         [ span [ class "text-sm" ]
-            [ text "Credits: Meta data from "
-            , a [ href "https://pvpoke.com/" ] [ text "PvPoke" ]
+            [ span [] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "PvPoke" ] ]
             , span [] [ text ", Privacy: Uses Google Analytics" ]
             , span [] [ text ", Code: ", a [ href "https://github.com/simonh1000/pvp-chooser" ] [ text "Github" ] ]
             ]
