@@ -401,7 +401,7 @@ view model =
                     [ h2 [] [ text "Introduction" ]
                     , p [] [ text "This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and no where else." ]
                     , img [ src "images/screenshot.png", class "mb-2" ] []
-                    , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line." ]
+                    , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present)." ]
                     , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. It is also unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
                     , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
                     , div [] [ mkStyledButton ( SwitchPage <| Registering [], "Start", True ) ]
@@ -764,14 +764,14 @@ viewTeam model league =
         sumFreqs =
             Helpers.calcWeightedTotal league.opponents
 
-        mbScore =
+        score =
             Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookupTeamMember team.cand1) (lookupTeamMember team.cand2) (lookupTeamMember team.cand3)
                 |> Result.map (Helpers.summariseTeam league.opponents)
                 |> Result.map (\x -> x / sumFreqs)
                 |> Result.map (ppFloat >> (\s -> " (score: " ++ s ++ ")"))
                 |> Result.withDefault ""
     in
-    [ h2 [] [ text <| "My Team" ++ mbScore ]
+    [ h2 [] [ text <| "My Team" ++ ifThenElse (model.page == Battling) "" score ]
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3
