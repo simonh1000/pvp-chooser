@@ -1,6 +1,6 @@
 {
     "author": "Simon Hampton",
-    "name": "elm-webpack-starter",
+    "name": "elm-pvp-manager",
     "version": "1.0.0",
     "description": "Pokemon PVP team manager",
     "main": "index.js",
