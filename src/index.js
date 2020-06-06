@@ -8,11 +8,13 @@ require("./styles.scss");
 const storageKey = "pokemons";
 
 import gamemaster from "./assets/gamemaster.json";
+import rankings2500 from "./assets/rankings-2500.json";
 
 const myPokemon = JSON.parse(localStorage.getItem(storageKey) || "[]");
 
 const flags = Object.assign(gamemaster, {
     myPokemon,
+    rankings2500,
     debug : false
 });
 // console.log(flags);

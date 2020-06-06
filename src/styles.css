@@ -15,6 +15,9 @@ h2 {
     @apply text-xl mb-3
 }
 
+.intro p {
+    @apply mb-2
+}
 .main.choosing > div {
     flex: 1 0 33%;
 }
