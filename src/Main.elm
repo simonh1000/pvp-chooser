@@ -463,6 +463,7 @@ pvpFooter tgt =
             [ span [] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "PvPoke" ] ]
             , span [] [ text ", Privacy: Uses Google Analytics" ]
             , span [] [ text ", Code: ", a [ href "https://github.com/simonh1000/pvp-chooser" ] [ text "Github" ] ]
+            , span [] [ text ", Feedback: ", a [ href "https://twitter.com/lambda_simon" ] [ text "@lambda_simon" ] ]
             ]
         , mkRadioButtons
             [ ( SwitchSeason Great, "Great", Great == tgt )
@@ -1333,7 +1334,7 @@ main =
         , update = update
         , view =
             \m ->
-                { title = "Autocomplete example"
+                { title = "Pokemon PVP team manager"
                 , body = [ view m ]
                 }
         , subscriptions = \_ -> Sub.none
