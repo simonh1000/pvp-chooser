@@ -43,6 +43,21 @@ h2 {
     flex-wrap: wrap;
 }
 
+.drop-zone {
+    min-height: 100px;
+    border-style: dashed;
+    border-width: 1px;
+}
+
+.drop-zone .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cccccccc;
+}
+
 button.toggle {
     width: 30px;
 }
@@ -92,10 +107,5 @@ button.toggle:hover {
 .super .badge {
     /* super resist/attack */
     @apply font-bold;
-}
-.drop-zone {
-    min-height: 100px;
-    border-style: dashed;
-    border-width: 1px;
 }
 
