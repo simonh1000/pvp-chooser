@@ -110,7 +110,8 @@ encodeSeason s =
 
 
 type Page
-    = Registering (List String)
+    = Intro
+    | Registering (List String)
     | TeamOptions
     | Battling
     | FatalError String
@@ -133,7 +134,7 @@ isRegistering page =
 
 
 type alias Persisted =
-    { season : Season
+    { season : Maybe Season -- Nothing on first load
     , great : League
     , ultra : League
     , master : League
@@ -152,7 +153,7 @@ decodePersisted =
                 ]
     in
     Decode.succeed Persisted
-        |> andMap (Decode.oneOf [ Decode.field "season" decodeSeason, Decode.succeed Great ])
+        |> andMap (Decode.maybe <| Decode.field "season" decodeSeason)
         |> andMap (dec "great")
         |> andMap (dec "ultra")
         |> andMap (dec "master")

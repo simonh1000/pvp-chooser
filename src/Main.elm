@@ -30,7 +30,7 @@ init value =
             let
                 model =
                     { defaultModel
-                        | season = flags.persisted.season
+                        | season = Maybe.withDefault Ultra flags.persisted.season
                         , great = flags.persisted.great
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
@@ -38,15 +38,21 @@ init value =
                         , attacks = flags.moves
                         , rankings2500 = flags.rankings2500
                         , debug = flags.debug
-                        , page =
-                            flags.persisted
+                    }
+
+                page =
+                    case flags.persisted.season of
+                        Just _ ->
+                            model
                                 |> getCurrentLeague
                                 |> .opponents
                                 |> sortOpponents
                                 |> Registering
-                    }
+
+                        Nothing ->
+                            Intro
             in
-            ( addScores model, Cmd.none )
+            ( addScores { model | page = page }, Cmd.none )
 
         Err err ->
             ( { defaultModel | page = FatalError <| Decode.errorToString err }, Cmd.none )
@@ -390,6 +396,17 @@ view model =
     div [ class "h-screen flex flex-col" ]
         [ pvpHeader lst model.page
         , case model.page of
+            Intro ->
+                div [ class "intro flex-grow p-3" ]
+                    [ h2 [] [ text "Introduction" ]
+                    , p [] [ text "This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and no where else." ]
+                    , img [ src "images/screenshot.png", class "mb-2" ] []
+                    , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line." ]
+                    , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. It is also unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
+                    , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
+                    , div [] [ mkStyledButton ( SwitchPage <| Registering [], "Start", True ) ]
+                    ]
+
             Registering names ->
                 div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
@@ -460,26 +477,26 @@ pvpFooter tgt =
 
 mkRadioButtons : List ( msg, String, Bool ) -> Html msg
 mkRadioButtons list =
+    list
+        |> L.map (mkStyledButton >> (\htm -> li [ class "mr-3" ] [ htm ]))
+        |> ul [ class "flex" ]
+
+
+mkStyledButton : ( msg, String, Bool ) -> Html msg
+mkStyledButton ( msg, txt, selected ) =
     let
-        cls selected =
-            if selected then
+        cls b =
+            if b then
                 "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
 
             else
                 "inline-block border border-white rounded hover:border-gray-200 text-blue-500 hover:bg-gray-200 py-1 px-3"
-
-        mkButton ( msg, txt, selected ) =
-            li [ class "mr-3" ]
-                [ button
-                    [ class <| cls selected
-                    , onClick msg
-                    ]
-                    [ text txt ]
-                ]
     in
-    list
-        |> L.map mkButton
-        |> ul [ class "flex" ]
+    button
+        [ class <| cls selected
+        , onClick msg
+        ]
+        [ text txt ]
 
 
 
@@ -637,28 +654,6 @@ viewMyPokemon model idx pokemon mbRanking entry =
 
         else
             [ topLine ]
-
-
-getAttackTypes : Dict String MoveType -> PokedexEntry -> Html msg
-getAttackTypes attacks entry =
-    let
-        fn : String -> List PType -> List PType
-        fn attk acc =
-            case attackToType attacks attk of
-                Just tp ->
-                    if L.member tp acc then
-                        acc
-
-                    else
-                        tp :: acc
-
-                Nothing ->
-                    acc
-    in
-    (entry.fast ++ entry.charged)
-        |> L.foldl fn []
-        |> L.map ppTypeShort
-        |> div [ class "flex flex-row text-xs" ]
 
 
 
@@ -1121,6 +1116,28 @@ viewTypes fn weaknesses title =
             , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             ]
         ]
+
+
+getAttackTypes : Dict String MoveType -> PokedexEntry -> Html msg
+getAttackTypes attacks entry =
+    let
+        fn : String -> List PType -> List PType
+        fn attk acc =
+            case attackToType attacks attk of
+                Just tp ->
+                    if L.member tp acc then
+                        acc
+
+                    else
+                        tp :: acc
+
+                Nothing ->
+                    acc
+    in
+    (entry.fast ++ entry.charged)
+        |> L.foldl fn []
+        |> L.map ppTypeShort
+        |> div [ class "flex flex-row text-xs" ]
 
 
 attackToType : Dict String MoveType -> String -> Maybe PType
