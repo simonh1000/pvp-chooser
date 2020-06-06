@@ -91,7 +91,7 @@ type Msg
     | ACMsg Autocomplete.Msg
     | ACSearch String
     | ACSelect Bool String -- isMyPokemon name
-    | SetAutoComplete PokedexChooser
+    | SetAutoComplete SearchTool
       -- My pokemons
     | ToggleMyPokemon Int
     | SelectFastMove Int String
@@ -194,13 +194,13 @@ update message model =
                                 Registering lst
 
                             else
-                                Registering <| lst ++ [ speciesId ]
+                                Registering <| speciesId :: lst
 
                         p ->
                             p
             in
             { newModel
-                | chooser = mapSearch (\_ -> "") model.chooser
+                | chooser = resetSearch model.chooser
                 , page = page
             }
                 |> andPersist
@@ -1206,7 +1206,7 @@ viewChooser pokedex search autocomplete =
         ]
 
 
-viewChooserPlaceholder : PokedexChooser -> Html Msg
+viewChooserPlaceholder : SearchTool -> Html Msg
 viewChooserPlaceholder chooser =
     div
         [ class "flex flex-row mb-2 cursor-pointer"
