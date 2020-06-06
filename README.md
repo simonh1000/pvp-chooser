@@ -4,7 +4,7 @@ See it in action: https://pvp.netlify.app/
 
 This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and no where else.
 
-![screenshot](https://github.com/simonh1000/pvp-chooser/blob/rankings/src/assets/images/screenshot.png?raw=true)
+![screenshot](https://github.com/simonh1000/pvp-chooser/blob/master/src/assets/images/screenshot.png?raw=true)
 
 To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present).
 
