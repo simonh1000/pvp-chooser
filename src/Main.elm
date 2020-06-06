@@ -466,6 +466,7 @@ pvpFooter tgt =
                 , class "underline"
                 ]
                 [ text "PvPoke" ]
+            , span [] [ text ", Privacy: Uses Google Analytics" ]
             ]
         , mkRadioButtons
             [ ( SwitchSeason Great, "Great", Great == tgt )
