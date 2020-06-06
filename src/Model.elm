@@ -20,7 +20,7 @@ type alias Model =
     , -- session data
       page : Page
     , selectedPokemon : Maybe Pokemon
-    , chooser : PokedexChooser
+    , chooser : SearchTool
     , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
@@ -625,13 +625,13 @@ decodeMoveStr =
 -- -----------------------
 
 
-type PokedexChooser
+type SearchTool
     = MyChooser String Autocomplete.State
     | OpponentChooser String Autocomplete.State
     | NoChooser
 
 
-mapSearch : (String -> String) -> PokedexChooser -> PokedexChooser
+mapSearch : (String -> String) -> SearchTool -> SearchTool
 mapSearch fn chooser =
     case chooser of
         MyChooser string state ->
@@ -639,6 +639,19 @@ mapSearch fn chooser =
 
         OpponentChooser string state ->
             OpponentChooser (fn string) state
+
+        NoChooser ->
+            NoChooser
+
+
+resetSearch : SearchTool -> SearchTool
+resetSearch chooser =
+    case chooser of
+        MyChooser string state ->
+            MyChooser "" Autocomplete.empty
+
+        OpponentChooser string state ->
+            OpponentChooser "" Autocomplete.empty
 
         NoChooser ->
             NoChooser
