@@ -9,7 +9,7 @@
         "start": "npm run dev",
         "dev": "webpack-dev-server --hot --colors --port 3000",
         "build": "webpack",
-        "prod": "webpack -p",
+        "prod": "export NODE_ENV=production && webpack -p",
         "deploy-local": "npm run prod && cp -r dist/* ~/Sites",
         "analyse": "elm-analyse -s -p 3001 -o"
     },
@@ -52,8 +52,8 @@
     },
     "dependencies": {
         "@mdi/font": "^5.0.45",
-        "tailwindcss": "^1.2.0",
-        "postcss": "^7.0.27"
+        "postcss": "^7.0.27",
+        "tailwindcss": "^1.4.6"
     },
     "prettier": {
         "tabWidth": 4
