@@ -15,7 +15,6 @@ import Html.Events exposing (..)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import List as L
-import List.Extra as LE
 import Model exposing (..)
 import Pokemon exposing (Effectiveness, PType, effectiveness, stringFromPType)
 import Ports
@@ -596,21 +595,8 @@ viewMyPokemon model idx pokemon mbRanking entry =
                 else
                     [ viewAttackBadge model.attacks attack ]
 
-        getRanks ranking =
-            let
-                ( p1, p2, p3 ) =
-                    ranking.moveStr
-
-                rFast =
-                    LE.getAt p1 <| L.sort ranking.fastMoves
-
-                rsCharged =
-                    [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
-            in
-            ( rFast, rsCharged )
-
-        ( recFast, recsCharged ) =
-            mbRanking |> Maybe.map getRanks |> Maybe.withDefault ( Nothing, [] )
+        { recFast, recsCharged } =
+            mbRanking |> Maybe.withDefault (RankingEntry Nothing [] 0)
 
         topLine =
             div [ class "flex flex-row items-center justify-between" ]

@@ -8,6 +8,7 @@ import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
 import List as L
+import List.Extra as LE
 import Pokemon exposing (..)
 import Set exposing (Set)
 
@@ -583,9 +584,8 @@ decMoveType =
 
 
 type alias RankingEntry =
-    { fastMoves : List String
-    , chargedMoves : List String
-    , moveStr : ( Int, Int, Int )
+    { recFast : Maybe String
+    , recsCharged : List (Maybe String)
     , score : Float
     }
 
@@ -595,11 +595,35 @@ decodeRankings =
     Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodeRankingEntry
         |> Decode.list
         |> Decode.map Dict.fromList
+        |> Decode.map (Dict.map <| \_ -> postProcessRankings)
 
 
-decodeRankingEntry : Decoder RankingEntry
+postProcessRankings : RawRanking -> RankingEntry
+postProcessRankings ranking =
+    let
+        ( p1, p2, p3 ) =
+            ranking.moveStr
+
+        rFast =
+            LE.getAt p1 <| L.sort ranking.fastMoves
+
+        rsCharged =
+            [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
+    in
+    RankingEntry rFast rsCharged ranking.score
+
+
+type alias RawRanking =
+    { fastMoves : List String
+    , chargedMoves : List String
+    , moveStr : ( Int, Int, Int )
+    , score : Float
+    }
+
+
+decodeRankingEntry : Decoder RawRanking
 decodeRankingEntry =
-    Decode.succeed RankingEntry
+    Decode.succeed RawRanking
         |> andMap (Decode.at [ "moves", "fastMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
         |> andMap (Decode.at [ "moves", "chargedMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
         |> andMap (Decode.field "moveStr" decodeMoveStr)
