@@ -559,9 +559,7 @@ viewMyPokemons model league =
                         ]
 
         addData idx pokemon =
-            MyPokemonData idx
-                pokemon
-                (Dict.get pokemon.speciesId model.pokedex)
+            MyPokemonData idx pokemon (Dict.get pokemon.speciesId model.pokedex)
 
         viewer : MyPokemonData -> Html Msg
         viewer { idx, pokemon, dex } =
@@ -589,7 +587,7 @@ viewMyPokemons model league =
         league.myPokemon
             |> Array.toList
             |> L.indexedMap addData
-            |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .ranking |> Maybe.map .score |> Maybe.withDefault 0 |> (*) -1)
+            |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .score |> Maybe.withDefault 0 |> (*) -1)
             |> L.map viewer
             |> div []
     ]
@@ -624,8 +622,8 @@ viewMyPokemon model idx pokemon entry =
             <|
                 [ viewMoveWithPvPoke model.attacks isRec attack ]
 
-        { recFast, recsCharged } =
-            entry.ranking |> Maybe.withDefault (RankingEntry Nothing [] 0)
+        ( recFast, recsCharged ) =
+            ( entry.recFast, entry.recsCharged )
 
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
@@ -651,7 +649,7 @@ viewMyPokemon model idx pokemon entry =
                         deleteIcon <| RemovePokemon idx
 
                       else
-                        entry.ranking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
+                        entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text
                     ]
 
                 -- getAttackTypes model.attacks entry
@@ -911,11 +909,11 @@ viewOpponentsRegistering model league names =
                 content =
                     if op.expanded then
                         [ entry.fast
-                            |> L.map (\attk -> viewMoveWithPvPoke model.attacks (Just attk == Maybe.andThen .recFast entry.ranking) attk)
+                            |> L.map (\attk -> viewMoveWithPvPoke model.attacks (Just attk == entry.recFast) attk)
                             |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
                             |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
                         , entry.charged
-                            |> L.map (\attk -> viewMoveWithPvPoke model.attacks (L.member (Just attk) (Maybe.withDefault [] <| Maybe.map .recsCharged entry.ranking)) attk)
+                            |> L.map (\attk -> viewMoveWithPvPoke model.attacks (L.member (Just attk) entry.recsCharged) attk)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
                         , div [] <| viewPokemonResistsAndWeaknesses model speciesId
@@ -977,14 +975,13 @@ viewOpponentsBattling model league =
             in
             div [ class <| cardClass ++ " flex flex-row  items-center justify-between mb-1" ]
                 [ div [ class "flex flex-row items-center" ]
-                    [ div []
-                        [ viewNameTitle entry.speciesName
-                        , if model.debug then
-                            small [ class "text-xs" ] [ text <| calcTeamScores model league speciesId ]
+                    [ ppTypes entry.types
+                    , viewNameTitle entry.speciesName
+                    , if model.debug then
+                        small [ class "text-xs" ] [ text <| calcTeamScores model league speciesId ]
 
-                          else
-                            text ""
-                        ]
+                      else
+                        text ""
                     , viewLst "bg-green-200" weak
                     ]
                 , viewLst "bg-red-200" resists
@@ -1241,6 +1238,7 @@ viewConfig =
 -- -------------------
 
 
+toggleBtn : msg -> Bool -> Html msg
 toggleBtn msg expanded =
     button
         [ class "toggle"
