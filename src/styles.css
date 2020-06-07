@@ -29,6 +29,9 @@ a {
     flex-basis: 300px;
     overflow: hidden;
 }
+.my-team .spacer {
+    height: 24px;
+}
 /*.battling .my-team {*/
 /*    flex-basis: 400px;*/
 /*}*/

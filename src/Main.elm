@@ -439,7 +439,8 @@ view model =
             Registering names ->
                 div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
-                    , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ]
+                        (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsRegistering model league names)
                     ]
 
@@ -741,10 +742,6 @@ viewTeam model league =
         team =
             league.team
 
-        convertToPokedex : Pokemon -> PokedexEntry -> ( String, PokedexEntry )
-        convertToPokedex pokemon pokedex =
-            ( pokemon.speciesId, { pokedex | fast = [ pokemon.fast ], charged = Set.toList pokemon.charged } )
-
         lookupTeamMember : TeamMember -> Result String Pokemon
         lookupTeamMember teamMember =
             case teamMember of
@@ -765,10 +762,10 @@ viewTeam model league =
                             (\pokemon ->
                                 model.pokedex
                                     |> Dict.get pokemon.speciesId
-                                    |> Maybe.map (convertToPokedex pokemon)
+                                    |> Maybe.map (Tuple.pair pokemon)
                                     |> Result.fromMaybe ("Could not look up " ++ pokemon.speciesId ++ " in pokedex")
                             )
-                        |> Result.map (\( _, entry ) -> viewTeamMember model name entry isPinned)
+                        |> Result.map (\( pokemon, entry ) -> viewTeamMember model name entry isPinned pokemon)
                         |> RE.extract (\err -> [ text err ])
 
                 content =
@@ -809,14 +806,15 @@ viewTeam model league =
                 |> Result.withDefault ""
     in
     [ h2 [] [ text <| "My Team" ++ ifThenElse (model.page == Battling) "" score ]
+    , div [ class "spacer mb-2" ] []
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3
     ]
 
 
-viewTeamMember : Model -> String -> PokedexEntry -> Bool -> List (Html Msg)
-viewTeamMember model speciesId entry isPinned =
+viewTeamMember : Model -> String -> PokedexEntry -> Bool -> Pokemon -> List (Html Msg)
+viewTeamMember model speciesId entry isPinned pokemon =
     --let
     --    go attk acc =
     --        case attackToType model.attacks attk of
@@ -845,6 +843,7 @@ viewTeamMember model speciesId entry isPinned =
         [ div [ class "flex flex-row items-center" ]
             [ ppTypes entry.types
             , viewNameTitle entry.speciesName
+            , span [ class "ml-2" ] [ summariseMoves model.attacks pokemon ]
             ]
         , if model.page == TeamOptions then
             button [ onClick <| PinTeamMember speciesId ]
