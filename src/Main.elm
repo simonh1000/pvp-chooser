@@ -685,7 +685,7 @@ summariseMoves attacks pokemon =
                     text "?"
     in
     div [ class "flex flex-row border border-gray-400 rounded-sm divide-x divide-gray-400 mr-2" ]
-        [ span [ class "mr-2 p-1" ] [ convert pokemon.fast ]
+        [ span [ class "p-1" ] [ convert pokemon.fast ]
         , pokemon.charged |> Set.toList |> L.map convert |> span [ class "flex flex-row p-1" ]
         ]
 
@@ -805,8 +805,8 @@ viewTeam model league =
                 |> Result.map (ppFloat >> (\s -> " (score: " ++ s ++ ")"))
                 |> Result.withDefault ""
     in
-    [ h2 [] [ text <| "My Team" ++ ifThenElse (model.page == Battling) "" score ]
-    , div [ class "spacer mb-2" ] []
+    [ h2 [] [ text <| "My Team" ++ ifThenElse (model.page == TeamOptions) score "" ]
+    , div [ class "spacer" ] []
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3

@@ -173,13 +173,13 @@ addScoresToLeague model league =
 evaluateBattle : Pokedex -> Dict String MoveType -> Pokemon -> String -> Result String Float
 evaluateBattle pokedex attacks pokemon opSpeciesId =
     let
-        handler myPokedexEntry opponent =
+        handler myDexEntry opDexEntry =
             let
                 attackScore =
-                    evaluateAgainstOpponent attacks pokemon opponent.types
+                    evaluateAgainstOpponent attacks pokemon opDexEntry.types
 
                 defenceScore =
-                    evaluateAverageEffect attacks (opponent.fast ++ opponent.charged) myPokedexEntry.types
+                    evaluateOpponentAttacks attacks opDexEntry myDexEntry.types
             in
             attackScore / defenceScore
     in
@@ -187,6 +187,8 @@ evaluateBattle pokedex attacks pokemon opSpeciesId =
         |> Result.fromMaybe ("could not look up one of : " ++ opSpeciesId ++ ", or " ++ pokemon.speciesId)
 
 
+{-| Calculates effect of my pokemon's chosen attacks on an opponent
+-}
 evaluateAgainstOpponent : Dict String MoveType -> Pokemon -> List PType -> Float
 evaluateAgainstOpponent attacks pokemon opponentTypes =
     let
@@ -212,19 +214,38 @@ evaluateAgainstOpponent attacks pokemon opponentTypes =
     (bestCharged + fastAttack) / 2
 
 
-evaluateAverageEffect : Dict String MoveType -> List String -> List PType -> Float
-evaluateAverageEffect attacks attackNames opponentTypes =
+{-| Calculates effect of opponent's pokemons' (weighted) average attacks on my pokemon
+-}
+evaluateOpponentAttacks : Dict String MoveType -> PokedexEntry -> List PType -> Float
+evaluateOpponentAttacks attacks opDexEntry myTypes =
     let
+        pvPokeMultiplier =
+            3
+
+        isPvPoke attk score =
+            if Just attk == opDexEntry.recFast || L.member (Just attk) opDexEntry.recsCharged then
+                score * pvPokeMultiplier
+
+            else
+                score
+
+        opAttackNames =
+            opDexEntry.fast ++ opDexEntry.charged
+
         lookup attack =
             attack
                 |> lookupMatrix attacks
-                |> Maybe.map (calculateEffectiveness opponentTypes)
+                |> Maybe.map (calculateEffectiveness myTypes >> isPvPoke attack)
+                -- multiply by likelihood of having been chosen
                 |> Maybe.withDefault -100
+
+        denominator =
+            L.length opAttackNames + ((pvPokeMultiplier - 1) * L.length (L.filterMap identity <| opDexEntry.recFast :: opDexEntry.recsCharged))
     in
-    attackNames
+    opAttackNames
         |> L.map lookup
         |> L.sum
-        |> (\total -> total / (toFloat <| L.length attackNames))
+        |> (\total -> total / toFloat denominator)
 
 
 lookupMatrix : Dict String MoveType -> String -> Maybe (Dict PType Float)
