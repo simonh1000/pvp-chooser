@@ -610,11 +610,7 @@ viewMyPokemon model idx pokemon entry =
                 , onClick <| selectMove idx attack
                 ]
             <|
-                if isRec then
-                    [ pvpPokeLogo, viewAttackBadge model.attacks attack ]
-
-                else
-                    [ viewAttackBadge model.attacks attack ]
+                [ viewMoveWithPvPoke model.attacks isRec attack ]
 
         { recFast, recsCharged } =
             entry.ranking |> Maybe.withDefault (RankingEntry Nothing [] 0)
@@ -622,29 +618,31 @@ viewMyPokemon model idx pokemon entry =
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
                 [ div [ class "flex flex-row items-center" ]
-                    [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
-                    , ppTypes entry.types
-                    , h3
-                        [ class "text-xl font-bold cursor-pointer truncate"
-                        , onClick <| SelectCandidate pokemon
-                        , title "Select for team"
+                    [ div [ class "flex flex-row items-center" ]
+                        [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
+                        , ppTypes entry.types
+                        , h3
+                            [ class "text-xl font-bold cursor-pointer truncate"
+                            , onClick <| SelectCandidate pokemon
+                            , title "Select for team"
+                            ]
+                            [ text entry.speciesName ]
                         ]
-                        [ text entry.speciesName ]
+                    , div [ class "flex flex-row items-center text-sm" ]
+                        [ if not pokemon.expanded then
+                            summariseMoves model.attacks pokemon
+
+                          else
+                            text ""
+                        , if pokemon.expanded then
+                            deleteIcon <| RemovePokemon idx
+
+                          else
+                            entry.ranking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
+                        ]
+
+                    -- getAttackTypes model.attacks entry
                     ]
-                , div [ class "flex flex-row items-center text-sm" ]
-                    [ if not pokemon.expanded then
-                        summariseMoves model.attacks pokemon
-
-                      else
-                        text ""
-                    , if pokemon.expanded then
-                        deleteIcon <| RemovePokemon idx
-
-                      else
-                        entry.ranking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
-                    ]
-
-                -- getAttackTypes model.attacks entry
                 ]
     in
     div [ class mainCls ] <|
@@ -875,6 +873,7 @@ viewOpponentsRegistering model league names =
                         , span [ class "text-sm" ] [ text "Frequency" ]
                         ]
 
+        viewOpponent : ( String, Opponent ) -> PokedexEntry -> Html Msg
         viewOpponent ( speciesId, op ) entry =
             let
                 headerRow =
@@ -900,11 +899,11 @@ viewOpponentsRegistering model league names =
                 content =
                     if op.expanded then
                         [ entry.fast
-                            |> L.map (viewAttackBadge model.attacks)
+                            |> L.map (\attk -> viewMoveWithPvPoke model.attacks (Just attk == Maybe.andThen .recFast entry.ranking) attk)
                             |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
                             |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
                         , entry.charged
-                            |> L.map (viewAttackBadge model.attacks)
+                            |> L.map (\attk -> viewMoveWithPvPoke model.attacks (L.member (Just attk) (Maybe.withDefault [] <| Maybe.map .recsCharged entry.ranking)) attk)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
                         , div [] <| viewPokemonResistsAndWeaknesses model speciesId
@@ -1158,11 +1157,17 @@ attackToType attacks attack =
             |> Maybe.map .type_
 
 
-viewAttackBadge : Dict String MoveType -> String -> Html msg
-viewAttackBadge attacks attack =
+viewMoveWithPvPoke : Dict String MoveType -> Bool -> String -> Html msg
+viewMoveWithPvPoke attacks isRec attack =
     case Dict.get attack attacks of
         Just mt ->
-            badge (Tuple.second <| stringFromPType mt.type_) mt.name
+            span
+                [ style "background-color" <| Tuple.second <| stringFromPType mt.type_
+                , class "flex flex-row items-center badge p-1 rounded text-sm"
+                ]
+                [ ifThenElse isRec pvpPokeLogo (text "")
+                , span [ class "truncate" ] [ text mt.name ]
+                ]
 
         Nothing ->
             text attack
