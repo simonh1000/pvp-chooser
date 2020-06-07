@@ -148,7 +148,7 @@ addScoresToLeague model league =
             let
                 foldFn : ( String, Opponent ) -> Dict String Float -> Result String (Dict String Float)
                 foldFn ( speciesId, _ ) acc =
-                    case evaluateBattle model.pokedex model.attacks p speciesId of
+                    case evaluateBattle model.pokedex model.moves p speciesId of
                         Ok score ->
                             Ok <| Dict.insert speciesId score acc
 

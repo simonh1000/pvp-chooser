@@ -3,21 +3,17 @@
 require("./styles.css");
 require("./styles.scss");
 
-// require("@mdi/font/css/materialdesignicons.min.css");
-
 const storageKey = "pokemons";
-
-import gamemaster from "./assets/gamemaster.json";
 
 const myPokemon = JSON.parse(localStorage.getItem(storageKey) || "[]");
 
-const flags = Object.assign(gamemaster, {
+const flags = {
     myPokemon,
-    debug : false
-});
+    debug: false
+};
 // console.log(flags);
 
-const { Elm } = require("./Main");
+const {Elm} = require("./Main");
 var app = Elm.Main.init({
     flags
 });

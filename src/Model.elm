@@ -27,7 +27,7 @@ type alias Model =
     , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
-    , attacks : Dict String MoveType
+    , moves : Dict String MoveType
     }
 
 
@@ -43,7 +43,7 @@ defaultModel =
     , chooser = MyChooser "" Autocomplete.empty
     , errorMessage = Nothing
     , pokedex = Dict.empty
-    , attacks = Dict.empty
+    , moves = Dict.empty
     }
 
 
@@ -81,6 +81,7 @@ getCurrentLeague model =
 
 type Page
     = Intro
+    | LoadingDex
     | Registering (List String)
     | TeamOptions
     | Battling

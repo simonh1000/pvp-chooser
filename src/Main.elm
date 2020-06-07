@@ -35,24 +35,18 @@ init value =
                         , great = flags.persisted.great
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
-                        , pokedex = flags.pokedex
-                        , attacks = flags.moves
                         , debug = flags.debug
                     }
 
                 page =
                     case flags.persisted.season of
                         Just _ ->
-                            model
-                                |> getCurrentLeague
-                                |> .opponents
-                                |> sortOpponents
-                                |> Registering
+                            LoadingDex
 
                         Nothing ->
                             Intro
             in
-            ( addScores { model | page = page }, getRankings model.season )
+            ( addScores { model | page = page }, getPokedex )
 
         Err err ->
             ( { defaultModel | page = FatalError <| Decode.errorToString err }, Cmd.none )
@@ -60,9 +54,6 @@ init value =
 
 type alias Flags =
     { persisted : Persisted
-    , --gamemaster
-      pokedex : Dict String PokedexEntry -- keys by lowercase name
-    , moves : Dict String MoveType
     , debug : Bool
     }
 
@@ -71,8 +62,6 @@ decodeFlags : Decoder Flags
 decodeFlags =
     Decode.succeed Flags
         |> andMap (Decode.field "myPokemon" decodePersisted)
-        |> andMap (Decode.field "pokemon" decodePokedex)
-        |> andMap (Decode.field "moves" decodeMoves)
         |> andMap (Decode.field "debug" Decode.bool)
 
 
@@ -106,6 +95,7 @@ type Msg
     | UpdateOpponentFrequency String Int -- name
     | RemoveOpponent String
       --
+    | OnPokedex (Result Http.Error ( Dict String MoveType, Pokedex ))
     | OnRankingData Season (Result Http.Error (Dict String RankingEntry))
 
 
@@ -319,6 +309,20 @@ update message model =
                 |> updateLeague (\l -> { l | opponents = Dict.filter (\n _ -> n /= name) l.opponents })
                 |> andPersist
 
+        OnPokedex res ->
+            case res of
+                Ok ( moves, pokedex ) ->
+                    ( { model
+                        | page = mkRegisteringPage model
+                        , moves = moves
+                        , pokedex = pokedex
+                      }
+                    , getRankings model.season
+                    )
+
+                Err _ ->
+                    ( { model | page = FatalError "Could not load gamemaster data" }, Cmd.none )
+
         OnRankingData season res ->
             case res of
                 Ok rankings ->
@@ -340,6 +344,13 @@ update message model =
                     )
 
 
+mkRegisteringPage =
+    getCurrentLeague
+        >> .opponents
+        >> sortOpponents
+        >> Registering
+
+
 addScores : Model -> Model
 addScores model =
     { model
@@ -352,7 +363,7 @@ addScores model =
 andPersist : Model -> ( Model, Cmd msg )
 andPersist model =
     ( addScores model
-    , Ports.toJs { tag = "Persist", payload = encodePersisted model }
+    , Ports.persist <| encodePersisted model
     )
 
 
@@ -435,6 +446,9 @@ view model =
                     , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
                     , div [] [ mkStyledButton ( SwitchPage <| Registering [], "Start", True ) ]
                     ]
+
+            LoadingDex ->
+                div [ class "loading flex-grow" ] []
 
             Registering names ->
                 div [ cls "choosing" ]
@@ -579,9 +593,9 @@ viewMyPokemons model league =
     , chooser
     , if Array.isEmpty league.myPokemon then
         ul []
-            [ ol [] [ text "Add you pokemon using the form above" ]
-            , ol [] [ text "Select the attacks you are using" ]
-            , ol [] [ text "Click on a Pokemon's name and then on one of the 'My Team' drop-zones to add to your team" ]
+            [ ol [ class "mb-3" ] [ matIcon "arrow-up-bold", matIcon "arrow-up-bold", text "First add some of your pokemon using the form above" ]
+            , ol [ class "mb-3" ] [ text "Select the attacks you are using" ]
+            , ol [ class "mb-3" ] [ text "Click on a Pokemon's name and then on one of the 'My Team' drop-zones to add to your team" ]
             ]
 
       else
@@ -621,7 +635,7 @@ viewMyPokemon model idx pokemon entry =
                 , onClick <| selectMove idx attack
                 ]
             <|
-                [ viewMoveWithPvPoke model.attacks isRec attack ]
+                [ viewMoveWithPvPoke model.moves isRec attack ]
 
         ( recFast, recsCharged ) =
             ( entry.recFast, entry.recsCharged )
@@ -642,7 +656,7 @@ viewMyPokemon model idx pokemon entry =
                 , -- RHS
                   div [ class "flex flex-row items-center text-sm" ]
                     [ if not pokemon.expanded then
-                        summariseMoves model.attacks pokemon
+                        summariseMoves model.moves pokemon
 
                       else
                         text ""
@@ -843,7 +857,7 @@ viewTeamMember model speciesId entry isPinned pokemon =
         [ div [ class "flex flex-row items-center" ]
             [ ppTypes entry.types
             , viewNameTitle entry.speciesName
-            , span [ class "ml-2" ] [ summariseMoves model.attacks pokemon ]
+            , span [ class "ml-2" ] [ summariseMoves model.moves pokemon ]
             ]
         , if model.page == TeamOptions then
             button [ onClick <| PinTeamMember speciesId ]
@@ -908,11 +922,11 @@ viewOpponentsRegistering model league names =
                 content =
                     if op.expanded then
                         [ entry.fast
-                            |> L.map (\attk -> viewMoveWithPvPoke model.attacks (Just attk == entry.recFast) attk)
+                            |> L.map (\attk -> viewMoveWithPvPoke model.moves (Just attk == entry.recFast) attk)
                             |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
                             |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
                         , entry.charged
-                            |> L.map (\attk -> viewMoveWithPvPoke model.attacks (L.member (Just attk) entry.recsCharged) attk)
+                            |> L.map (\attk -> viewMoveWithPvPoke model.moves (L.member (Just attk) entry.recsCharged) attk)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
                         , div [] <| viewPokemonResistsAndWeaknesses model speciesId
@@ -1033,14 +1047,14 @@ summariseTeam model league =
     , league.team.cand3
     ]
         |> L.filterMap getMember
-        |> summariseTeam2 model.attacks league.myPokemon
+        |> summariseTeam2 model.moves league.myPokemon
 
 
 calcTeamScores : Model -> League -> String -> String
 calcTeamScores model league opName =
     let
         mkItemInner pokemon =
-            Helpers.evaluateBattle model.pokedex model.attacks pokemon opName
+            Helpers.evaluateBattle model.pokedex model.moves pokemon opName
                 |> Result.toMaybe
 
         mkItem : String -> String
@@ -1335,10 +1349,27 @@ matIcon t =
 -- -----------------
 
 
+getPokedex : Cmd Msg
+getPokedex =
+    let
+        dec =
+            Decode.map2 Tuple.pair
+                (Decode.field "moves" decodeMoves)
+                (Decode.field "pokemon" decodePokedex)
+    in
+    Http.get
+        { url = "gamemaster.json"
+        , expect = Http.expectJson OnPokedex dec
+        }
+
+
 getRankings : Season -> Cmd Msg
 getRankings season =
     if season == Ultra then
-        Http.get { url = "rankings-2500.json", expect = Http.expectJson (OnRankingData season) decodeRankings }
+        Http.get
+            { url = "rankings-2500.json"
+            , expect = Http.expectJson (OnRankingData season) decodeRankings
+            }
 
     else
         Task.succeed (Ok Dict.empty)
