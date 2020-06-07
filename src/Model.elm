@@ -20,14 +20,15 @@ type alias Model =
     , master : League
     , -- session data
       page : Page
-    , selectedPokemon : Maybe Pokemon
+    , -- move to Register
+      selectedPokemon : Maybe Pokemon
     , chooser : SearchTool
+    , errorMessage : Maybe String
     , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
+    , attacks : Dict String MoveType
     , rankings2500 : Dict String RankingEntry
-    , -- todo move to
-      attacks : Dict String MoveType
     }
 
 
@@ -41,9 +42,10 @@ defaultModel =
     , page = Registering []
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
+    , errorMessage = Nothing
     , pokedex = Dict.empty
-    , rankings2500 = Dict.empty
     , attacks = Dict.empty
+    , rankings2500 = Dict.empty
     }
 
 
@@ -655,6 +657,11 @@ type SearchTool
     | NoChooser
 
 
+resetSearch : SearchTool -> SearchTool
+resetSearch =
+    mapSearch (\_ -> "") >> mapAutocomplete (\_ -> Autocomplete.empty)
+
+
 mapSearch : (String -> String) -> SearchTool -> SearchTool
 mapSearch fn chooser =
     case chooser of
@@ -668,31 +675,20 @@ mapSearch fn chooser =
             NoChooser
 
 
-resetSearch : SearchTool -> SearchTool
-resetSearch chooser =
+mapAutocomplete : (Autocomplete.State -> Autocomplete.State) -> SearchTool -> SearchTool
+mapAutocomplete fn chooser =
     case chooser of
         MyChooser string state ->
-            MyChooser "" Autocomplete.empty
+            MyChooser string (fn state)
 
         OpponentChooser string state ->
-            OpponentChooser "" Autocomplete.empty
+            OpponentChooser string (fn state)
 
         NoChooser ->
             NoChooser
 
 
 
---mapAutocomplete : (Autocomplete.State -> Autocomplete.State) -> PokedexChooser -> PokedexChooser
---mapAutocomplete fn chooser =
---    case chooser of
---        MyChooser string state ->
---            MyChooser string (fn state)
---
---        OpponentChooser string state ->
---            OpponentChooser string (fn state)
---
---        NoChooser ->
---            NoChooser
 -- Helpers
 
 

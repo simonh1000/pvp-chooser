@@ -5,13 +5,14 @@ import Array.Extra as AE
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Browser
-import Common.CoreHelpers exposing (ifThenElse)
+import Common.CoreHelpers exposing (addCmd, ifThenElse)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
 import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupName)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Http
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import List as L
@@ -20,6 +21,7 @@ import Pokemon exposing (Effectiveness, PType, effectiveness, stringFromPType)
 import Ports
 import Result.Extra as RE
 import Set
+import Task exposing (Task)
 
 
 init : Value -> ( Model, Cmd Msg )
@@ -35,7 +37,6 @@ init value =
                         , master = flags.persisted.master
                         , pokedex = flags.pokedex
                         , attacks = flags.moves
-                        , rankings2500 = flags.rankings2500
                         , debug = flags.debug
                     }
 
@@ -51,7 +52,7 @@ init value =
                         Nothing ->
                             Intro
             in
-            ( addScores { model | page = page }, Cmd.none )
+            ( addScores { model | page = page }, getRankings model.season )
 
         Err err ->
             ( { defaultModel | page = FatalError <| Decode.errorToString err }, Cmd.none )
@@ -62,7 +63,6 @@ type alias Flags =
     , --gamemaster
       pokedex : Dict String PokedexEntry -- keys by lowercase name
     , moves : Dict String MoveType
-    , rankings2500 : Dict String RankingEntry
     , debug : Bool
     }
 
@@ -73,7 +73,6 @@ decodeFlags =
         |> andMap (Decode.field "myPokemon" decodePersisted)
         |> andMap (Decode.field "pokemon" decodePokedex)
         |> andMap (Decode.field "moves" decodeMoves)
-        |> andMap (Decode.field "rankings2500" decodeRankings)
         |> andMap (Decode.field "debug" Decode.bool)
 
 
@@ -106,6 +105,8 @@ type Msg
     | ToggleOpponent String
     | UpdateOpponentFrequency String Int -- name
     | RemoveOpponent String
+      --
+    | OnRankingData Season (Result Http.Error (Dict String RankingEntry))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -117,7 +118,7 @@ update message model =
         SwitchSeason season ->
             let
                 newModel =
-                    { model | season = season }
+                    { model | season = season, rankings2500 = Dict.empty }
 
                 newPage =
                     case model.page of
@@ -131,7 +132,9 @@ update message model =
                         p ->
                             p
             in
-            { newModel | page = newPage } |> andPersist
+            { newModel | page = newPage }
+                |> andPersist
+                |> addCmd (getRankings season)
 
         -- Autocomplete
         ACMsg msg ->
@@ -308,6 +311,29 @@ update message model =
             model
                 |> updateLeague (\l -> { l | opponents = Dict.filter (\n _ -> n /= name) l.opponents })
                 |> andPersist
+
+        OnRankingData season res ->
+            case res of
+                Ok rankings ->
+                    if season == model.season then
+                        ( { model
+                            | rankings2500 = rankings
+                            , errorMessage = Nothing
+                          }
+                        , Cmd.none
+                        )
+
+                    else
+                        -- user has changed season - we do not want this data any more
+                        ( { model | errorMessage = Nothing }, Cmd.none )
+
+                Err _ ->
+                    ( { model
+                        | rankings2500 = Dict.empty
+                        , errorMessage = Just "Could not access ranking data"
+                      }
+                    , Cmd.none
+                    )
 
 
 addScores : Model -> Model
@@ -609,14 +635,14 @@ viewMyPokemon model idx pokemon mbRanking entry =
                         , title "Select for team"
                         ]
                         [ text entry.speciesName ]
-                    , if not pokemon.expanded then
+                    ]
+                , div [ class "flex flex-row items-center text-sm" ]
+                    [ if not pokemon.expanded then
                         summariseMoves model.attacks pokemon
 
                       else
                         text ""
-                    ]
-                , div [ class "flex flex-row items-center text-sm" ]
-                    [ if pokemon.expanded then
+                    , if pokemon.expanded then
                         deleteIcon <| RemovePokemon idx
 
                       else
@@ -654,7 +680,7 @@ summariseMoves attacks pokemon =
                 Nothing ->
                     text "?"
     in
-    div [ class "flex flex-row border border-gray-400 rounded-sm divide-x divide-gray-400 ml-2" ]
+    div [ class "flex flex-row border border-gray-400 rounded-sm divide-x divide-gray-400 mr-2" ]
         [ span [ class "mr-2 p-1" ] [ convert pokemon.fast ]
         , pokemon.charged |> Set.toList |> L.map convert |> span [ class "flex flex-row p-1" ]
         ]
@@ -1320,6 +1346,22 @@ matIcon t =
 
 
 
+-- -----------------
+-- Commands
+-- -----------------
+
+
+getRankings : Season -> Cmd Msg
+getRankings season =
+    if season == Ultra then
+        Http.get { url = "rankings-2500.json", expect = Http.expectJson (OnRankingData season) decodeRankings }
+
+    else
+        Task.succeed (Ok Dict.empty)
+            |> Task.perform (OnRankingData season)
+
+
+
 -- Main program
 
 
@@ -1335,65 +1377,3 @@ main =
                 }
         , subscriptions = \_ -> Sub.none
         }
-
-
-
---
---viewAttacks model entry =
---    div [ class "flex flex-col" ]
---        [ entry.fast
---            |> L.map (viewAttack model)
---            |> div [ class "flex flex-col" ]
---        , entry.charged
---            |> L.map (viewAttack model)
---            |> div [ class "flex flex-col" ]
---        ]
---viewAttack : Model -> String -> Html msg
---viewAttack model attack =
---    div [ class "flex flex-row items-center" ]
---        [ div [ class "mr-2" ] [ viewAttackBadge model.attacks attack ]
---        , model.attacks
---            |> Dict.get attack
---            |> Maybe.map (.type_ >> viewAttack1 effectiveness)
---            |> Maybe.withDefault (text attack)
---        ]
---calcTeamEffectiveness : Effectiveness -> List PokedexEntry -> List ( String, PType ) -> Float
---calcTeamEffectiveness effectiveness opponents teamAttacks =
---let
---    ctOps =
---        L.length opponents |> toFloat
---
---    ctAttacks =
---        L.length teamAttacks |> toFloat
---
---    scoreAttack : ( String, PType ) -> Float
---    scoreAttack ( _, attackTp ) =
---        L.foldl (\op acc -> acc + calculateEffectiveness effectiveness attackTp op.types) 0 opponents
---in
---L.foldl (\attack acc -> acc + scoreAttack attack) 0 teamAttacks / ctOps / ctAttacks
---
---addScores : Model -> League -> League
---addScores model league =
---    let
---        opponents =
---            league.opponents
---                |> L.filterMap (\opName -> Dict.get opName model.pokedex)
---
---        scorer =
---            calcPokemonScore model.attacks effectiveness opponents
---    in
---    { league | myPokemon = Array.map scorer league.myPokemon }
---calcPokemonScore : Dict String MoveType -> Effectiveness -> List PokedexEntry -> Pokemon -> Pokemon
---calcPokemonScore attacks effectiveness opponents pokemon =
---    let
---        thisAttacks : List ( String, PType )
---        thisAttacks =
---            (pokemon.fast :: Set.toList pokemon.charged)
---                |> L.filterMap (nameToAttack attacks)
---    in
---    { pokemon | scores = calcTeamEffectiveness effectiveness opponents thisAttacks }
---nameToAttack : Dict String MoveType -> String -> Maybe ( String, PType )
---nameToAttack moves attack =
---    moves
---        |> Dict.get attack
---        |> Maybe.map (.type_ >> Tuple.pair attack)
