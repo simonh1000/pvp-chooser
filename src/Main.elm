@@ -617,32 +617,32 @@ viewMyPokemon model idx pokemon entry =
 
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
-                [ div [ class "flex flex-row items-center" ]
-                    [ div [ class "flex flex-row items-center" ]
-                        [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
-                        , ppTypes entry.types
-                        , h3
-                            [ class "text-xl font-bold cursor-pointer truncate"
-                            , onClick <| SelectCandidate pokemon
-                            , title "Select for team"
-                            ]
-                            [ text entry.speciesName ]
+                [ -- LHS
+                  div [ class "flex flex-row items-center" ]
+                    [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
+                    , ppTypes entry.types
+                    , h3
+                        [ class "text-xl font-bold cursor-pointer truncate"
+                        , onClick <| SelectCandidate pokemon
+                        , title "Select for team"
                         ]
-                    , div [ class "flex flex-row items-center text-sm" ]
-                        [ if not pokemon.expanded then
-                            summariseMoves model.attacks pokemon
-
-                          else
-                            text ""
-                        , if pokemon.expanded then
-                            deleteIcon <| RemovePokemon idx
-
-                          else
-                            entry.ranking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
-                        ]
-
-                    -- getAttackTypes model.attacks entry
+                        [ text entry.speciesName ]
                     ]
+                , -- RHS
+                  div [ class "flex flex-row items-center text-sm" ]
+                    [ if not pokemon.expanded then
+                        summariseMoves model.attacks pokemon
+
+                      else
+                        text ""
+                    , if pokemon.expanded then
+                        deleteIcon <| RemovePokemon idx
+
+                      else
+                        entry.ranking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
+                    ]
+
+                -- getAttackTypes model.attacks entry
                 ]
     in
     div [ class mainCls ] <|
