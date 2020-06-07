@@ -20,7 +20,7 @@ type alias Model =
     , master : League
     , -- session data
       page : Page
-    , -- move to Register
+    , -- move to Page?
       selectedPokemon : Maybe Pokemon
     , chooser : SearchTool
     , errorMessage : Maybe String
@@ -531,12 +531,25 @@ type alias Pokedex =
 
 attachRankings : Dict String RankingEntry -> Pokedex -> Pokedex
 attachRankings rankings =
-    Dict.map (\speciesId entry -> { entry | ranking = Dict.get speciesId rankings })
+    Dict.map
+        (\speciesId entry ->
+            case Dict.get speciesId rankings of
+                Just r ->
+                    { entry | recFast = r.recFast, recsCharged = r.recsCharged, score = Just r.score }
+
+                Nothing ->
+                    resetRanking entry
+        )
 
 
 resetPokedex : Pokedex -> Pokedex
 resetPokedex =
-    Dict.map (\_ dex -> { dex | ranking = Nothing })
+    Dict.map (\_ -> resetRanking)
+
+
+resetRanking : PokedexEntry -> PokedexEntry
+resetRanking entry =
+    { entry | recFast = Nothing, recsCharged = [], score = Nothing }
 
 
 type alias PokedexEntry =
@@ -544,7 +557,21 @@ type alias PokedexEntry =
     , types : List PType
     , fast : List String
     , charged : List String
-    , ranking : Maybe RankingEntry
+    , recFast : Maybe String
+    , recsCharged : List (Maybe String)
+    , score : Maybe Float
+    }
+
+
+blankDex : PokedexEntry
+blankDex =
+    { speciesName = ""
+    , types = []
+    , fast = []
+    , charged = []
+    , recFast = Nothing
+    , recsCharged = []
+    , score = Nothing
     }
 
 
@@ -557,12 +584,11 @@ decodePokedex =
 
 decodePokedexEntry : Decoder PokedexEntry
 decodePokedexEntry =
-    Decode.succeed PokedexEntry
+    Decode.succeed (\speciesName types fast charged -> { blankDex | speciesName = speciesName, types = types, fast = fast, charged = charged })
         |> andMap (Decode.field "speciesName" Decode.string)
         |> andMap (Decode.field "types" decodeTypes)
         |> andMap (Decode.field "fastMoves" <| Decode.list Decode.string)
         |> andMap (Decode.field "chargedMoves" <| Decode.list Decode.string)
-        |> andMap (Decode.succeed Nothing)
 
 
 
@@ -611,7 +637,24 @@ decodeRankings =
     Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodeRankingEntry
         |> Decode.list
         |> Decode.map Dict.fromList
-        |> Decode.map (Dict.map <| \_ -> postProcessRankings)
+
+
+type alias RawRanking =
+    { fastMoves : List String
+    , chargedMoves : List String
+    , moveStr : ( Int, Int, Int )
+    , score : Float
+    }
+
+
+decodeRankingEntry : Decoder RankingEntry
+decodeRankingEntry =
+    Decode.succeed RawRanking
+        |> andMap (Decode.at [ "moves", "fastMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
+        |> andMap (Decode.at [ "moves", "chargedMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
+        |> andMap (Decode.field "moveStr" decodeMoveStr)
+        |> andMap (Decode.field "score" Decode.float)
+        |> Decode.map postProcessRankings
 
 
 postProcessRankings : RawRanking -> RankingEntry
@@ -627,23 +670,6 @@ postProcessRankings ranking =
             [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
     in
     RankingEntry rFast rsCharged ranking.score
-
-
-type alias RawRanking =
-    { fastMoves : List String
-    , chargedMoves : List String
-    , moveStr : ( Int, Int, Int )
-    , score : Float
-    }
-
-
-decodeRankingEntry : Decoder RawRanking
-decodeRankingEntry =
-    Decode.succeed RawRanking
-        |> andMap (Decode.at [ "moves", "fastMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
-        |> andMap (Decode.at [ "moves", "chargedMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
-        |> andMap (Decode.field "moveStr" decodeMoveStr)
-        |> andMap (Decode.field "score" Decode.float)
 
 
 decodeMoveStr =
