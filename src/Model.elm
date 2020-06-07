@@ -20,7 +20,7 @@ type alias Model =
     , master : League
     , -- session data
       page : Page
-    , -- move to Register
+    , -- move to Page?
       selectedPokemon : Maybe Pokemon
     , chooser : SearchTool
     , errorMessage : Maybe String
@@ -563,6 +563,7 @@ type alias PokedexEntry =
     }
 
 
+blankDex : PokedexEntry
 blankDex =
     { speciesName = ""
     , types = []
