@@ -428,10 +428,10 @@ view model =
             Intro ->
                 div [ class "intro flex-grow p-3" ]
                     [ h2 [] [ text "Introduction" ]
-                    , p [] [ text "This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and no where else." ]
+                    , p [] [ text "This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and nowhere else." ]
                     , img [ src "images/screenshot.png", class "mb-2" ] []
                     , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present)." ]
-                    , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. It is also unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
+                    , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. Consequently, it is unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
                     , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
                     , div [] [ mkStyledButton ( SwitchPage <| Registering [], "Start", True ) ]
                     ]
@@ -475,13 +475,25 @@ sortOpponents opponents =
 
 pvpHeader : List String -> Page -> Html Msg
 pvpHeader lst tgt =
+    let
+        switcher =
+            mkRadioButtons
+                [ ( SwitchPage <| Registering lst, "Registering", isRegistering tgt )
+                , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
+                , ( SwitchPage Battling, "Battling", Battling == tgt )
+                ]
+    in
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
         [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon PVP team manager" ]
-        , mkRadioButtons
-            [ ( SwitchPage <| Registering lst, "Registering", isRegistering tgt )
-            , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
-            , ( SwitchPage Battling, "Battling", Battling == tgt )
-            ]
+        , case tgt of
+            Intro ->
+                text ""
+
+            FatalError _ ->
+                text ""
+
+            _ ->
+                switcher
         ]
 
 
