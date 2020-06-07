@@ -111,11 +111,16 @@ ifThenElse cond yes no =
 --    ( m, Cmd.batch [ c, fn m ] )
 --
 --
---{-| (m, c) |> addCmd c2
----}
---addCmd : Cmd msg -> ( m, Cmd msg ) -> ( m, Cmd msg )
---addCmd c ( m1, c1 ) =
---    ( m1, Cmd.batch [ c, c1 ] )
+
+
+{-| (m, c) |> addCmd c2
+-}
+addCmd : Cmd msg -> ( m, Cmd msg ) -> ( m, Cmd msg )
+addCmd c ( m1, c1 ) =
+    ( m1, Cmd.batch [ c, c1 ] )
+
+
+
 --
 --
 --addBoth : m -> ( m, Cmd msg, Maybe a )

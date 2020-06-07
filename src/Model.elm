@@ -8,6 +8,7 @@ import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
 import List as L
+import List.Extra as LE
 import Pokemon exposing (..)
 import Set exposing (Set)
 
@@ -19,14 +20,14 @@ type alias Model =
     , master : League
     , -- session data
       page : Page
-    , selectedPokemon : Maybe Pokemon
+    , -- move to Register
+      selectedPokemon : Maybe Pokemon
     , chooser : SearchTool
+    , errorMessage : Maybe String
     , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
-    , rankings2500 : Dict String RankingEntry
-    , -- todo move to
-      attacks : Dict String MoveType
+    , attacks : Dict String MoveType
     }
 
 
@@ -40,8 +41,8 @@ defaultModel =
     , page = Registering []
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
+    , errorMessage = Nothing
     , pokedex = Dict.empty
-    , rankings2500 = Dict.empty
     , attacks = Dict.empty
     }
 
@@ -73,40 +74,9 @@ getCurrentLeague model =
 
 
 
--- Season
-
-
-type Season
-    = Great
-    | Ultra
-    | Master
-
-
-decodeSeason : Decoder Season
-decodeSeason =
-    decodeSimpleCustomTypes
-        [ ( "Great", Great )
-        , ( "Ultra", Ultra )
-        , ( "Master", Master )
-        ]
-
-
-encodeSeason : Season -> Value
-encodeSeason s =
-    Encode.string <|
-        case s of
-            Great ->
-                "Great"
-
-            Ultra ->
-                "Ultra"
-
-            Master ->
-                "Master"
-
-
-
+-- -----------------------
 -- Page
+-- -----------------------
 
 
 type Page
@@ -167,6 +137,41 @@ encodePersisted model =
         , ( "ultra", encodeLeague model.ultra )
         , ( "master", encodeLeague model.master )
         ]
+
+
+
+-- -----------------------
+-- Season
+-- -----------------------
+
+
+type Season
+    = Great
+    | Ultra
+    | Master
+
+
+decodeSeason : Decoder Season
+decodeSeason =
+    decodeSimpleCustomTypes
+        [ ( "Great", Great )
+        , ( "Ultra", Ultra )
+        , ( "Master", Master )
+        ]
+
+
+encodeSeason : Season -> Value
+encodeSeason s =
+    Encode.string <|
+        case s of
+            Great ->
+                "Great"
+
+            Ultra ->
+                "Ultra"
+
+            Master ->
+                "Master"
 
 
 
@@ -524,11 +529,22 @@ type alias Pokedex =
     Dict String PokedexEntry
 
 
+attachRankings : Dict String RankingEntry -> Pokedex -> Pokedex
+attachRankings rankings =
+    Dict.map (\speciesId entry -> { entry | ranking = Dict.get speciesId rankings })
+
+
+resetPokedex : Pokedex -> Pokedex
+resetPokedex =
+    Dict.map (\_ dex -> { dex | ranking = Nothing })
+
+
 type alias PokedexEntry =
     { speciesName : String
     , types : List PType
     , fast : List String
     , charged : List String
+    , ranking : Maybe RankingEntry
     }
 
 
@@ -546,6 +562,7 @@ decodePokedexEntry =
         |> andMap (Decode.field "types" decodeTypes)
         |> andMap (Decode.field "fastMoves" <| Decode.list Decode.string)
         |> andMap (Decode.field "chargedMoves" <| Decode.list Decode.string)
+        |> andMap (Decode.succeed Nothing)
 
 
 
@@ -583,9 +600,8 @@ decMoveType =
 
 
 type alias RankingEntry =
-    { fastMoves : List String
-    , chargedMoves : List String
-    , moveStr : ( Int, Int, Int )
+    { recFast : Maybe String
+    , recsCharged : List (Maybe String)
     , score : Float
     }
 
@@ -595,11 +611,35 @@ decodeRankings =
     Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodeRankingEntry
         |> Decode.list
         |> Decode.map Dict.fromList
+        |> Decode.map (Dict.map <| \_ -> postProcessRankings)
 
 
-decodeRankingEntry : Decoder RankingEntry
+postProcessRankings : RawRanking -> RankingEntry
+postProcessRankings ranking =
+    let
+        ( p1, p2, p3 ) =
+            ranking.moveStr
+
+        rFast =
+            LE.getAt p1 <| L.sort ranking.fastMoves
+
+        rsCharged =
+            [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
+    in
+    RankingEntry rFast rsCharged ranking.score
+
+
+type alias RawRanking =
+    { fastMoves : List String
+    , chargedMoves : List String
+    , moveStr : ( Int, Int, Int )
+    , score : Float
+    }
+
+
+decodeRankingEntry : Decoder RawRanking
 decodeRankingEntry =
-    Decode.succeed RankingEntry
+    Decode.succeed RawRanking
         |> andMap (Decode.at [ "moves", "fastMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
         |> andMap (Decode.at [ "moves", "chargedMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
         |> andMap (Decode.field "moveStr" decodeMoveStr)
@@ -631,6 +671,11 @@ type SearchTool
     | NoChooser
 
 
+resetSearch : SearchTool -> SearchTool
+resetSearch =
+    mapSearch (\_ -> "") >> mapAutocomplete (\_ -> Autocomplete.empty)
+
+
 mapSearch : (String -> String) -> SearchTool -> SearchTool
 mapSearch fn chooser =
     case chooser of
@@ -644,31 +689,20 @@ mapSearch fn chooser =
             NoChooser
 
 
-resetSearch : SearchTool -> SearchTool
-resetSearch chooser =
+mapAutocomplete : (Autocomplete.State -> Autocomplete.State) -> SearchTool -> SearchTool
+mapAutocomplete fn chooser =
     case chooser of
         MyChooser string state ->
-            MyChooser "" Autocomplete.empty
+            MyChooser string (fn state)
 
         OpponentChooser string state ->
-            OpponentChooser "" Autocomplete.empty
+            OpponentChooser string (fn state)
 
         NoChooser ->
             NoChooser
 
 
 
---mapAutocomplete : (Autocomplete.State -> Autocomplete.State) -> PokedexChooser -> PokedexChooser
---mapAutocomplete fn chooser =
---    case chooser of
---        MyChooser string state ->
---            MyChooser string (fn state)
---
---        OpponentChooser string state ->
---            OpponentChooser string (fn state)
---
---        NoChooser ->
---            NoChooser
 -- Helpers
 
 
