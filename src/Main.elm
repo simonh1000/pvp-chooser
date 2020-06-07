@@ -116,25 +116,32 @@ update message model =
             ( { model | page = page }, Cmd.none )
 
         SwitchSeason season ->
-            let
-                newModel =
-                    { model | season = season, rankings2500 = Dict.empty }
+            if season == model.season then
+                ( model, Cmd.none )
 
-                newPage =
-                    case model.page of
-                        Registering _ ->
-                            newModel
-                                |> getCurrentLeague
-                                |> .opponents
-                                |> sortOpponents
-                                |> Registering
+            else
+                let
+                    newModel =
+                        { model
+                            | season = season
+                            , pokedex = resetPokedex model.pokedex
+                        }
 
-                        p ->
-                            p
-            in
-            { newModel | page = newPage }
-                |> andPersist
-                |> addCmd (getRankings season)
+                    newPage =
+                        case model.page of
+                            Registering _ ->
+                                newModel
+                                    |> getCurrentLeague
+                                    |> .opponents
+                                    |> sortOpponents
+                                    |> Registering
+
+                            p ->
+                                p
+                in
+                { newModel | page = newPage }
+                    |> andPersist
+                    |> addCmd (getRankings season)
 
         -- Autocomplete
         ACMsg msg ->
@@ -317,7 +324,7 @@ update message model =
                 Ok rankings ->
                     if season == model.season then
                         ( { model
-                            | rankings2500 = rankings
+                            | pokedex = attachRankings rankings model.pokedex
                             , errorMessage = Nothing
                           }
                         , Cmd.none
@@ -328,10 +335,7 @@ update message model =
                         ( { model | errorMessage = Nothing }, Cmd.none )
 
                 Err _ ->
-                    ( { model
-                        | rankings2500 = Dict.empty
-                        , errorMessage = Just "Could not access ranking data"
-                      }
+                    ( { model | errorMessage = Just "Could not access ranking data" }
                     , Cmd.none
                     )
 
@@ -542,22 +546,14 @@ viewMyPokemons model league =
                         , pvpPokeLogo
                         ]
 
-        rankings =
-            if model.season == Ultra then
-                model.rankings2500
-
-            else
-                Dict.empty
-
         addData idx pokemon =
             MyPokemonData idx
                 pokemon
                 (Dict.get pokemon.speciesId model.pokedex)
-                (Dict.get pokemon.speciesId rankings)
 
         viewer : MyPokemonData -> Html Msg
-        viewer { idx, pokemon, dex, mbRank } =
-            Maybe.map (viewMyPokemon model idx pokemon mbRank) dex
+        viewer { idx, pokemon, dex } =
+            Maybe.map (viewMyPokemon model idx pokemon) dex
                 |> Maybe.withDefault
                     (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
@@ -581,7 +577,7 @@ viewMyPokemons model league =
         league.myPokemon
             |> Array.toList
             |> L.indexedMap addData
-            |> L.sortBy (\{ mbRank } -> mbRank |> Maybe.map .score |> Maybe.withDefault 0 |> (*) -1)
+            |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .ranking |> Maybe.map .score |> Maybe.withDefault 0 |> (*) -1)
             |> L.map viewer
             |> div []
     ]
@@ -591,12 +587,11 @@ type alias MyPokemonData =
     { idx : Int
     , pokemon : Pokemon
     , dex : Maybe PokedexEntry
-    , mbRank : Maybe RankingEntry
     }
 
 
-viewMyPokemon : Model -> Int -> Pokemon -> Maybe RankingEntry -> PokedexEntry -> Html Msg
-viewMyPokemon model idx pokemon mbRanking entry =
+viewMyPokemon : Model -> Int -> Pokemon -> PokedexEntry -> Html Msg
+viewMyPokemon model idx pokemon entry =
     let
         mainCls =
             if Maybe.map .speciesId model.selectedPokemon == Just pokemon.speciesId then
@@ -622,7 +617,7 @@ viewMyPokemon model idx pokemon mbRanking entry =
                     [ viewAttackBadge model.attacks attack ]
 
         { recFast, recsCharged } =
-            mbRanking |> Maybe.withDefault (RankingEntry Nothing [] 0)
+            entry.ranking |> Maybe.withDefault (RankingEntry Nothing [] 0)
 
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
@@ -646,7 +641,7 @@ viewMyPokemon model idx pokemon mbRanking entry =
                         deleteIcon <| RemovePokemon idx
 
                       else
-                        mbRanking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
+                        entry.ranking |> Maybe.map (.score >> ppFloat) |> Maybe.withDefault "" |> text
                     ]
 
                 -- getAttackTypes model.attacks entry
@@ -814,30 +809,30 @@ viewTeam model league =
 
 viewTeamMember : Model -> String -> PokedexEntry -> Bool -> List (Html Msg)
 viewTeamMember model speciesId entry isPinned =
-    let
-        go attk acc =
-            case attackToType model.attacks attk of
-                Just tp ->
-                    if L.member tp acc then
-                        acc
-
-                    else
-                        tp :: acc
-
-                Nothing ->
-                    acc
-
-        attacks =
-            (entry.fast ++ entry.charged)
-                |> L.foldl go []
-                |> L.reverse
-
-        viewAttk tp =
-            div [ class "flex flex-row items-center mb-1" ]
-                [ div [ class "mr-2" ] [ ppType tp ]
-                , viewAttack1 effectiveness tp
-                ]
-    in
+    --let
+    --    go attk acc =
+    --        case attackToType model.attacks attk of
+    --            Just tp ->
+    --                if L.member tp acc then
+    --                    acc
+    --
+    --                else
+    --                    tp :: acc
+    --
+    --            Nothing ->
+    --                acc
+    --
+    --    attacks =
+    --        (entry.fast ++ entry.charged)
+    --            |> L.foldl go []
+    --            |> L.reverse
+    --
+    --    viewAttk tp =
+    --        div [ class "flex flex-row items-center mb-1" ]
+    --            [ div [ class "mr-2" ] [ ppType tp ]
+    --            , viewAttack1 effectiveness tp
+    --            ]
+    --in
     [ div [ class "flex flex-row items-center justify-between mb-2" ]
         [ div [ class "flex flex-row items-center" ]
             [ ppTypes entry.types

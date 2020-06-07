@@ -28,7 +28,8 @@ type alias Model =
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
     , attacks : Dict String MoveType
-    , rankings2500 : Dict String RankingEntry
+
+    --, rankings2500 : Dict String RankingEntry
     }
 
 
@@ -45,7 +46,8 @@ defaultModel =
     , errorMessage = Nothing
     , pokedex = Dict.empty
     , attacks = Dict.empty
-    , rankings2500 = Dict.empty
+
+    --, rankings2500 = Dict.empty
     }
 
 
@@ -76,40 +78,9 @@ getCurrentLeague model =
 
 
 
--- Season
-
-
-type Season
-    = Great
-    | Ultra
-    | Master
-
-
-decodeSeason : Decoder Season
-decodeSeason =
-    decodeSimpleCustomTypes
-        [ ( "Great", Great )
-        , ( "Ultra", Ultra )
-        , ( "Master", Master )
-        ]
-
-
-encodeSeason : Season -> Value
-encodeSeason s =
-    Encode.string <|
-        case s of
-            Great ->
-                "Great"
-
-            Ultra ->
-                "Ultra"
-
-            Master ->
-                "Master"
-
-
-
+-- -----------------------
 -- Page
+-- -----------------------
 
 
 type Page
@@ -170,6 +141,41 @@ encodePersisted model =
         , ( "ultra", encodeLeague model.ultra )
         , ( "master", encodeLeague model.master )
         ]
+
+
+
+-- -----------------------
+-- Season
+-- -----------------------
+
+
+type Season
+    = Great
+    | Ultra
+    | Master
+
+
+decodeSeason : Decoder Season
+decodeSeason =
+    decodeSimpleCustomTypes
+        [ ( "Great", Great )
+        , ( "Ultra", Ultra )
+        , ( "Master", Master )
+        ]
+
+
+encodeSeason : Season -> Value
+encodeSeason s =
+    Encode.string <|
+        case s of
+            Great ->
+                "Great"
+
+            Ultra ->
+                "Ultra"
+
+            Master ->
+                "Master"
 
 
 
@@ -527,11 +533,22 @@ type alias Pokedex =
     Dict String PokedexEntry
 
 
+attachRankings : Dict String RankingEntry -> Pokedex -> Pokedex
+attachRankings rankings =
+    Dict.map (\speciesId entry -> { entry | ranking = Dict.get speciesId rankings })
+
+
+resetPokedex : Pokedex -> Pokedex
+resetPokedex =
+    Dict.map (\_ dex -> { dex | ranking = Nothing })
+
+
 type alias PokedexEntry =
     { speciesName : String
     , types : List PType
     , fast : List String
     , charged : List String
+    , ranking : Maybe RankingEntry
     }
 
 
@@ -549,6 +566,7 @@ decodePokedexEntry =
         |> andMap (Decode.field "types" decodeTypes)
         |> andMap (Decode.field "fastMoves" <| Decode.list Decode.string)
         |> andMap (Decode.field "chargedMoves" <| Decode.list Decode.string)
+        |> andMap (Decode.succeed Nothing)
 
 
 
