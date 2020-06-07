@@ -536,12 +536,12 @@ viewMyPokemons : Model -> League -> List (Html Msg)
 viewMyPokemons model league =
     let
         chooser =
-            case model.chooser of
-                MyChooser search state ->
-                    viewChooser model.pokedex search state
+            div [ class "flex flex-row items-center justify-between mb-2" ] <|
+                case model.chooser of
+                    MyChooser search state ->
+                        [ viewChooser model.pokedex search state ]
 
-                _ ->
-                    div [ class "flex flex-row items-center justify-between" ]
+                    _ ->
                         [ viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
                         , pvpPokeLogo
                         ]
@@ -865,12 +865,12 @@ viewOpponentsRegistering : Model -> League -> List String -> List (Html Msg)
 viewOpponentsRegistering model league names =
     let
         chooser =
-            case model.chooser of
-                OpponentChooser search state ->
-                    viewChooser model.pokedex search state
+            div [ class "flex flex-row items-center justify-between mb-2 " ] <|
+                case model.chooser of
+                    OpponentChooser search state ->
+                        [ viewChooser model.pokedex search state ]
 
-                _ ->
-                    div [ class "flex flex-row items-center justify-between" ]
+                    _ ->
                         [ viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
                         , span [ class "text-sm" ] [ text "Frequency" ]
                         ]
@@ -1158,31 +1158,6 @@ attackToType attacks attack =
             |> Maybe.map .type_
 
 
-viewAttack1 : Dict PType (Dict PType Float) -> PType -> Html msg
-viewAttack1 effectiveness attack =
-    let
-        go tp val ( accStrong, accWeak ) =
-            if val < 0.9 then
-                ( accStrong, tp :: accWeak )
-
-            else if val > 1.1 then
-                ( tp :: accStrong, accWeak )
-
-            else
-                ( accStrong, accWeak )
-
-        ( strong, weak ) =
-            effectiveness
-                |> Dict.get attack
-                |> Maybe.map (Dict.foldl go ( [], [] ))
-                |> Maybe.withDefault ( [], [] )
-    in
-    div [ class "flex flex-col" ]
-        [ strong |> L.map ppType |> div []
-        , weak |> L.map ppType |> div []
-        ]
-
-
 viewAttackBadge : Dict String MoveType -> String -> Html msg
 viewAttackBadge attacks attack =
     case Dict.get attack attacks of
@@ -1205,7 +1180,7 @@ viewChooser pokedex search autocomplete =
         choices =
             getRelevantChoices search pokedex
     in
-    div [ class "chooser-container flex flex-row justify-between mb-2" ]
+    div [ class "chooser-container flex flex-row justify-between" ]
         [ Autocomplete.view viewConfig autocomplete choices search
             |> Html.map ACMsg
         , span [ onClick <| SetAutoComplete NoChooser ] [ matIcon "close" ]
@@ -1215,7 +1190,7 @@ viewChooser pokedex search autocomplete =
 viewChooserPlaceholder : SearchTool -> Html Msg
 viewChooserPlaceholder chooser =
     div
-        [ class "flex flex-row mb-2 cursor-pointer"
+        [ class "flex flex-row cursor-pointer"
         , onClick <| SetAutoComplete chooser
         ]
         [ span [ class "mr-2" ] [ matIcon "pencil" ]

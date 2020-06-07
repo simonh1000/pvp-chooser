@@ -28,8 +28,6 @@ type alias Model =
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
     , attacks : Dict String MoveType
-
-    --, rankings2500 : Dict String RankingEntry
     }
 
 
@@ -46,8 +44,6 @@ defaultModel =
     , errorMessage = Nothing
     , pokedex = Dict.empty
     , attacks = Dict.empty
-
-    --, rankings2500 = Dict.empty
     }
 
 
