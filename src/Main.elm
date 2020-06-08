@@ -344,6 +344,7 @@ update message model =
                     )
 
 
+mkRegisteringPage : Model -> Page
 mkRegisteringPage =
     getCurrentLeague
         >> .opponents
@@ -646,12 +647,11 @@ viewMyPokemon model idx pokemon entry =
                   div [ class "flex flex-row items-center" ]
                     [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
                     , ppTypes entry.types
-                    , h3
-                        [ class "text-xl font-bold cursor-pointer truncate"
-                        , onClick <| SelectCandidate pokemon
+                    , div
+                        [ onClick <| SelectCandidate pokemon
                         , title "Select for team"
                         ]
-                        [ text entry.speciesName ]
+                        [ viewNameTitle entry.speciesName ]
                     ]
                 , -- RHS
                   div [ class "flex flex-row items-center text-sm" ]
@@ -1117,8 +1117,9 @@ ppFloat =
     FormatNumber.format { usLocale | decimals = Exact 1 }
 
 
+viewNameTitle : String -> Html msg
 viewNameTitle name =
-    h3 [ class "text-xl font-bold truncate" ] [ text name ]
+    h3 [ class "text-xl font-bold truncate ml-1" ] [ text name ]
 
 
 viewPokemonResistsAndWeaknesses : Model -> String -> List (Html msg)
