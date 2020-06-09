@@ -462,8 +462,8 @@ view model =
 
             TeamOptions ->
                 div [ cls "teams" ]
-                    [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewTeamOptions model league)
-                    , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
+                    [ div [ class "my-pokemon flex flex-col flex-grow flex-shrink-0" ] (viewTeamOptions model league)
+                    , div [ class "my-team flex flex-col flex-grow flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
                     ]
 
@@ -817,14 +817,15 @@ viewTeam model league =
             Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookupTeamMember team.cand1) (lookupTeamMember team.cand2) (lookupTeamMember team.cand3)
                 |> Result.map (Helpers.summariseTeam league.opponents)
                 |> Result.map (\x -> x / sumFreqs)
-                |> Result.map (ppFloat >> (\s -> " (score: " ++ s ++ ")"))
+                |> Result.map (ppFloat >> (\s -> "score: " ++ s))
                 |> Result.withDefault ""
     in
-    [ h2 [] [ text <| "My Team" ++ ifThenElse (model.page == TeamOptions) score "" ]
+    [ h2 [] [ text <| "My Team" ]
     , div [ class "spacer" ] []
     , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3
+    , div [] [ text score ]
     ]
 
 

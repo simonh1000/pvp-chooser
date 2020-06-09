@@ -25,6 +25,10 @@ a {
     flex: 1 0 33%;
 }
 
+.teams .my-pokemon, .teams .my-team {
+    flex-basis: 300px;
+    overflow: hidden;
+}
 .my-team {
     flex-basis: 300px;
     overflow: hidden;
