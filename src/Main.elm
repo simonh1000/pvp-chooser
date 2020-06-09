@@ -312,11 +312,12 @@ update message model =
         OnPokedex res ->
             case res of
                 Ok ( moves, pokedex ) ->
-                    ( { model
-                        | page = mkRegisteringPage model
-                        , moves = moves
-                        , pokedex = pokedex
-                      }
+                    ( addScores
+                        { model
+                            | page = mkRegisteringPage model
+                            , moves = moves
+                            , pokedex = pokedex
+                        }
                     , getRankings model.season
                     )
 
@@ -327,10 +328,11 @@ update message model =
             case res of
                 Ok rankings ->
                     if season == model.season then
-                        ( { model
-                            | pokedex = attachRankings rankings model.pokedex
-                            , errorMessage = Nothing
-                          }
+                        ( addScores
+                            { model
+                                | pokedex = attachRankings rankings model.pokedex
+                                , errorMessage = Nothing
+                            }
                         , Cmd.none
                         )
 
@@ -352,6 +354,13 @@ mkRegisteringPage =
         >> Registering
 
 
+andPersist : Model -> ( Model, Cmd msg )
+andPersist model =
+    ( addScores model
+    , Ports.persist <| encodePersisted model
+    )
+
+
 addScores : Model -> Model
 addScores model =
     { model
@@ -359,13 +368,6 @@ addScores model =
         , ultra = addScoresToLeague model model.ultra
         , master = addScoresToLeague model model.master
     }
-
-
-andPersist : Model -> ( Model, Cmd msg )
-andPersist model =
-    ( addScores model
-    , Ports.persist <| encodePersisted model
-    )
 
 
 updateConfig : Bool -> UpdateConfig Msg ( String, PokedexEntry )
@@ -454,8 +456,7 @@ view model =
             Registering names ->
                 div [ cls "choosing" ]
                     [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
-                    , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ]
-                        (viewTeam model league)
+                    , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsRegistering model league names)
                     ]
 
