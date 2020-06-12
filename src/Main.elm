@@ -1363,15 +1363,23 @@ getPokedex =
 
 getRankings : Season -> Cmd Msg
 getRankings season =
-    if season == Ultra then
-        Http.get
-            { url = "rankings-2500.json"
-            , expect = Http.expectJson (OnRankingData season) decodeRankings
-            }
+    let
+        get n =
+            Http.get
+                { url = n
+                , expect = Http.expectJson (OnRankingData season) decodeRankings
+                }
+    in
+    case season of
+        Ultra ->
+            get "rankings-2500.json"
 
-    else
-        Task.succeed (Ok Dict.empty)
-            |> Task.perform (OnRankingData season)
+        Master ->
+            get "rankings-10000.json"
+
+        _ ->
+            Task.succeed (Ok Dict.empty)
+                |> Task.perform (OnRankingData season)
 
 
 
