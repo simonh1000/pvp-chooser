@@ -622,18 +622,14 @@ viewMyPokemon model idx pokemon entry =
     let
         mainCls =
             if Maybe.map .speciesId model.selectedPokemon == Just pokemon.speciesId then
-                cardClass ++ " mb-2 bg-blue-100"
+                " mb-2 bg-blue-100"
 
             else
-                cardClass ++ " mb-2 bg-white"
+                " mb-2 bg-white"
 
         viewAttack_ selectMove isRec isSelected attack =
-            let
-                cls c =
-                    class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ c
-            in
             span
-                [ cls <| ifThenElse isSelected "bg-teal-300" "bg-gray-300"
+                [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-gray-300"
                 , onClick <| selectMove idx attack
                 ]
             <|
@@ -648,16 +644,13 @@ viewMyPokemon model idx pokemon entry =
                     , div
                         [ onClick <| SelectCandidate pokemon
                         , title "Select for team"
+                        , class "cursor-pointer"
                         ]
                         [ viewNameTitle entry.speciesName ]
                     ]
                 , -- RHS
                   div [ class "flex flex-row items-center text-sm" ]
-                    [ if not pokemon.expanded then
-                        summariseMoves model.moves pokemon
-
-                      else
-                        text ""
+                    [ ifThenElse pokemon.expanded (text "") (summariseMoves model.moves pokemon)
                     , if pokemon.expanded then
                         deleteIcon <| RemovePokemon idx
 
@@ -668,7 +661,7 @@ viewMyPokemon model idx pokemon entry =
                 -- getAttackTypes model.attacks entry
                 ]
     in
-    div [ class mainCls ] <|
+    div [ class <| cardClass ++ mainCls ] <|
         if pokemon.expanded then
             topLine
                 :: [ entry.fast
@@ -679,6 +672,11 @@ viewMyPokemon model idx pokemon entry =
                         |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member attack entry.recMoves) (Set.member attack pokemon.charged) attack)
                         |> (::) (text "Charged: ")
                         |> div [ class "flex flex-row flex-wrap items-center" ]
+                   , if Set.size pokemon.charged > 2 then
+                        div [ class "text-red-400" ] [ text "You have selected more than 2 charged moves" ]
+
+                     else
+                        text ""
                    ]
 
         else
