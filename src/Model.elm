@@ -27,7 +27,7 @@ type alias Model =
     , debug : Bool
     , -- data
       pokedex : Dict String PokedexEntry -- name => meta
-    , attacks : Dict String MoveType
+    , moves : Dict String MoveType
     }
 
 
@@ -43,7 +43,7 @@ defaultModel =
     , chooser = MyChooser "" Autocomplete.empty
     , errorMessage = Nothing
     , pokedex = Dict.empty
-    , attacks = Dict.empty
+    , moves = Dict.empty
     }
 
 
@@ -81,6 +81,7 @@ getCurrentLeague model =
 
 type Page
     = Intro
+    | LoadingDex
     | Registering (List String)
     | TeamOptions
     | Battling
@@ -535,7 +536,7 @@ attachRankings rankings =
         (\speciesId entry ->
             case Dict.get speciesId rankings of
                 Just r ->
-                    { entry | recFast = r.recFast, recsCharged = r.recsCharged, score = Just r.score }
+                    { entry | recMoves = r.moveSet, score = Just r.score }
 
                 Nothing ->
                     resetRanking entry
@@ -549,7 +550,7 @@ resetPokedex =
 
 resetRanking : PokedexEntry -> PokedexEntry
 resetRanking entry =
-    { entry | recFast = Nothing, recsCharged = [], score = Nothing }
+    { entry | recMoves = [], score = Nothing }
 
 
 type alias PokedexEntry =
@@ -557,8 +558,7 @@ type alias PokedexEntry =
     , types : List PType
     , fast : List String
     , charged : List String
-    , recFast : Maybe String
-    , recsCharged : List (Maybe String)
+    , recMoves : List String
     , score : Maybe Float
     }
 
@@ -569,8 +569,7 @@ blankDex =
     , types = []
     , fast = []
     , charged = []
-    , recFast = Nothing
-    , recsCharged = []
+    , recMoves = []
     , score = Nothing
     }
 
@@ -626,8 +625,7 @@ decMoveType =
 
 
 type alias RankingEntry =
-    { recFast : Maybe String
-    , recsCharged : List (Maybe String)
+    { moveSet : List String
     , score : Float
     }
 
@@ -639,50 +637,11 @@ decodeRankings =
         |> Decode.map Dict.fromList
 
 
-type alias RawRanking =
-    { fastMoves : List String
-    , chargedMoves : List String
-    , moveStr : ( Int, Int, Int )
-    , score : Float
-    }
-
-
 decodeRankingEntry : Decoder RankingEntry
 decodeRankingEntry =
-    Decode.succeed RawRanking
-        |> andMap (Decode.at [ "moves", "fastMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
-        |> andMap (Decode.at [ "moves", "chargedMoves" ] <| Decode.list <| Decode.field "moveId" Decode.string)
-        |> andMap (Decode.field "moveStr" decodeMoveStr)
+    Decode.succeed RankingEntry
+        |> andMap (Decode.field "moveset" <| Decode.list Decode.string)
         |> andMap (Decode.field "score" Decode.float)
-        |> Decode.map postProcessRankings
-
-
-postProcessRankings : RawRanking -> RankingEntry
-postProcessRankings ranking =
-    let
-        ( p1, p2, p3 ) =
-            ranking.moveStr
-
-        rFast =
-            LE.getAt p1 <| L.sort ranking.fastMoves
-
-        rsCharged =
-            [ p2, p3 ] |> L.map (\p -> LE.getAt (p - 1) (L.sort ranking.chargedMoves))
-    in
-    RankingEntry rFast rsCharged ranking.score
-
-
-decodeMoveStr =
-    Decode.string
-        |> Decode.andThen
-            (\s ->
-                case String.split "-" s |> L.filterMap String.toInt of
-                    [ s1, s2, s3 ] ->
-                        Decode.succeed ( s1, s2, s3 )
-
-                    _ ->
-                        Decode.fail "could not parse moveStr"
-            )
 
 
 
