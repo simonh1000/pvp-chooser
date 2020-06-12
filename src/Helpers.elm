@@ -217,20 +217,20 @@ evaluateAgainstOpponent attacks pokemon opponentTypes =
 {-| Calculates effect of opponent's pokemons' (weighted) average attacks on my pokemon
 -}
 evaluateOpponentAttacks : Dict String MoveType -> PokedexEntry -> List PType -> Float
-evaluateOpponentAttacks attacks opDexEntry myTypes =
+evaluateOpponentAttacks attacks entry myTypes =
     let
         pvPokeMultiplier =
             3
 
-        isPvPoke attk score =
-            if Just attk == opDexEntry.recFast || L.member (Just attk) opDexEntry.recsCharged then
+        isPvPoke attack score =
+            if L.member attack entry.recMoves then
                 score * pvPokeMultiplier
 
             else
                 score
 
         opAttackNames =
-            opDexEntry.fast ++ opDexEntry.charged
+            entry.fast ++ entry.charged
 
         lookup attack =
             attack
@@ -240,7 +240,7 @@ evaluateOpponentAttacks attacks opDexEntry myTypes =
                 |> Maybe.withDefault -100
 
         denominator =
-            L.length opAttackNames + ((pvPokeMultiplier - 1) * L.length (L.filterMap identity <| opDexEntry.recFast :: opDexEntry.recsCharged))
+            L.length opAttackNames + ((pvPokeMultiplier - 1) * L.length entry.recMoves)
     in
     opAttackNames
         |> L.map lookup

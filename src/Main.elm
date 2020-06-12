@@ -639,9 +639,6 @@ viewMyPokemon model idx pokemon entry =
             <|
                 [ viewMoveWithPvPoke model.moves isRec attack ]
 
-        ( recFast, recsCharged ) =
-            ( entry.recFast, entry.recsCharged )
-
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
                 [ -- LHS
@@ -675,11 +672,11 @@ viewMyPokemon model idx pokemon entry =
         if pokemon.expanded then
             topLine
                 :: [ entry.fast
-                        |> L.map (\attack -> viewAttack_ SelectFastMove (Just attack == recFast) (attack == pokemon.fast) attack)
+                        |> L.map (\attack -> viewAttack_ SelectFastMove (L.member attack entry.recMoves) (attack == pokemon.fast) attack)
                         |> (::) (text "Fast: ")
                         |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
                    , entry.charged
-                        |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member (Just attack) recsCharged) (Set.member attack pokemon.charged) attack)
+                        |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member attack entry.recMoves) (Set.member attack pokemon.charged) attack)
                         |> (::) (text "Charged: ")
                         |> div [ class "flex flex-row flex-wrap items-center" ]
                    ]
@@ -924,11 +921,11 @@ viewOpponentsRegistering model league names =
                 content =
                     if op.expanded then
                         [ entry.fast
-                            |> L.map (\attk -> viewMoveWithPvPoke model.moves (Just attk == entry.recFast) attk)
+                            |> L.map (\attack -> viewMoveWithPvPoke model.moves (L.member attack entry.recMoves) attack)
                             |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
                             |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
                         , entry.charged
-                            |> L.map (\attk -> viewMoveWithPvPoke model.moves (L.member (Just attk) entry.recsCharged) attk)
+                            |> L.map (\attack -> viewMoveWithPvPoke model.moves (L.member attack entry.recMoves) attack)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
                         , div [] <| viewPokemonResistsAndWeaknesses model speciesId
