@@ -40,7 +40,7 @@ evaluateTeams league =
         sumFreqs =
             calcWeightedTotal league.opponents
 
-        mapper (( ( s1, p1 ), ( s2, p2 ), ( s3, p3 ) ) as team) =
+        mapper (( ( s1, _ ), ( s2, _ ), ( s3, _ ) ) as team) =
             ( ( s1, s2, s3 )
             , (summariseTeam league.opponents <| evaluateTeam team) / sumFreqs
             )

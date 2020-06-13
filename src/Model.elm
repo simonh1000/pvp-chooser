@@ -212,43 +212,6 @@ decodeLeague =
 
 
 
---decodeLeagueLegacy : Decoder League
---decodeLeagueLegacy =
---    let
---        mapTp tm =
---            case tm of
---                Pinned x ->
---                    Pinned <| convertNameToId x
---
---                Chosen x ->
---                    Chosen <| convertNameToId x
---
---                Unset ->
---                    Unset
---
---        mapOp ops =
---            let
---                go k v acc =
---                    Dict.insert (convertNameToId k) v acc
---            in
---            Dict.foldl go Dict.empty ops
---    in
---    Decode.succeed League
---        |> andMap
---            (Decode.oneOf
---                [ Decode.field "myPokemon" <| Decode.list decodeLegacyPokemon
---                , Decode.succeed []
---                ]
---                |> Decode.map Array.fromList
---            )
---        |> andMap
---            (Decode.oneOf
---                [ Decode.field "team" decodeTeam
---                , Decode.succeed blankTeam
---                ]
---                |> Decode.map (mapTeam mapTp)
---            )
---        |> andMap (Decode.field "opponents" decodeOpponents |> Decode.map mapOp)
 -- -----------------------
 -- Pokemon
 -- -----------------------
@@ -671,20 +634,3 @@ mapAutocomplete fn chooser =
 decSet : Decoder comparable -> Decoder (Set comparable)
 decSet =
     Decode.list >> Decode.map Set.fromList
-
-
-
---decodeName : Decoder String
---decodeName =
---    let
---        mkName ( pName, pForm ) =
---            if pForm == "Normal" then
---                pName
---
---            else
---                pName ++ " - " ++ pForm
---    in
---    Decode.map2 Tuple.pair
---        (Decode.field "pokemon_name" Decode.string)
---        (Decode.oneOf [ Decode.field "form" Decode.string, Decode.succeed "Normal" ])
---        |> Decode.map mkName
