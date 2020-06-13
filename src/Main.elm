@@ -721,7 +721,7 @@ viewTeamOptions model league =
             div
                 [ classList
                     [ ( cardClass, True )
-                    , ( "mb-1 flex flex-row justify-between", True )
+                    , ( "mb-1 flex flex-row justify-between cursor-pointer", True )
                     , ( "bg-blue-100", selected )
                     ]
                 , onClick <| SetTeam ( c1, c2, c3 )
@@ -814,7 +814,11 @@ viewTeam model league =
                 |> Result.withDefault ""
     in
     [ h2 [] [ text <| "My Team" ]
-    , div [ class "spacer" ] [ text score ]
+    , if isRegistering model.page then
+        div [ class "spacer" ] [ text score ]
+
+      else
+        text ""
     , viewMbCand (\c -> UpdateTeam { team | cand1 = c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = c }) team.cand3
