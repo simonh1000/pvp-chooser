@@ -1,4 +1,4 @@
-module Main exposing (main)
+module Main exposing (main, viewAttacksWithRecommendations)
 
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
@@ -619,14 +619,6 @@ viewMyPokemon model speciesId pokemon entry =
             else
                 " mb-2 bg-white"
 
-        viewAttack_ selectMove isRec isSelected attack =
-            span
-                [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-gray-300"
-                , onClick <| selectMove speciesId attack
-                ]
-            <|
-                [ viewMoveWithPvPoke model.moves isRec attack ]
-
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
                 [ -- LHS
@@ -655,24 +647,37 @@ viewMyPokemon model speciesId pokemon entry =
     in
     div [ class <| cardClass ++ mainCls ] <|
         if pokemon.expanded then
-            topLine
-                :: [ entry.fast
-                        |> L.map (\attack -> viewAttack_ SelectFastMove (L.member attack entry.recMoves) (attack == pokemon.fast) attack)
-                        |> (::) (text "Fast: ")
-                        |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
-                   , entry.charged
-                        |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member attack entry.recMoves) (Set.member attack pokemon.charged) attack)
-                        |> (::) (text "Charged: ")
-                        |> div [ class "flex flex-row flex-wrap items-center" ]
-                   , if Set.size pokemon.charged > 2 then
-                        div [ class "text-red-400" ] [ text "You have selected more than 2 charged moves" ]
-
-                     else
-                        text ""
-                   ]
+            topLine :: viewAttacksWithRecommendations model.moves entry speciesId pokemon
 
         else
             [ topLine ]
+
+
+viewAttacksWithRecommendations : Dict String MoveType -> PokedexEntry -> String -> Pokemon -> List (Html Msg)
+viewAttacksWithRecommendations moves entry speciesId pokemon =
+    let
+        viewAttack_ selectMove isRec isSelected attack =
+            span
+                [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-gray-300"
+                , onClick <| selectMove speciesId attack
+                ]
+            <|
+                [ viewMoveWithPvPoke moves isRec attack ]
+    in
+    [ entry.fast
+        |> L.map (\attack -> viewAttack_ SelectFastMove (L.member attack entry.recMoves) (attack == pokemon.fast) attack)
+        |> (::) (text "Fast: ")
+        |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
+    , entry.charged
+        |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member attack entry.recMoves) (Set.member attack pokemon.charged) attack)
+        |> (::) (text "Charged: ")
+        |> div [ class "flex flex-row flex-wrap items-center" ]
+    , if Set.size pokemon.charged > 2 then
+        div [ class "text-red-400" ] [ text "You have selected more than 2 charged moves" ]
+
+      else
+        text ""
+    ]
 
 
 summariseMoves : Dict String MoveType -> Pokemon -> Html msg
@@ -818,56 +823,36 @@ viewTeam model league =
 
 viewTeamMember : (TeamMember -> Msg) -> Model -> String -> PokedexEntry -> Bool -> Pokemon -> List (Html Msg)
 viewTeamMember updater model speciesId entry isPinned pokemon =
-    --let
-    --    go attk acc =
-    --        case attackToType model.attacks attk of
-    --            Just tp ->
-    --                if L.member tp acc then
-    --                    acc
-    --
-    --                else
-    --                    tp :: acc
-    --
-    --            Nothing ->
-    --                acc
-    --
-    --    attacks =
-    --        (entry.fast ++ entry.charged)
-    --            |> L.foldl go []
-    --            |> L.reverse
-    --
-    --    viewAttk tp =
-    --        div [ class "flex flex-row items-center mb-1" ]
-    --            [ div [ class "mr-2" ] [ ppType tp ]
-    --            , viewAttack1 effectiveness tp
-    --            ]
-    --in
-    [ div [ class "flex flex-row items-center justify-between mb-2" ]
-        [ div [ class "flex flex-row items-center" ]
-            [ ppTypes entry.types
-            , viewNameTitle entry.speciesName
-            , span [ class "ml-2" ] [ summariseMoves model.moves pokemon ]
-            ]
-        , case model.page of
-            TeamOptions ->
-                button [ onClick <| PinTeamMember speciesId ]
-                    [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
+    let
+        topLine =
+            div [ class "flex flex-row items-center justify-between mb-2" ]
+                [ div [ class "flex flex-row items-center" ]
+                    [ ppTypes entry.types
+                    , viewNameTitle entry.speciesName
+                    , span [ class "ml-2" ] [ summariseMoves model.moves pokemon ]
+                    ]
+                , case model.page of
+                    TeamOptions ->
+                        button [ onClick <| PinTeamMember speciesId ]
+                            [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
 
-            Registering _ ->
-                button [ onClick <| updater Unset ]
-                    [ matIcon "bookmark-remove" ]
+                    Registering _ ->
+                        button [ onClick <| updater Unset ]
+                            [ matIcon "bookmark-remove" ]
 
-            _ ->
-                text ""
-        ]
+                    _ ->
+                        text ""
+                ]
 
-    --, if model.page == Battling then
-    --    attacks |> L.map viewAttk |> div []
-    --
-    --  else
-    --    text ""
-    ]
-        ++ viewPokedexResistsAndWeaknesses entry
+        middlePart =
+            case model.page of
+                Registering _ ->
+                    viewAttacksWithRecommendations model.moves entry speciesId pokemon
+
+                _ ->
+                    []
+    in
+    topLine :: middlePart ++ viewPokedexResistsAndWeaknesses entry
 
 
 
