@@ -4,7 +4,7 @@ import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Common.CoreHelpers exposing (decodeSimpleCustomTypes, exactMatchString, ifThenElse)
 import Json.Decode as Decode exposing (Decoder, Value)
-import Json.Decode.Extra exposing (andMap)
+import Json.Decode.Extra as DE exposing (andMap)
 import Json.Encode as Encode
 import List as L
 import Pokemon exposing (..)
@@ -189,6 +189,14 @@ blankLeague =
     League Dict.empty blankTeam Dict.empty
 
 
+decodeLeague : Decoder League
+decodeLeague =
+    Decode.succeed League
+        |> andMap (DE.withDefault Dict.empty <| Decode.field "myPokemon" <| decodeMyPokemon)
+        |> andMap (DE.withDefault blankTeam <| Decode.field "team" decodeTeam)
+        |> andMap (Decode.field "opponents" decodeOpponents)
+
+
 encodeLeague : League -> Value
 encodeLeague league =
     [ ( "myPokemon", encodeMyPokemon league.myPokemon )
@@ -196,19 +204,6 @@ encodeLeague league =
     , ( "opponents", encodeOpponents league.opponents )
     ]
         |> Encode.object
-
-
-decodeLeague : Decoder League
-decodeLeague =
-    Decode.succeed League
-        |> andMap (Decode.field "myPokemon" <| decodeMyPokemon)
-        |> andMap
-            (Decode.oneOf
-                [ Decode.field "team" decodeTeam
-                , Decode.succeed blankTeam
-                ]
-            )
-        |> andMap (Decode.field "opponents" decodeOpponents)
 
 
 

@@ -471,7 +471,7 @@ foldRResult f bResult lst =
 --
 --{-| Removes a list of keys from a Dict
 ---}
---rejectByList : List String -> Dict String a -> Dict String a
+--rejectByList : List comparable -> Dict comparable a -> Dict comparable a
 --rejectByList lst dict =
 --    List.foldl Dict.remove dict lst
 --
