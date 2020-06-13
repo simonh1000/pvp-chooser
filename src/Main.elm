@@ -85,6 +85,7 @@ type Msg
     | SelectCandidate String -- speciesId
       -- Registering: Team
     | UpdateTeam Team -- second part
+    | SwapTeam Bool -- isTopTwo
       -- Team chooser
     | PinTeamMember String
     | SetTeam ( String, String, String )
@@ -280,6 +281,22 @@ update message model =
         UpdateTeam team ->
             { model | selectedPokemon = Nothing }
                 |> updateLeague (\l -> { l | team = team })
+                |> andPersist
+
+        SwapTeam isTopTwo ->
+            let
+                updater l =
+                    { l
+                        | team =
+                            if isTopTwo then
+                                { cand1 = l.team.cand2, cand2 = l.team.cand1, cand3 = l.team.cand3 }
+
+                            else
+                                { cand1 = l.team.cand1, cand2 = l.team.cand3, cand3 = l.team.cand2 }
+                    }
+            in
+            model
+                |> updateLeague updater
                 |> andPersist
 
         ToggleOpponent name ->
@@ -821,7 +838,9 @@ viewTeam model league =
       else
         text ""
     , viewMbCand (\c -> UpdateTeam { team | cand1 = c }) team.cand1
+    , div [ class "flex flex-row justify-center mb-2" ] [ button [ onClick <| SwapTeam True ] [ matIcon "swap-vertical-bold" ] ]
     , viewMbCand (\c -> UpdateTeam { team | cand2 = c }) team.cand2
+    , div [ class "flex flex-row justify-center mb-2" ] [ button [ onClick <| SwapTeam False ] [ matIcon "swap-vertical-bold" ] ]
     , viewMbCand (\c -> UpdateTeam { team | cand3 = c }) team.cand3
     ]
 
