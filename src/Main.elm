@@ -533,15 +533,15 @@ mkRadioButtons list =
 mkStyledButton : ( msg, String, Bool ) -> Html msg
 mkStyledButton ( msg, txt, selected ) =
     let
-        cls b =
-            if b then
+        cls =
+            if selected then
                 "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
 
             else
                 "inline-block border border-white rounded hover:border-gray-200 text-blue-500 hover:bg-gray-200 py-1 px-3"
     in
     button
-        [ class <| cls selected
+        [ class cls
         , onClick msg
         ]
         [ text txt ]
@@ -659,7 +659,7 @@ viewAttacksWithRecommendations moves entry speciesId pokemon =
     let
         viewAttack_ selectMove isRec isSelected attack =
             span
-                [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-gray-300"
+                [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-transparent"
                 , onClick <| selectMove speciesId attack
                 ]
             <|
@@ -840,8 +840,7 @@ viewTeamMember updater model speciesId entry isPinned pokemon =
                     Registering _ ->
                         div [ class "flex flex-row" ]
                             [ span [ class "mr-2 text-sm" ] [ entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text ]
-                            , button [ onClick <| updater Unset ]
-                                [ matIcon "bookmark-remove" ]
+                            , button [ onClick <| updater Unset ] [ matIcon "bookmark-remove" ]
                             ]
 
                     _ ->
