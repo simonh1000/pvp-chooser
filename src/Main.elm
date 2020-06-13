@@ -767,7 +767,7 @@ viewTeam model league =
                                     |> Maybe.map (Tuple.pair pokemon)
                                     |> Result.fromMaybe ("Could not look up " ++ name ++ " in pokedex")
                             )
-                        |> Result.map (\( pokemon, entry ) -> viewTeamMember model name entry isPinned pokemon)
+                        |> Result.map (\( pokemon, entry ) -> viewTeamMember updater model name entry isPinned pokemon)
                         |> RE.extract (\err -> [ text err ])
 
                 content =
@@ -789,7 +789,7 @@ viewTeam model league =
                 Just selected ->
                     div
                         [ class "drop-zone p-1 mb-2 border-blue-500 relative"
-                        , onClick (updater selected)
+                        , onClick (updater <| Chosen selected)
                         ]
                         (overlay :: content)
 
@@ -809,15 +809,15 @@ viewTeam model league =
     in
     [ h2 [] [ text <| "My Team" ]
     , div [ class "spacer" ] []
-    , viewMbCand (\c -> UpdateTeam { team | cand1 = Chosen c }) team.cand1
-    , viewMbCand (\c -> UpdateTeam { team | cand2 = Chosen c }) team.cand2
-    , viewMbCand (\c -> UpdateTeam { team | cand3 = Chosen c }) team.cand3
+    , viewMbCand (\c -> UpdateTeam { team | cand1 = c }) team.cand1
+    , viewMbCand (\c -> UpdateTeam { team | cand2 = c }) team.cand2
+    , viewMbCand (\c -> UpdateTeam { team | cand3 = c }) team.cand3
     , div [] [ text score ]
     ]
 
 
-viewTeamMember : Model -> String -> PokedexEntry -> Bool -> Pokemon -> List (Html Msg)
-viewTeamMember model speciesId entry isPinned pokemon =
+viewTeamMember : (TeamMember -> Msg) -> Model -> String -> PokedexEntry -> Bool -> Pokemon -> List (Html Msg)
+viewTeamMember updater model speciesId entry isPinned pokemon =
     --let
     --    go attk acc =
     --        case attackToType model.attacks attk of
@@ -848,12 +848,17 @@ viewTeamMember model speciesId entry isPinned pokemon =
             , viewNameTitle entry.speciesName
             , span [ class "ml-2" ] [ summariseMoves model.moves pokemon ]
             ]
-        , if model.page == TeamOptions then
-            button [ onClick <| PinTeamMember speciesId ]
-                [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
+        , case model.page of
+            TeamOptions ->
+                button [ onClick <| PinTeamMember speciesId ]
+                    [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
 
-          else
-            text ""
+            Registering _ ->
+                button [ onClick <| updater Unset ]
+                    [ matIcon "bookmark-remove" ]
+
+            _ ->
+                text ""
         ]
 
     --, if model.page == Battling then
