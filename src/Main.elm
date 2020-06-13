@@ -446,10 +446,10 @@ view model =
                 div [ class "loading flex-grow" ] []
 
             Registering names ->
-                div [ cls "choosing" ]
-                    [ div [ class "my-pokemon flex flex-col flex-grow" ] (viewMyPokemons model league)
-                    , div [ class "my-team flex flex-col flex-grow ml-2 mr-2" ] (viewTeam model league)
-                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsRegistering model league names)
+                div [ cls "choosing grid grid-cols-1 md:grid-cols-3" ]
+                    [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model league)
+                    , div [ class "my-team flex flex-col ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league names)
                     ]
 
             TeamOptions ->
@@ -814,11 +814,10 @@ viewTeam model league =
                 |> Result.withDefault ""
     in
     [ h2 [] [ text <| "My Team" ]
-    , div [ class "spacer" ] []
+    , div [ class "spacer" ] [ text score ]
     , viewMbCand (\c -> UpdateTeam { team | cand1 = c }) team.cand1
     , viewMbCand (\c -> UpdateTeam { team | cand2 = c }) team.cand2
     , viewMbCand (\c -> UpdateTeam { team | cand3 = c }) team.cand3
-    , div [] [ text score ]
     ]
 
 

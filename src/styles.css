@@ -21,15 +21,12 @@ a {
 .intro p {
     @apply mb-2
 }
-.main.choosing > div {
-    flex: 1 0 33%;
-}
 
 .teams .my-pokemon, .teams .my-team {
     flex-basis: 300px;
     overflow: hidden;
 }
-.my-team {
+.battling .my-team {
     flex-basis: 300px;
     overflow: hidden;
 }
@@ -37,13 +34,6 @@ a {
     height: 24px;
     @apply mb-2
 }
-/*.battling .my-team {*/
-/*    flex-basis: 400px;*/
-/*}*/
-
-/*.choosing .my-team {*/
-/*    flex-grow: 3;*/
-/*}*/
 
 .chooser-container {
     z-index: 1;
