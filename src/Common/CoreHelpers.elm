@@ -468,12 +468,12 @@ foldRResult f bResult lst =
 --    L.foldl folder Dict.empty lst
 --
 --
+--
 --{-| Removes a list of keys from a Dict
 ---}
---rejectByList : List comparable -> Dict comparable a -> Dict comparable a
+--rejectByList : List String -> Dict String a -> Dict String a
 --rejectByList lst dict =
---    DE.removeMany (Set.fromList lst) dict
---
+--    List.foldl Dict.remove dict lst
 --
 --renameKey : comparable -> comparable -> Dict comparable b -> Dict comparable b
 --renameKey oldKey newKey dict =

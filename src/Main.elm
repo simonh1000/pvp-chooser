@@ -594,6 +594,7 @@ viewMyPokemons model league =
 
       else
         league.myPokemon
+            |> rejectByList (L.filterMap extractSpeciesId <| mkTeamList league.team)
             |> Dict.map addData
             |> Dict.values
             |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .score |> Maybe.withDefault 0 |> (*) -1)
@@ -837,8 +838,11 @@ viewTeamMember updater model speciesId entry isPinned pokemon =
                             [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
 
                     Registering _ ->
-                        button [ onClick <| updater Unset ]
-                            [ matIcon "bookmark-remove" ]
+                        div [ class "flex flex-row" ]
+                            [ span [ class "mr-2" ] [ entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text ]
+                            , button [ onClick <| updater Unset ]
+                                [ matIcon "bookmark-remove" ]
+                            ]
 
                     _ ->
                         text ""
@@ -1025,7 +1029,7 @@ summariseTeam model league =
     , league.team.cand2
     , league.team.cand3
     ]
-        |> L.filterMap getMember
+        |> L.filterMap extractSpeciesId
         |> summariseTeam2 model.moves league.myPokemon
 
 
@@ -1048,7 +1052,7 @@ calcTeamScores model league opName =
     , league.team.cand2
     , league.team.cand3
     ]
-        |> L.filterMap (getMember >> Maybe.map mkItem)
+        |> L.filterMap (extractSpeciesId >> Maybe.map mkItem)
         |> String.join ", "
 
 
