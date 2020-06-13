@@ -839,7 +839,7 @@ viewTeamMember updater model speciesId entry isPinned pokemon =
 
                     Registering _ ->
                         div [ class "flex flex-row" ]
-                            [ span [ class "mr-2" ] [ entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text ]
+                            [ span [ class "mr-2 text-sm" ] [ entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text ]
                             , button [ onClick <| updater Unset ]
                                 [ matIcon "bookmark-remove" ]
                             ]
