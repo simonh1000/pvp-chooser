@@ -446,23 +446,23 @@ view model =
                 div [ class "loading flex-grow" ] []
 
             Registering names ->
-                div [ cls "choosing grid grid-cols-1 md:grid-cols-3" ]
+                div [ cls "choosing grid grid-cols-1 md:grid-cols-3 gap-2" ]
                     [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model league)
-                    , div [ class "my-team flex flex-col ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "my-team flex flex-col" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league names)
                     ]
 
             TeamOptions ->
-                div [ cls "teams" ]
-                    [ div [ class "my-pokemon flex flex-col flex-grow flex-shrink-0" ] (viewTeamOptions model league)
-                    , div [ class "my-team flex flex-col flex-grow flex-shrink-0 ml-2 mr-2" ] (viewTeam model league)
-                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
+                div [ cls "teams grid grid-cols-1 md:grid-cols-4 gap-2" ]
+                    [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model league)
+                    , div [ class "my-team flex flex-col ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
             Battling ->
-                div [ cls "battling" ]
-                    [ div [ class "my-team flex flex-col flex-grow mr-2" ] (viewTeam model league)
-                    , div [ class "opponents flex flex-col flex-grow" ] (viewOpponentsBattling model league)
+                div [ cls "battling grid grid-cols-1 md:grid-cols-3 gap-2" ]
+                    [ div [ class "my-team flex flex-col" ] (viewTeam model league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
             FatalError string ->

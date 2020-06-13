@@ -22,14 +22,12 @@ a {
     @apply mb-2
 }
 
-.teams .my-pokemon, .teams .my-team {
-    flex-basis: 300px;
-    overflow: hidden;
-}
-.battling .my-team {
-    flex-basis: 300px;
-    overflow: hidden;
-}
+/*.teams .my-pokemon, .teams .my-team {*/
+/*    overflow: hidden;*/
+/*}*/
+/*.battling .my-team {*/
+/*    overflow: hidden;*/
+/*}*/
 .choosing .spacer {
     height: 24px;
     @apply mb-2
@@ -37,11 +35,6 @@ a {
 
 .chooser-container {
     z-index: 1;
-}
-.recommendations > div {
-    min-width: 30px;
-    display: flex;
-    flex-wrap: wrap;
 }
 
 .drop-zone {
