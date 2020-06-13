@@ -1,6 +1,5 @@
 module Model exposing (..)
 
-import Array exposing (Array)
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Common.CoreHelpers exposing (decodeSimpleCustomTypes, exactMatchString, ifThenElse)
@@ -8,7 +7,6 @@ import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as Encode
 import List as L
-import List.Extra as LE
 import Pokemon exposing (..)
 import Set exposing (Set)
 
@@ -21,7 +19,7 @@ type alias Model =
     , -- session data
       page : Page
     , -- move to Page?
-      selectedPokemon : Maybe Pokemon
+      selectedPokemon : Maybe String -- speciesId
     , chooser : SearchTool
     , errorMessage : Maybe String
     , debug : Bool
@@ -118,8 +116,6 @@ decodePersisted =
         dec s =
             Decode.oneOf
                 [ Decode.field s decodeLeague
-                , -- todo remove
-                  Decode.field s decodeLeagueLegacy
                 , Decode.succeed blankLeague
                 ]
     in
@@ -182,7 +178,7 @@ encodeSeason s =
 
 
 type alias League =
-    { myPokemon : Array Pokemon
+    { myPokemon : Dict String Pokemon -- speciesId => data
     , team : Team
     , opponents : Dict String Opponent -- name => opponent
     }
@@ -190,12 +186,12 @@ type alias League =
 
 blankLeague : League
 blankLeague =
-    League Array.empty blankTeam Dict.empty
+    League Dict.empty blankTeam Dict.empty
 
 
 encodeLeague : League -> Value
 encodeLeague league =
-    [ ( "myPokemon", Encode.list encodePokemon <| Array.toList league.myPokemon )
+    [ ( "myPokemon", encodeMyPokemon league.myPokemon )
     , ( "team", encodeTeam league.team )
     , ( "opponents", encodeOpponents league.opponents )
     ]
@@ -205,14 +201,7 @@ encodeLeague league =
 decodeLeague : Decoder League
 decodeLeague =
     Decode.succeed League
-        |> andMap
-            (Decode.oneOf
-                [ Decode.field "myPokemon" <| Decode.list decodePokemon
-
-                --, Decode.succeed []
-                ]
-                |> Decode.map Array.fromList
-            )
+        |> andMap (Decode.field "myPokemon" <| decodeMyPokemon)
         |> andMap
             (Decode.oneOf
                 [ Decode.field "team" decodeTeam
@@ -222,46 +211,44 @@ decodeLeague =
         |> andMap (Decode.field "opponents" decodeOpponents)
 
 
-decodeLeagueLegacy : Decoder League
-decodeLeagueLegacy =
-    let
-        mapTp tm =
-            case tm of
-                Pinned x ->
-                    Pinned <| convertNameToId x
 
-                Chosen x ->
-                    Chosen <| convertNameToId x
-
-                Unset ->
-                    Unset
-
-        mapOp ops =
-            let
-                go k v acc =
-                    Dict.insert (convertNameToId k) v acc
-            in
-            Dict.foldl go Dict.empty ops
-    in
-    Decode.succeed League
-        |> andMap
-            (Decode.oneOf
-                [ Decode.field "myPokemon" <| Decode.list decodeLegacyPokemon
-                , Decode.succeed []
-                ]
-                |> Decode.map Array.fromList
-            )
-        |> andMap
-            (Decode.oneOf
-                [ Decode.field "team" decodeTeam
-                , Decode.succeed blankTeam
-                ]
-                |> Decode.map (mapTeam mapTp)
-            )
-        |> andMap (Decode.field "opponents" decodeOpponents |> Decode.map mapOp)
-
-
-
+--decodeLeagueLegacy : Decoder League
+--decodeLeagueLegacy =
+--    let
+--        mapTp tm =
+--            case tm of
+--                Pinned x ->
+--                    Pinned <| convertNameToId x
+--
+--                Chosen x ->
+--                    Chosen <| convertNameToId x
+--
+--                Unset ->
+--                    Unset
+--
+--        mapOp ops =
+--            let
+--                go k v acc =
+--                    Dict.insert (convertNameToId k) v acc
+--            in
+--            Dict.foldl go Dict.empty ops
+--    in
+--    Decode.succeed League
+--        |> andMap
+--            (Decode.oneOf
+--                [ Decode.field "myPokemon" <| Decode.list decodeLegacyPokemon
+--                , Decode.succeed []
+--                ]
+--                |> Decode.map Array.fromList
+--            )
+--        |> andMap
+--            (Decode.oneOf
+--                [ Decode.field "team" decodeTeam
+--                , Decode.succeed blankTeam
+--                ]
+--                |> Decode.map (mapTeam mapTp)
+--            )
+--        |> andMap (Decode.field "opponents" decodeOpponents |> Decode.map mapOp)
 -- -----------------------
 -- Pokemon
 -- -----------------------
@@ -269,7 +256,6 @@ decodeLeagueLegacy =
 
 type alias Pokemon =
     { expanded : Bool
-    , speciesId : String
     , fast : String -- the specific attack being used
     , charged : Set String
     , scores : Dict String Float -- opponent name => score
@@ -278,46 +264,37 @@ type alias Pokemon =
 
 blankPokemon : Pokemon
 blankPokemon =
-    Pokemon True "" "" Set.empty Dict.empty
+    Pokemon True "" Set.empty Dict.empty
+
+
+decodeMyPokemon : Decoder (Dict String Pokemon)
+decodeMyPokemon =
+    Decode.map2 Tuple.pair (Decode.field "speciesId" Decode.string) decodePokemon
+        |> Decode.list
+        |> Decode.map Dict.fromList
 
 
 decodePokemon : Decoder Pokemon
 decodePokemon =
-    Decode.succeed (\name fast charged -> Pokemon False name fast charged Dict.empty)
-        |> andMap (Decode.field "speciesId" Decode.string)
+    Decode.succeed (\fast charged -> Pokemon False fast charged Dict.empty)
         |> andMap (Decode.field "fast" Decode.string)
         |> andMap (Decode.field "charged" <| decSet Decode.string)
 
 
-encodePokemon : Pokemon -> Value
+encodeMyPokemon : Dict String Pokemon -> Value
+encodeMyPokemon myPokemon =
+    let
+        enc speciesId p =
+            Encode.object <| ( "speciesId", Encode.string speciesId ) :: encodePokemon p
+    in
+    myPokemon |> Dict.map enc |> Dict.values |> Encode.list identity
+
+
+encodePokemon : Pokemon -> List ( String, Value )
 encodePokemon p =
-    [ ( "speciesId", Encode.string p.speciesId )
-    , ( "fast", Encode.string p.fast )
+    [ ( "fast", Encode.string p.fast )
     , ( "charged", Encode.list Encode.string <| Set.toList p.charged )
     ]
-        |> Encode.object
-
-
-
--- migration
-
-
-decodeLegacyPokemon : Decoder Pokemon
-decodeLegacyPokemon =
-    Decode.succeed (\name fast charged -> Pokemon False (convertNameToId name) (convertAttack fast) (Set.map convertAttack charged) Dict.empty)
-        |> andMap (Decode.field "name" Decode.string)
-        |> andMap (Decode.field "fast" Decode.string)
-        |> andMap (Decode.field "charged" <| decSet Decode.string)
-
-
-convertNameToId : String -> String
-convertNameToId =
-    String.toLower >> String.replace " - " "_" >> String.replace "alola" "alolan"
-
-
-convertAttack : String -> String
-convertAttack =
-    String.replace " " "_" >> String.toUpper
 
 
 

@@ -1,7 +1,5 @@
 module Main exposing (main)
 
-import Array exposing (Array)
-import Array.Extra as AE
 import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Browser
@@ -80,15 +78,15 @@ type Msg
     | ACSelect Bool String -- isMyPokemon name
     | SetAutoComplete SearchTool
       -- My pokemons
-    | ToggleMyPokemon Int
-    | SelectFastMove Int String
-    | SelectChargedMove Int String
-    | RemovePokemon Int
+    | ToggleMyPokemon String
+    | SelectFastMove String String
+    | SelectChargedMove String String
+    | RemovePokemon String
     | PinTeamMember String
       -- Team chooser
     | SetTeam ( String, String, String )
       -- middle
-    | SelectCandidate Pokemon -- first part of adding to team
+    | SelectCandidate String -- speciesId
     | UpdateTeam Team -- second part
       -- My opponents
     | ToggleOpponent String
@@ -173,12 +171,11 @@ update message model =
                         let
                             pokemon =
                                 { blankPokemon
-                                    | speciesId = speciesId
-                                    , fast = model.pokedex |> Dict.get speciesId |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
+                                    | fast = model.pokedex |> Dict.get speciesId |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
                                     , charged = Set.empty
                                 }
                         in
-                        { l | myPokemon = Array.push pokemon l.myPokemon }
+                        { l | myPokemon = Dict.insert speciesId pokemon l.myPokemon }
 
                     else
                         { l | opponents = Dict.insert speciesId (Opponent False 1) l.opponents }
@@ -208,17 +205,17 @@ update message model =
             ( { model | chooser = chooser }, Cmd.none )
 
         -- My Pokemones
-        ToggleMyPokemon idx ->
+        ToggleMyPokemon speciesId ->
             model
-                |> updateLeague (\l -> { l | myPokemon = AE.update idx (\p -> { p | expanded = not p.expanded }) l.myPokemon })
+                |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| \p -> { p | expanded = not p.expanded }) l.myPokemon })
                 |> andPersist
 
-        SelectFastMove idx move ->
+        SelectFastMove speciesId move ->
             model
-                |> updateLeague (\l -> { l | myPokemon = AE.update idx (\p -> { p | fast = move }) l.myPokemon })
+                |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| \p -> { p | fast = move }) l.myPokemon })
                 |> andPersist
 
-        SelectChargedMove idx move ->
+        SelectChargedMove speciesId move ->
             let
                 updater charged =
                     if Set.member move charged then
@@ -228,21 +225,16 @@ update message model =
                         Set.insert move charged
             in
             model
-                |> updateLeague (\l -> { l | myPokemon = AE.update idx (\p -> { p | charged = updater p.charged }) l.myPokemon })
+                |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| \p -> { p | charged = updater p.charged }) l.myPokemon })
                 |> andPersist
 
-        RemovePokemon idx ->
+        RemovePokemon speciesId ->
             let
                 updater l =
-                    case Array.get idx l.myPokemon of
-                        Just p ->
-                            { l
-                                | myPokemon = AE.removeAt idx l.myPokemon
-                                , team = removeFromTeam p.speciesId l.team
-                            }
-
-                        Nothing ->
-                            { l | myPokemon = AE.removeAt idx l.myPokemon }
+                    { l
+                        | myPokemon = Dict.remove speciesId l.myPokemon
+                        , team = removeFromTeam speciesId l.team
+                    }
             in
             model
                 |> updateLeague updater
@@ -575,17 +567,17 @@ viewMyPokemons model league =
                         , pvpPokeLogo
                         ]
 
-        addData idx pokemon =
-            MyPokemonData idx pokemon (Dict.get pokemon.speciesId model.pokedex)
+        addData speciesId pokemon =
+            MyPokemonData speciesId pokemon (Dict.get speciesId model.pokedex)
 
         viewer : MyPokemonData -> Html Msg
-        viewer { idx, pokemon, dex } =
-            Maybe.map (viewMyPokemon model idx pokemon) dex
+        viewer { speciesId, pokemon, dex } =
+            Maybe.map (viewMyPokemon model speciesId pokemon) dex
                 |> Maybe.withDefault
                     (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
-                            [ viewNameTitle pokemon.speciesId
-                            , deleteIcon <| RemovePokemon idx
+                            [ viewNameTitle speciesId
+                            , deleteIcon <| RemovePokemon speciesId
                             ]
                         , div [] [ text <| "Unexpected error looking up. Please delete and re-add" ]
                         ]
@@ -593,7 +585,7 @@ viewMyPokemons model league =
     in
     [ h2 [] [ text "My Pokemons" ]
     , chooser
-    , if Array.isEmpty league.myPokemon then
+    , if Dict.isEmpty league.myPokemon then
         ul []
             [ ol [ class "mb-3" ] [ matIcon "arrow-up-bold", matIcon "arrow-up-bold", text "First add some of your pokemon using the form above" ]
             , ol [ class "mb-3" ] [ text "Select the attacks you are using" ]
@@ -602,8 +594,8 @@ viewMyPokemons model league =
 
       else
         league.myPokemon
-            |> Array.toList
-            |> L.indexedMap addData
+            |> Dict.map addData
+            |> Dict.values
             |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .score |> Maybe.withDefault 0 |> (*) -1)
             |> L.map viewer
             |> div []
@@ -611,17 +603,17 @@ viewMyPokemons model league =
 
 
 type alias MyPokemonData =
-    { idx : Int
+    { speciesId : String
     , pokemon : Pokemon
     , dex : Maybe PokedexEntry
     }
 
 
-viewMyPokemon : Model -> Int -> Pokemon -> PokedexEntry -> Html Msg
-viewMyPokemon model idx pokemon entry =
+viewMyPokemon : Model -> String -> Pokemon -> PokedexEntry -> Html Msg
+viewMyPokemon model speciesId pokemon entry =
     let
         mainCls =
-            if Maybe.map .speciesId model.selectedPokemon == Just pokemon.speciesId then
+            if model.selectedPokemon == Just speciesId then
                 " mb-2 bg-blue-100"
 
             else
@@ -630,7 +622,7 @@ viewMyPokemon model idx pokemon entry =
         viewAttack_ selectMove isRec isSelected attack =
             span
                 [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-gray-300"
-                , onClick <| selectMove idx attack
+                , onClick <| selectMove speciesId attack
                 ]
             <|
                 [ viewMoveWithPvPoke model.moves isRec attack ]
@@ -639,10 +631,10 @@ viewMyPokemon model idx pokemon entry =
             div [ class "flex flex-row items-center justify-between" ]
                 [ -- LHS
                   div [ class "flex flex-row items-center" ]
-                    [ toggleBtn (ToggleMyPokemon idx) pokemon.expanded
+                    [ toggleBtn (ToggleMyPokemon speciesId) pokemon.expanded
                     , ppTypes entry.types
                     , div
-                        [ onClick <| SelectCandidate pokemon
+                        [ onClick <| SelectCandidate speciesId
                         , title "Select for team"
                         , class "cursor-pointer"
                         ]
@@ -652,7 +644,7 @@ viewMyPokemon model idx pokemon entry =
                   div [ class "flex flex-row items-center text-sm" ]
                     [ ifThenElse pokemon.expanded (text "") (summariseMoves model.moves pokemon)
                     , if pokemon.expanded then
-                        deleteIcon <| RemovePokemon idx
+                        deleteIcon <| RemovePokemon speciesId
 
                       else
                         entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text
@@ -752,17 +744,17 @@ viewTeam model league =
         team =
             league.team
 
-        lookupTeamMember : TeamMember -> Result String Pokemon
+        lookupTeamMember : TeamMember -> Result String ( String, Pokemon )
         lookupTeamMember teamMember =
             case teamMember of
                 Unset ->
                     Err "Team member not chosen"
 
                 Chosen speciesId ->
-                    lookupName league.myPokemon speciesId
+                    lookupName league.myPokemon speciesId |> Result.map (Tuple.pair speciesId)
 
                 Pinned speciesId ->
-                    lookupName league.myPokemon speciesId
+                    lookupName league.myPokemon speciesId |> Result.map (Tuple.pair speciesId)
 
         viewMbCand updater mbCand =
             let
@@ -771,9 +763,9 @@ viewTeam model league =
                         |> Result.andThen
                             (\pokemon ->
                                 model.pokedex
-                                    |> Dict.get pokemon.speciesId
+                                    |> Dict.get name
                                     |> Maybe.map (Tuple.pair pokemon)
-                                    |> Result.fromMaybe ("Could not look up " ++ pokemon.speciesId ++ " in pokedex")
+                                    |> Result.fromMaybe ("Could not look up " ++ name ++ " in pokedex")
                             )
                         |> Result.map (\( pokemon, entry ) -> viewTeamMember model name entry isPinned pokemon)
                         |> RE.extract (\err -> [ text err ])
@@ -797,7 +789,7 @@ viewTeam model league =
                 Just selected ->
                     div
                         [ class "drop-zone p-1 mb-2 border-blue-500 relative"
-                        , onClick (updater selected.speciesId)
+                        , onClick (updater selected)
                         ]
                         (overlay :: content)
 
@@ -1050,14 +1042,14 @@ summariseTeam model league =
 calcTeamScores : Model -> League -> String -> String
 calcTeamScores model league opName =
     let
-        mkItemInner pokemon =
-            Helpers.evaluateBattle model.pokedex model.moves pokemon opName
+        mkItemInner speciesId pokemon =
+            Helpers.evaluateBattle model.pokedex model.moves speciesId pokemon opName
                 |> Result.toMaybe
 
         mkItem : String -> String
-        mkItem cand =
-            Maybe.map mkItemInner
-                (lookupMyPokemon league.myPokemon cand)
+        mkItem speciesId =
+            lookupMyPokemon league.myPokemon speciesId
+                |> Maybe.map (mkItemInner speciesId)
                 |> Maybe.andThen identity
                 |> Maybe.map ppFloat
                 |> Maybe.withDefault "."
@@ -1070,21 +1062,20 @@ calcTeamScores model league opName =
         |> String.join ", "
 
 
-summariseTeam2 : Dict String MoveType -> Array Pokemon -> List String -> List ( String, PType )
+summariseTeam2 : Dict String MoveType -> Dict String Pokemon -> List String -> List ( String, PType )
 summariseTeam2 attacks myPokemon team =
     team
-        |> L.filterMap (lookupMyPokemon myPokemon)
+        |> L.filterMap (\speciesId -> Dict.get speciesId myPokemon |> Maybe.map (Tuple.pair speciesId))
+        |> Dict.fromList
         |> summariseTeamInner attacks
 
 
-lookupMyPokemon : Array Pokemon -> String -> Maybe Pokemon
-lookupMyPokemon myPokemon name =
-    myPokemon
-        |> Array.filter (\item -> item.speciesId == name)
-        |> Array.get 0
+lookupMyPokemon : Dict String Pokemon -> String -> Maybe Pokemon
+lookupMyPokemon myPokemon speciesId =
+    Dict.get speciesId myPokemon
 
 
-summariseTeamInner : Dict String MoveType -> List Pokemon -> List ( String, PType )
+summariseTeamInner : Dict String MoveType -> Dict String Pokemon -> List ( String, PType )
 summariseTeamInner attacks pokemons =
     let
         createItem : String -> ( String, String ) -> Maybe ( String, PType )
@@ -1092,16 +1083,16 @@ summariseTeamInner attacks pokemons =
             Dict.get attack attacks
                 |> Maybe.map (\{ type_ } -> ( name, type_ ))
 
-        go : Pokemon -> List ( String, PType ) -> List ( String, PType )
-        go p acc =
+        go : String -> Pokemon -> List ( String, PType ) -> List ( String, PType )
+        go speciesId p acc =
             p.charged
                 |> Set.toList
                 |> L.map (\atk -> ( atk, "**" ))
                 |> (::) ( p.fast, "*" )
-                |> L.filterMap (createItem p.speciesId)
+                |> L.filterMap (createItem speciesId)
                 |> (++) acc
     in
-    L.foldl go [] pokemons
+    Dict.foldl go [] pokemons
 
 
 
