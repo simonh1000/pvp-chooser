@@ -77,18 +77,18 @@ type Msg
     | ACSearch String
     | ACSelect Bool String -- isMyPokemon name
     | SetAutoComplete SearchTool
-      -- My pokemons
+      -- Registering: My pokemons
     | ToggleMyPokemon String
     | SelectFastMove String String
     | SelectChargedMove String String
     | RemovePokemon String
-    | PinTeamMember String
-      -- Team chooser
-    | SetTeam ( String, String, String )
-      -- middle
     | SelectCandidate String -- speciesId
+      -- Registering: Team
     | UpdateTeam Team -- second part
-      -- My opponents
+      -- Team chooser
+    | PinTeamMember String
+    | SetTeam ( String, String, String )
+      -- Registering: opponents
     | ToggleOpponent String
     | UpdateOpponentFrequency String Int -- name
     | RemoveOpponent String
@@ -657,20 +657,21 @@ viewMyPokemon model speciesId pokemon entry =
 viewAttacksWithRecommendations : Dict String MoveType -> PokedexEntry -> String -> Pokemon -> List (Html Msg)
 viewAttacksWithRecommendations moves entry speciesId pokemon =
     let
-        viewAttack_ selectMove isRec isSelected attack =
+        -- TODO mark elite
+        viewAttack_ selectMove isSelected attack =
             span
                 [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-transparent"
                 , onClick <| selectMove speciesId attack
                 ]
             <|
-                [ viewMoveWithPvPoke moves isRec attack ]
+                [ viewMoveWithPvPoke moves entry attack ]
     in
     [ entry.fast
-        |> L.map (\attack -> viewAttack_ SelectFastMove (L.member attack entry.recMoves) (attack == pokemon.fast) attack)
+        |> L.map (\attack -> viewAttack_ SelectFastMove (attack == pokemon.fast) attack)
         |> (::) (text "Fast: ")
         |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
     , entry.charged
-        |> L.map (\attack -> viewAttack_ SelectChargedMove (L.member attack entry.recMoves) (Set.member attack pokemon.charged) attack)
+        |> L.map (\attack -> viewAttack_ SelectChargedMove (Set.member attack pokemon.charged) attack)
         |> (::) (text "Charged: ")
         |> div [ class "flex flex-row flex-wrap items-center" ]
     , if Set.size pokemon.charged > 2 then
@@ -810,7 +811,7 @@ viewTeam model league =
             Result.map3 (\a b c -> evaluateTeam ( a, b, c )) (lookupTeamMember team.cand1) (lookupTeamMember team.cand2) (lookupTeamMember team.cand3)
                 |> Result.map (Helpers.summariseTeam league.opponents)
                 |> Result.map (\x -> x / sumFreqs)
-                |> Result.map (ppFloat >> (\s -> "score: " ++ s))
+                |> Result.map (ppFloat >> (\s -> "Score: " ++ s))
                 |> Result.withDefault ""
     in
     [ h2 [] [ text <| "My Team" ]
@@ -907,11 +908,11 @@ viewOpponentsRegistering model league names =
                 content =
                     if op.expanded then
                         [ entry.fast
-                            |> L.map (\attack -> viewMoveWithPvPoke model.moves (L.member attack entry.recMoves) attack)
+                            |> L.map (\attack -> viewMoveWithPvPoke model.moves entry attack)
                             |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
                             |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
                         , entry.charged
-                            |> L.map (\attack -> viewMoveWithPvPoke model.moves (L.member attack entry.recMoves) attack)
+                            |> L.map (\attack -> viewMoveWithPvPoke model.moves entry attack)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
                         , div [] <| viewPokemonResistsAndWeaknesses model speciesId
@@ -1156,6 +1157,7 @@ viewTypes fn weaknesses title =
 attackToType : Dict String MoveType -> String -> Maybe PType
 attackToType attacks attack =
     if String.startsWith "HIDDEN" attack then
+        -- we don't show hidden type because there are 10 of them!
         Nothing
 
     else
@@ -1164,8 +1166,15 @@ attackToType attacks attack =
             |> Maybe.map .type_
 
 
-viewMoveWithPvPoke : Dict String MoveType -> Bool -> String -> Html msg
-viewMoveWithPvPoke attacks isRec attack =
+viewMoveWithPvPoke : Dict String MoveType -> PokedexEntry -> String -> Html msg
+viewMoveWithPvPoke attacks entry attack =
+    let
+        isRec =
+            L.member attack entry.recMoves
+
+        isElite =
+            L.member attack entry.elite
+    in
     case Dict.get attack attacks of
         Just mt ->
             span
@@ -1173,7 +1182,7 @@ viewMoveWithPvPoke attacks isRec attack =
                 , class "flex flex-row items-center badge p-1 rounded text-sm"
                 ]
                 [ ifThenElse isRec pvpPokeLogo (text "")
-                , span [ class "truncate" ] [ text mt.name ]
+                , span [ class "truncate" ] [ text <| ifThenElse isElite "*" "" ++ mt.name ]
                 ]
 
         Nothing ->

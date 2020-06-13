@@ -276,12 +276,13 @@ blankTeam =
     }
 
 
-mapTeam : (TeamMember -> TeamMember) -> Team -> Team
-mapTeam fn team =
-    { cand1 = fn team.cand1
-    , cand2 = fn team.cand2
-    , cand3 = fn team.cand3
-    }
+
+--mapTeam : (TeamMember -> TeamMember) -> Team -> Team
+--mapTeam fn team =
+--    { cand1 = fn team.cand1
+--    , cand2 = fn team.cand2
+--    , cand3 = fn team.cand3
+--    }
 
 
 copyPinning : Team -> ( String, String, String ) -> Team
@@ -500,17 +501,19 @@ type alias PokedexEntry =
     , types : List PType
     , fast : List String
     , charged : List String
+    , elite : List String
     , recMoves : List String
     , score : Maybe Float
     }
 
 
-blankDex : PokedexEntry
-blankDex =
-    { speciesName = ""
-    , types = []
-    , fast = []
-    , charged = []
+mkDexEntry : String -> List PType -> List String -> List String -> List String -> PokedexEntry
+mkDexEntry speciesName types fast charged elite =
+    { speciesName = speciesName
+    , types = types
+    , fast = fast
+    , charged = charged
+    , elite = elite
     , recMoves = []
     , score = Nothing
     }
@@ -525,11 +528,12 @@ decodePokedex =
 
 decodePokedexEntry : Decoder PokedexEntry
 decodePokedexEntry =
-    Decode.succeed (\speciesName types fast charged -> { blankDex | speciesName = speciesName, types = types, fast = fast, charged = charged })
+    Decode.succeed mkDexEntry
         |> andMap (Decode.field "speciesName" Decode.string)
         |> andMap (Decode.field "types" decodeTypes)
         |> andMap (Decode.field "fastMoves" <| Decode.list Decode.string)
         |> andMap (Decode.field "chargedMoves" <| Decode.list Decode.string)
+        |> andMap (DE.withDefault [] <| Decode.field "eliteMoves" <| Decode.list Decode.string)
 
 
 
