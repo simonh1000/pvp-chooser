@@ -119,13 +119,8 @@ update message model =
 
                     newPage =
                         case model.page of
-                            Registering _ ->
-                                newModel
-                                    |> getCurrentLeague
-                                    |> .opponents
-                                    |> sortOpponents
-                                    |> RegisteringModel
-                                    |> Registering
+                            Registering m ->
+                                { m | opponents = newModel |> getCurrentLeague |> .opponents |> sortOpponents } |> Registering
 
                             p ->
                                 p
@@ -269,19 +264,14 @@ update message model =
                 |> andPersist
 
         SelectCandidate pokemon ->
-            ( { model
-                | selectedPokemon =
-                    if Just pokemon == model.selectedPokemon then
-                        Nothing
-
-                    else
-                        Just pokemon
-              }
-            , Cmd.none
-            )
+            let
+                fn m =
+                    { m | selectedPokemon = ifThenElse (Just pokemon == m.selectedPokemon) Nothing (Just pokemon) }
+            in
+            ( { model | page = mapRegistering fn model.page }, Cmd.none )
 
         UpdateTeam team ->
-            { model | selectedPokemon = Nothing }
+            { model | page = mapRegistering (\m -> { m | selectedPokemon = Nothing }) model.page }
                 |> updateLeague (\l -> { l | team = team })
                 |> andPersist
 
@@ -358,12 +348,12 @@ update message model =
 
 
 mkRegisteringPage : Model -> Page
-mkRegisteringPage =
-    getCurrentLeague
-        >> .opponents
-        >> sortOpponents
-        >> RegisteringModel
-        >> Registering
+mkRegisteringPage model =
+    let
+        opponents =
+            model |> getCurrentLeague |> .opponents |> sortOpponents
+    in
+    Registering { blankRegistering | opponents = opponents }
 
 
 andPersist : Model -> ( Model, Cmd msg )
@@ -465,23 +455,23 @@ view model =
             LoadingDex ->
                 div [ class "loading flex-grow" ] []
 
-            Registering { opponents } ->
+            Registering m ->
                 div [ cls "choosing grid grid-cols-1 md:grid-cols-3 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model league)
-                    , div [ class "my-team flex flex-col" ] (viewTeam model league)
-                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league opponents)
+                    [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model m league)
+                    , div [ class "my-team flex flex-col" ] (viewTeam model m.selectedPokemon league)
+                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
                     ]
 
             TeamOptions ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-4 gap-2" ]
                     [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model league)
-                    , div [ class "my-team flex flex-col" ] (viewTeam model league)
+                    , div [ class "my-team flex flex-col" ] (viewTeam model Nothing league)
                     , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
             Battling ->
                 div [ cls "battling grid grid-cols-1 md:grid-cols-3 gap-2" ]
-                    [ div [ class "my-team flex flex-col" ] (viewTeam model league)
+                    [ div [ class "my-team flex flex-col" ] (viewTeam model Nothing league)
                     , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
@@ -507,7 +497,7 @@ pvpHeader lst tgt =
     let
         switcher =
             mkRadioButtons
-                [ ( SwitchPage <| Registering { opponents = lst }, "Registering", isRegistering tgt )
+                [ ( SwitchPage <| Registering { blankRegistering | opponents = lst }, "Registering", isRegistering tgt )
                 , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
                 , ( SwitchPage Battling, "Battling", Battling == tgt )
                 ]
@@ -573,8 +563,8 @@ mkStyledButton ( msg, txt, selected ) =
 -- -------------------
 
 
-viewMyPokemons : Model -> League -> List (Html Msg)
-viewMyPokemons model league =
+viewMyPokemons : Model -> RegisteringModel -> League -> List (Html Msg)
+viewMyPokemons model m league =
     let
         chooser =
             div [ class "flex flex-row items-center justify-between mb-2" ] <|
@@ -592,7 +582,7 @@ viewMyPokemons model league =
 
         viewer : MyPokemonData -> Html Msg
         viewer { speciesId, pokemon, dex } =
-            Maybe.map (viewMyPokemon model speciesId pokemon) dex
+            Maybe.map (viewMyPokemon model m.selectedPokemon speciesId pokemon) dex
                 |> Maybe.withDefault
                     (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
                         [ div [ class "flex flex-row items-center justify-between" ]
@@ -630,11 +620,11 @@ type alias MyPokemonData =
     }
 
 
-viewMyPokemon : Model -> String -> Pokemon -> PokedexEntry -> Html Msg
-viewMyPokemon model speciesId pokemon entry =
+viewMyPokemon : Model -> Maybe String -> String -> Pokemon -> PokedexEntry -> Html Msg
+viewMyPokemon model selectedPokemon speciesId pokemon entry =
     let
         mainCls =
-            if model.selectedPokemon == Just speciesId then
+            if selectedPokemon == Just speciesId then
                 " mb-2 bg-blue-100"
 
             else
@@ -764,8 +754,8 @@ viewTeamOptions model league =
 -- -------------------
 
 
-viewTeam : Model -> League -> List (Html Msg)
-viewTeam model league =
+viewTeam : Model -> Maybe String -> League -> List (Html Msg)
+viewTeam model selectedPokemon league =
     let
         team =
             league.team
@@ -803,7 +793,7 @@ viewTeam model league =
                     div [ class "overlay flex flex-row items-center justify-center" ]
                         [ text "Click here to insert into team" ]
             in
-            case model.selectedPokemon of
+            case selectedPokemon of
                 Just selected ->
                     div
                         [ class "drop-zone p-1 mb-2 border-blue-500 relative"

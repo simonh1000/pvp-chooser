@@ -18,8 +18,6 @@ type alias Model =
     , master : League
     , -- session data
       page : Page
-    , -- move to Page?
-      selectedPokemon : Maybe String -- speciesId
     , chooser : SearchTool
     , errorMessage : Maybe String
     , debug : Bool
@@ -37,7 +35,6 @@ defaultModel =
     , master = blankLeague
     , debug = False
     , page = LoadingDex
-    , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
     , errorMessage = Nothing
     , pokedex = Dict.empty
@@ -86,13 +83,25 @@ type Page
     | FatalError String
 
 
+mapRegistering : (RegisteringModel -> RegisteringModel) -> Page -> Page
+mapRegistering function page =
+    case page of
+        Registering m ->
+            Registering <| function m
+
+        _ ->
+            page
+
+
 type alias RegisteringModel =
-    { opponents : List String }
+    { opponents : List String
+    , selectedPokemon : Maybe String -- speciesId
+    }
 
 
 blankRegistering : RegisteringModel
 blankRegistering =
-    RegisteringModel []
+    { opponents = [], selectedPokemon = Nothing }
 
 
 isRegistering : Page -> Bool
