@@ -1,8 +1,8 @@
 module Helpers exposing (..)
 
-import Array exposing (Array)
-import AssocList as Dict exposing (Dict)
+import AssocList as AL
 import Common.CoreHelpers exposing (foldResult)
+import Dict exposing (Dict)
 import List as L
 import Model exposing (..)
 import Pokemon exposing (PType, effectiveness)
@@ -35,52 +35,63 @@ mkTeams2 tl =
 -- calculate team scores
 
 
-evaluateTeams : League -> List ( ( String, String, String ), Float )
+evaluateTeams : League -> List ( Team, Float )
 evaluateTeams league =
     let
         sumFreqs =
             calcWeightedTotal league.opponents
 
-        mapper (( p1, p2, p3 ) as team) =
-            ( ( p1.speciesId, p2.speciesId, p3.speciesId )
-            , (summariseTeam league.opponents <| evaluateTeam team) / sumFreqs
-            )
+        mapper ps =
+            (summariseTeam league.opponents <| evaluateTeam ps) / sumFreqs
 
+        pinnedTeam =
+            getPinnedTeam league.team
+
+        newTeam lst =
+            L.foldl (addToTeam << Chosen) pinnedTeam lst
+
+        pinnedMembers : List ( String, Pokemon )
+        pinnedMembers =
+            mkTeamList league.team
+                |> L.filterMap getPinnedMember
+                |> L.filterMap (\n -> lookupName league.myPokemon n |> Result.toMaybe |> Maybe.map (Tuple.pair n))
+
+        teams : List ( Team, ( Pokemon, Pokemon, Pokemon ) )
         teams =
             -- built taking into account which team members are pinned
-            case mkTeamList league.team |> L.filterMap getPinnedMember |> L.filterMap (lookupName league.myPokemon >> Result.toMaybe) of
-                [ p1 ] ->
+            case pinnedMembers of
+                [ ( s1, p1 ) ] ->
                     league.myPokemon
-                        |> Array.toList
-                        |> L.filter (\p -> p.speciesId /= p1.speciesId)
+                        |> Dict.toList
+                        |> L.filter (\( speciesId, _ ) -> speciesId /= s1)
                         |> mkTeams2
-                        |> L.map (\( p2, p3 ) -> ( p1, p2, p3 ))
+                        |> L.map (\( ( s2, p2 ), ( s3, p3 ) ) -> ( newTeam [ s2, s3 ], ( p1, p2, p3 ) ))
 
-                [ p1, p2 ] ->
+                [ ( s1, p1 ), ( s2, p2 ) ] ->
                     league.myPokemon
-                        |> Array.toList
-                        |> L.filter (\p -> p.speciesId /= p1.speciesId && p.speciesId /= p2.speciesId)
-                        |> L.map (\p3 -> ( p1, p2, p3 ))
+                        |> Dict.toList
+                        |> L.filter (\( speciesId, _ ) -> speciesId /= s1 && speciesId /= s2)
+                        |> L.map (\( s3, p3 ) -> ( newTeam [ s3 ], ( p1, p2, p3 ) ))
 
-                [ p1, p2, p3 ] ->
-                    [ ( p1, p2, p3 ) ]
+                [ ( _, p1 ), ( _, p2 ), ( _, p3 ) ] ->
+                    [ ( pinnedTeam, ( p1, p2, p3 ) ) ]
 
                 _ ->
                     league.myPokemon
-                        |> Array.toList
+                        |> Dict.toList
                         |> mkTeams3
+                        |> L.map (\( ( s1, p1 ), ( s2, p2 ), ( s3, p3 ) ) -> ( newTeam [ s1, s2, s3 ], ( p1, p2, p3 ) ))
     in
     teams
-        |> L.map mapper
+        |> L.map (Tuple.mapSecond mapper)
         |> L.sortBy (Tuple.second >> (*) -1)
 
 
-lookupName : Array Pokemon -> String -> Result String Pokemon
-lookupName myPokemon name =
+lookupName : Dict String Pokemon -> String -> Result String Pokemon
+lookupName myPokemon speciesId =
     myPokemon
-        |> Array.filter (\item -> item.speciesId == name)
-        |> Array.get 0
-        |> Result.fromMaybe ("Could not lookup: " ++ name)
+        |> Dict.get speciesId
+        |> Result.fromMaybe ("Could not lookup: " ++ speciesId)
 
 
 calcWeightedTotal : Dict String Opponent -> Float
@@ -143,14 +154,14 @@ evaluateTeam ( p1, p2, p3 ) =
 addScoresToLeague : Model -> League -> League
 addScoresToLeague model league =
     let
-        addScores_ : Pokemon -> Dict String Float
-        addScores_ p =
+        addScores_ : String -> Pokemon -> Dict String Float
+        addScores_ speciesId p =
             let
                 foldFn : ( String, Opponent ) -> Dict String Float -> Result String (Dict String Float)
-                foldFn ( speciesId, _ ) acc =
-                    case evaluateBattle model.pokedex model.moves p speciesId of
+                foldFn ( opSpeciesId, _ ) acc =
+                    case evaluateBattle model.pokedex model.moves speciesId p opSpeciesId of
                         Ok score ->
-                            Ok <| Dict.insert speciesId score acc
+                            Ok <| Dict.insert opSpeciesId score acc
 
                         Err err ->
                             Err err
@@ -167,11 +178,11 @@ addScoresToLeague model league =
                 Err _ ->
                     Dict.empty
     in
-    { league | myPokemon = Array.map (\p -> { p | scores = addScores_ p }) league.myPokemon }
+    { league | myPokemon = Dict.map (\speciesId p -> { p | scores = addScores_ speciesId p }) league.myPokemon }
 
 
-evaluateBattle : Pokedex -> Dict String MoveType -> Pokemon -> String -> Result String Float
-evaluateBattle pokedex attacks pokemon opSpeciesId =
+evaluateBattle : Pokedex -> Dict String MoveType -> String -> Pokemon -> String -> Result String Float
+evaluateBattle pokedex attacks speciesId pokemon opSpeciesId =
     let
         handler myDexEntry opDexEntry =
             let
@@ -183,8 +194,8 @@ evaluateBattle pokedex attacks pokemon opSpeciesId =
             in
             attackScore / defenceScore
     in
-    Maybe.map2 handler (Dict.get pokemon.speciesId pokedex) (Dict.get opSpeciesId pokedex)
-        |> Result.fromMaybe ("could not look up one of : " ++ opSpeciesId ++ ", or " ++ pokemon.speciesId)
+    Maybe.map2 handler (Dict.get speciesId pokedex) (Dict.get opSpeciesId pokedex)
+        |> Result.fromMaybe ("could not look up one of : " ++ opSpeciesId ++ ", or " ++ speciesId)
 
 
 {-| Calculates effect of my pokemon's chosen attacks on an opponent
@@ -248,19 +259,19 @@ evaluateOpponentAttacks attacks entry myTypes =
         |> (\total -> total / toFloat denominator)
 
 
-lookupMatrix : Dict String MoveType -> String -> Maybe (Dict PType Float)
+lookupMatrix : Dict String MoveType -> String -> Maybe (AL.Dict PType Float)
 lookupMatrix attacks attack =
     Dict.get attack attacks
-        |> Maybe.andThen (\moveType -> Dict.get moveType.type_ effectiveness)
+        |> Maybe.andThen (\moveType -> AL.get moveType.type_ effectiveness)
 
 
-calculateEffectiveness : List PType -> Dict PType Float -> Float
+calculateEffectiveness : List PType -> AL.Dict PType Float -> Float
 calculateEffectiveness defenderTypes matrix =
     let
         go : PType -> Float -> Float
         go dType acc =
             matrix
-                |> Dict.get dType
+                |> AL.get dType
                 |> Maybe.withDefault 1
                 |> (*) acc
     in

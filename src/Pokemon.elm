@@ -70,6 +70,7 @@ decodePType =
         ]
 
 
+stringFromPType : PType -> ( String, String )
 stringFromPType tp =
     case tp of
         Poison ->
