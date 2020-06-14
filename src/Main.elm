@@ -124,6 +124,7 @@ update message model =
                                     |> getCurrentLeague
                                     |> .opponents
                                     |> sortOpponents
+                                    |> RegisteringModel
                                     |> Registering
 
                             p ->
@@ -187,12 +188,12 @@ update message model =
 
                 page =
                     case model.page of
-                        Registering lst ->
+                        Registering m ->
                             if isMyPokemon then
-                                Registering lst
+                                Registering m
 
                             else
-                                Registering <| speciesId :: lst
+                                Registering <| { m | opponents = speciesId :: m.opponents }
 
                         p ->
                             p
@@ -361,6 +362,7 @@ mkRegisteringPage =
     getCurrentLeague
         >> .opponents
         >> sortOpponents
+        >> RegisteringModel
         >> Registering
 
 
@@ -457,17 +459,17 @@ view model =
                     , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present)." ]
                     , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. Consequently, it is unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
                     , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
-                    , div [] [ mkStyledButton ( SwitchPage <| Registering [], "Start", True ) ]
+                    , div [] [ mkStyledButton ( SwitchPage <| Registering blankRegistering, "Start", True ) ]
                     ]
 
             LoadingDex ->
                 div [ class "loading flex-grow" ] []
 
-            Registering names ->
+            Registering { opponents } ->
                 div [ cls "choosing grid grid-cols-1 md:grid-cols-3 gap-2" ]
                     [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model league)
                     , div [ class "my-team flex flex-col" ] (viewTeam model league)
-                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league names)
+                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league opponents)
                     ]
 
             TeamOptions ->
@@ -505,7 +507,7 @@ pvpHeader lst tgt =
     let
         switcher =
             mkRadioButtons
-                [ ( SwitchPage <| Registering lst, "Registering", isRegistering tgt )
+                [ ( SwitchPage <| Registering { opponents = lst }, "Registering", isRegistering tgt )
                 , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
                 , ( SwitchPage Battling, "Battling", Battling == tgt )
                 ]

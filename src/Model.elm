@@ -36,7 +36,7 @@ defaultModel =
     , ultra = blankLeague
     , master = blankLeague
     , debug = False
-    , page = Registering []
+    , page = LoadingDex
     , selectedPokemon = Nothing
     , chooser = MyChooser "" Autocomplete.empty
     , errorMessage = Nothing
@@ -80,10 +80,19 @@ getCurrentLeague model =
 type Page
     = Intro
     | LoadingDex
-    | Registering (List String)
+    | Registering RegisteringModel
     | TeamOptions
     | Battling
     | FatalError String
+
+
+type alias RegisteringModel =
+    { opponents : List String }
+
+
+blankRegistering : RegisteringModel
+blankRegistering =
+    RegisteringModel []
 
 
 isRegistering : Page -> Bool
