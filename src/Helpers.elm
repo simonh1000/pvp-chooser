@@ -1,7 +1,8 @@
 module Helpers exposing (..)
 
-import AssocList as Dict exposing (Dict)
+import AssocList as AL
 import Common.CoreHelpers exposing (foldResult)
+import Dict exposing (Dict)
 import List as L
 import Model exposing (..)
 import Pokemon exposing (PType, effectiveness)
@@ -40,10 +41,8 @@ evaluateTeams league =
         sumFreqs =
             calcWeightedTotal league.opponents
 
-        mapper ( team, ps ) =
-            ( team
-            , (summariseTeam league.opponents <| evaluateTeam ps) / sumFreqs
-            )
+        mapper ps =
+            (summariseTeam league.opponents <| evaluateTeam ps) / sumFreqs
 
         pinnedTeam =
             getPinnedTeam league.team
@@ -84,7 +83,7 @@ evaluateTeams league =
                         |> L.map (\( ( s1, p1 ), ( s2, p2 ), ( s3, p3 ) ) -> ( newTeam [ s1, s2, s3 ], ( p1, p2, p3 ) ))
     in
     teams
-        |> L.map mapper
+        |> L.map (Tuple.mapSecond mapper)
         |> L.sortBy (Tuple.second >> (*) -1)
 
 
@@ -260,19 +259,19 @@ evaluateOpponentAttacks attacks entry myTypes =
         |> (\total -> total / toFloat denominator)
 
 
-lookupMatrix : Dict String MoveType -> String -> Maybe (Dict PType Float)
+lookupMatrix : Dict String MoveType -> String -> Maybe (AL.Dict PType Float)
 lookupMatrix attacks attack =
     Dict.get attack attacks
-        |> Maybe.andThen (\moveType -> Dict.get moveType.type_ effectiveness)
+        |> Maybe.andThen (\moveType -> AL.get moveType.type_ effectiveness)
 
 
-calculateEffectiveness : List PType -> Dict PType Float -> Float
+calculateEffectiveness : List PType -> AL.Dict PType Float -> Float
 calculateEffectiveness defenderTypes matrix =
     let
         go : PType -> Float -> Float
         go dType acc =
             matrix
-                |> Dict.get dType
+                |> AL.get dType
                 |> Maybe.withDefault 1
                 |> (*) acc
     in

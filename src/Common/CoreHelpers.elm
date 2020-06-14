@@ -2,6 +2,7 @@ module Common.CoreHelpers exposing (..)
 
 -- ONLY FOR THINGS THAT ARE TOTALLY UN-REMIX SPECIFIC
 
+import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder)
 import List as L
 
@@ -463,11 +464,16 @@ foldRResult f bResult lst =
 --
 --
 --
---{-| Removes a list of keys from a Dict
----}
---rejectByList : List comparable -> Dict comparable a -> Dict comparable a
---rejectByList lst dict =
---    List.foldl Dict.remove dict lst
+
+
+{-| Removes a list of keys from a Dict
+-}
+rejectByList : List comparable -> Dict comparable a -> Dict comparable a
+rejectByList lst dict =
+    List.foldl Dict.remove dict lst
+
+
+
 --renameKey : comparable -> comparable -> Dict comparable b -> Dict comparable b
 --renameKey oldKey newKey dict =
 --    case Dict.get oldKey dict of

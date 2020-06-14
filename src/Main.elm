@@ -1,9 +1,10 @@
 module Main exposing (main, viewAttacksWithRecommendations)
 
-import AssocList as Dict exposing (Dict)
+import AssocList as AL
 import Autocomplete exposing (..)
 import Browser
-import Common.CoreHelpers exposing (addCmd, ifThenElse)
+import Common.CoreHelpers exposing (addCmd, ifThenElse, rejectByList)
+import Dict exposing (Dict)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
 import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupName)
@@ -674,7 +675,6 @@ viewMyPokemon model speciesId pokemon entry =
 viewAttacksWithRecommendations : Dict String MoveType -> PokedexEntry -> String -> Pokemon -> List (Html Msg)
 viewAttacksWithRecommendations moves entry speciesId pokemon =
     let
-        -- TODO mark elite
         viewAttack_ selectMove isSelected attack =
             span
                 [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-transparent"
@@ -1021,7 +1021,7 @@ checkAttackAgainstDefenderType effectiveness team defenderTypes =
         go (( _, attackTp ) as val) ( accWeak, accResists ) =
             let
                 score =
-                    Dict.get attackTp effectiveness
+                    AL.get attackTp effectiveness
                         |> Maybe.map (\matrix -> calculateEffectiveness defenderTypes matrix)
                         |> Maybe.withDefault 0
             in
@@ -1137,23 +1137,23 @@ viewPokedexResistsAndWeaknesses entry =
     ]
 
 
-getDefenceMeta : Effectiveness -> List PType -> Dict PType Float
+getDefenceMeta : Effectiveness -> List PType -> AL.Dict PType Float
 getDefenceMeta effectiveness tps =
     let
         go _ dict =
-            L.foldl (\tp acc -> Dict.get tp dict |> Maybe.withDefault 1 |> (*) acc) 1 tps
+            L.foldl (\tp acc -> AL.get tp dict |> Maybe.withDefault 1 |> (*) acc) 1 tps
     in
     effectiveness
-        |> Dict.map go
+        |> AL.map go
 
 
-viewTypes : (PType -> Float -> Bool) -> Dict PType Float -> String -> Html msg
+viewTypes : (PType -> Float -> Bool) -> AL.Dict PType Float -> String -> Html msg
 viewTypes fn weaknesses title =
     let
         ( normals, supers ) =
             weaknesses
-                |> Dict.filter fn
-                |> Dict.toList
+                |> AL.filter fn
+                |> AL.toList
                 |> L.partition (\( _, v ) -> v > 0.5 && v < 1.5)
     in
     div [ class "flex flex-row items-center mb-2" ]

@@ -1,8 +1,8 @@
 module Model exposing (..)
 
-import AssocList as Dict exposing (Dict)
 import Autocomplete exposing (..)
 import Common.CoreHelpers exposing (decodeSimpleCustomTypes, exactMatchString, ifThenElse)
+import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra as DE exposing (andMap)
 import Json.Encode as Encode
@@ -630,13 +630,6 @@ mapAutocomplete fn chooser =
 
         NoChooser ->
             NoChooser
-
-
-{-| OPERATES ON ASSOCIATELIST
--}
-rejectByList : List String -> Dict String a -> Dict String a
-rejectByList lst dict =
-    List.foldl Dict.remove dict lst
 
 
 
