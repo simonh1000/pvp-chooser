@@ -276,15 +276,6 @@ blankTeam =
     }
 
 
-
---mapTeam : (TeamMember -> TeamMember) -> Team -> Team
---mapTeam fn team =
---    { cand1 = fn team.cand1
---    , cand2 = fn team.cand2
---    , cand3 = fn team.cand3
---    }
-
-
 copyPinning : Team -> ( String, String, String ) -> Team
 copyPinning currTeam ( p1, p2, p3 ) =
     let
@@ -299,6 +290,29 @@ copyPinning currTeam ( p1, p2, p3 ) =
     { cand1 = convertor p1
     , cand2 = convertor p2
     , cand3 = convertor p3
+    }
+
+
+addToTeam : TeamMember -> Team -> Team
+addToTeam teamMember team =
+    if team.cand1 == Unset then
+        { team | cand1 = teamMember }
+
+    else if team.cand2 == Unset then
+        { team | cand2 = teamMember }
+
+    else if team.cand3 == Unset then
+        { team | cand3 = teamMember }
+
+    else
+        team
+
+
+mapTeam : (TeamMember -> TeamMember) -> Team -> Team
+mapTeam fn team =
+    { cand1 = fn team.cand1
+    , cand2 = fn team.cand2
+    , cand3 = fn team.cand3
     }
 
 

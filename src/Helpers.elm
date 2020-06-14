@@ -40,9 +40,9 @@ evaluateTeams league =
         sumFreqs =
             calcWeightedTotal league.opponents
 
-        mapper (( ( s1, _ ), ( s2, _ ), ( s3, _ ) ) as team) =
+        mapper ( ( s1, p1 ), ( s2, p2 ), ( s3, p3 ) ) =
             ( ( s1, s2, s3 )
-            , (summariseTeam league.opponents <| evaluateTeam team) / sumFreqs
+            , (summariseTeam league.opponents <| evaluateTeam ( p1, p2, p3 )) / sumFreqs
             )
 
         teamList =
@@ -110,8 +110,8 @@ summariseTeam opponents scores =
 {-| Looks at how we a team will do against each opponent. Teams that are all weak to a particular opponent
 are particularly penalised.
 -}
-evaluateTeam : ( ( String, Pokemon ), ( String, Pokemon ), ( String, Pokemon ) ) -> Dict String Float
-evaluateTeam ( ( _, p1 ), ( _, p2 ), ( _, p3 ) ) =
+evaluateTeam : ( Pokemon, Pokemon, Pokemon ) -> Dict String Float
+evaluateTeam ( p1, p2, p3 ) =
     let
         evalTeam scores =
             let

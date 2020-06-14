@@ -768,17 +768,9 @@ viewTeam model league =
         team =
             league.team
 
-        lookupTeamMember : TeamMember -> Result String ( String, Pokemon )
-        lookupTeamMember teamMember =
-            case teamMember of
-                Unset ->
-                    Err "Team member not chosen"
-
-                Chosen speciesId ->
-                    lookupName league.myPokemon speciesId |> Result.map (Tuple.pair speciesId)
-
-                Pinned speciesId ->
-                    lookupName league.myPokemon speciesId |> Result.map (Tuple.pair speciesId)
+        lookupTeamMember : TeamMember -> Result String Pokemon
+        lookupTeamMember =
+            extractSpeciesId >> Result.fromMaybe "Team member not chosen" >> Result.andThen (lookupName league.myPokemon)
 
         viewMbCand updater mbCand =
             let
