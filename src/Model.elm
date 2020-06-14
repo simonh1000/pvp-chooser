@@ -276,23 +276,6 @@ blankTeam =
     }
 
 
-copyPinning : Team -> ( String, String, String ) -> Team
-copyPinning currTeam ( p1, p2, p3 ) =
-    let
-        convertor : String -> TeamMember
-        convertor p =
-            if L.member (Pinned p) (mkTeamList currTeam) then
-                Pinned p
-
-            else
-                Chosen p
-    in
-    { cand1 = convertor p1
-    , cand2 = convertor p2
-    , cand3 = convertor p3
-    }
-
-
 addToTeam : TeamMember -> Team -> Team
 addToTeam teamMember team =
     if team.cand1 == Unset then
@@ -308,17 +291,26 @@ addToTeam teamMember team =
         team
 
 
+getPinnedTeam : Team -> Team
+getPinnedTeam team =
+    let
+        mapper member =
+            case member of
+                Pinned _ ->
+                    member
+
+                _ ->
+                    Unset
+    in
+    mapTeam mapper team
+
+
 mapTeam : (TeamMember -> TeamMember) -> Team -> Team
 mapTeam fn team =
     { cand1 = fn team.cand1
     , cand2 = fn team.cand2
     , cand3 = fn team.cand3
     }
-
-
-hasMember : String -> Team -> Bool
-hasMember tgt =
-    L.any (eqMember tgt) << mkTeamList
 
 
 mkTeamList : Team -> List TeamMember
@@ -368,13 +360,6 @@ getPinnedMember teamMember =
 
         _ ->
             Nothing
-
-
-{-| Removes a list of keys from a Dict
--}
-rejectByList : List String -> Dict String a -> Dict String a
-rejectByList lst dict =
-    List.foldl Dict.remove dict lst
 
 
 extractSpeciesId : TeamMember -> Maybe String
@@ -645,6 +630,13 @@ mapAutocomplete fn chooser =
 
         NoChooser ->
             NoChooser
+
+
+{-| OPERATES ON ASSOCIATELIST
+-}
+rejectByList : List String -> Dict String a -> Dict String a
+rejectByList lst dict =
+    List.foldl Dict.remove dict lst
 
 
 

@@ -34,46 +34,54 @@ mkTeams2 tl =
 -- calculate team scores
 
 
-evaluateTeams : League -> List ( ( String, String, String ), Float )
+evaluateTeams : League -> List ( Team, Float )
 evaluateTeams league =
     let
         sumFreqs =
             calcWeightedTotal league.opponents
 
-        mapper ( ( s1, p1 ), ( s2, p2 ), ( s3, p3 ) ) =
-            ( ( s1, s2, s3 )
-            , (summariseTeam league.opponents <| evaluateTeam ( p1, p2, p3 )) / sumFreqs
+        mapper ( team, ps ) =
+            ( team
+            , (summariseTeam league.opponents <| evaluateTeam ps) / sumFreqs
             )
 
-        teamList =
+        pinnedTeam =
+            getPinnedTeam league.team
+
+        newTeam lst =
+            L.foldl (addToTeam << Chosen) pinnedTeam lst
+
+        pinnedMembers : List ( String, Pokemon )
+        pinnedMembers =
             mkTeamList league.team
                 |> L.filterMap getPinnedMember
                 |> L.filterMap (\n -> lookupName league.myPokemon n |> Result.toMaybe |> Maybe.map (Tuple.pair n))
 
-        teams : List ( ( String, Pokemon ), ( String, Pokemon ), ( String, Pokemon ) )
+        teams : List ( Team, ( Pokemon, Pokemon, Pokemon ) )
         teams =
             -- built taking into account which team members are pinned
-            case teamList of
+            case pinnedMembers of
                 [ ( s1, p1 ) ] ->
                     league.myPokemon
                         |> Dict.toList
                         |> L.filter (\( speciesId, _ ) -> speciesId /= s1)
                         |> mkTeams2
-                        |> L.map (\( p2, p3 ) -> ( ( s1, p1 ), p2, p3 ))
+                        |> L.map (\( ( s2, p2 ), ( s3, p3 ) ) -> ( newTeam [ s2, s3 ], ( p1, p2, p3 ) ))
 
                 [ ( s1, p1 ), ( s2, p2 ) ] ->
                     league.myPokemon
                         |> Dict.toList
                         |> L.filter (\( speciesId, _ ) -> speciesId /= s1 && speciesId /= s2)
-                        |> L.map (\p3 -> ( ( s1, p1 ), ( s2, p2 ), p3 ))
+                        |> L.map (\( s3, p3 ) -> ( newTeam [ s3 ], ( p1, p2, p3 ) ))
 
-                [ p1, p2, p3 ] ->
-                    [ ( p1, p2, p3 ) ]
+                [ ( _, p1 ), ( _, p2 ), ( _, p3 ) ] ->
+                    [ ( pinnedTeam, ( p1, p2, p3 ) ) ]
 
                 _ ->
                     league.myPokemon
                         |> Dict.toList
                         |> mkTeams3
+                        |> L.map (\( ( s1, p1 ), ( s2, p2 ), ( s3, p3 ) ) -> ( newTeam [ s1, s2, s3 ], ( p1, p2, p3 ) ))
     in
     teams
         |> L.map mapper

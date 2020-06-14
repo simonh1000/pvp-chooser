@@ -2,14 +2,8 @@ module Common.CoreHelpers exposing (..)
 
 -- ONLY FOR THINGS THAT ARE TOTALLY UN-REMIX SPECIFIC
 
-import Array exposing (Array)
-import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder)
-import Json.Encode as Encode
 import List as L
-import Set exposing (Set)
-import Task exposing (Task)
-import Tuple
 
 
 
@@ -474,7 +468,6 @@ foldRResult f bResult lst =
 --rejectByList : List comparable -> Dict comparable a -> Dict comparable a
 --rejectByList lst dict =
 --    List.foldl Dict.remove dict lst
---
 --renameKey : comparable -> comparable -> Dict comparable b -> Dict comparable b
 --renameKey oldKey newKey dict =
 --    case Dict.get oldKey dict of

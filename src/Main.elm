@@ -88,7 +88,7 @@ type Msg
     | SwapTeam Bool -- isTopTwo
       -- Team chooser
     | PinTeamMember String
-    | SetTeam ( String, String, String )
+    | SetTeam Team
       -- Registering: opponents
     | ToggleOpponent String
     | UpdateOpponentFrequency String Int -- name
@@ -260,7 +260,7 @@ update message model =
         SetTeam team ->
             let
                 updater l =
-                    { l | team = copyPinning l.team team }
+                    { l | team = team }
             in
             model
                 |> updateLeague updater
@@ -725,15 +725,15 @@ summariseMoves attacks pokemon =
 viewTeamOptions : Model -> League -> List (Html Msg)
 viewTeamOptions model league =
     let
-        viewOption : ( ( String, String, String ), Float ) -> Html Msg
-        viewOption ( ( c1, c2, c3 ), score ) =
+        viewOption : ( Team, Float ) -> Html Msg
+        viewOption ( { cand1, cand2, cand3 } as team, score ) =
             let
                 selected =
-                    hasMember c1 league.team && hasMember c2 league.team && hasMember c3 league.team
+                    team == league.team
 
                 title =
-                    [ c1, c2, c3 ]
-                        |> L.filterMap (\c -> Dict.get c model.pokedex |> Maybe.map .speciesName)
+                    [ cand1, cand2, cand3 ]
+                        |> L.filterMap (\c -> c |> extractSpeciesId |> Maybe.andThen (\id -> Dict.get id model.pokedex) |> Maybe.map .speciesName)
                         |> String.join ", "
             in
             div
@@ -742,7 +742,7 @@ viewTeamOptions model league =
                     , ( "mb-1 flex flex-row justify-between cursor-pointer", True )
                     , ( "bg-blue-100", selected )
                     ]
-                , onClick <| SetTeam ( c1, c2, c3 )
+                , onClick <| SetTeam team
                 ]
                 [ span [] [ text title ]
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
