@@ -315,7 +315,12 @@ update message model =
                 Ok ( moves, pokedex ) ->
                     ( addScores
                         { model
-                            | page = mkRegisteringPage model
+                            | page =
+                                if model.page == LoadingDex then
+                                    mkRegisteringPage model
+
+                                else
+                                    model.page
                             , moves = moves
                             , pokedex = pokedex
                         }
@@ -402,7 +407,6 @@ getRelevantChoices search pokedex =
             String.toLower search
     in
     pokedex
-        --|> Dict.keys
         |> Dict.filter (\_ { speciesName } -> String.contains search_ (String.toLower speciesName))
         |> Dict.toList
 
@@ -425,15 +429,7 @@ view model =
             class <| "p-2 main flex-grow flex flex-row " ++ s
 
         league =
-            case model.season of
-                Great ->
-                    model.great
-
-                Ultra ->
-                    model.ultra
-
-                Master ->
-                    model.master
+            getCurrentLeague model
 
         lst =
             sortOpponents league.opponents
