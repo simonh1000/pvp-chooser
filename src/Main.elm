@@ -472,7 +472,7 @@ view model =
             TeamOptions ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-4 gap-2" ]
                     [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model league)
-                    , div [ class "my-team flex flex-col ml-2 mr-2" ] (viewTeam model league)
+                    , div [ class "my-team flex flex-col" ] (viewTeam model league)
                     , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
