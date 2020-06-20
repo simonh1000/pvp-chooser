@@ -1,6 +1,7 @@
 module HelperTests exposing (..)
 
-import AssocList as Dict
+import AssocList as AL
+import Dict
 import Expect exposing (Expectation, FloatingPointTolerance(..))
 import Helpers exposing (..)
 import List as L
@@ -11,6 +12,7 @@ import Set
 import Test exposing (..)
 
 
+mkTeamsTests : Test
 mkTeamsTests =
     describe "mkteams"
         [ test "3" <|
@@ -36,7 +38,7 @@ evaluateBattleTests =
     describe "evaluateBattle"
         [ test "despite a good attack, azumarill repels a stunfisk much better" <|
             \_ ->
-                evaluateBattle pokedex attacks stunfisk "Azumarill"
+                evaluateBattle pokedex attacks "stunfisk" stunfisk "Azumarill"
                     |> Result.withDefault -1
                     |> Expect.within (Absolute 0.1) 0.8
         ]
@@ -56,25 +58,25 @@ calculateEffectivenessTests =
         [ test "water -> water" <|
             \_ ->
                 effectiveness
-                    |> Dict.get Water
+                    |> AL.get Water
                     |> Maybe.map (calculateEffectiveness [ Water ])
                     |> Expect.equal (Just 0.625)
         , test "water -> water/steel" <|
             \_ ->
                 effectiveness
-                    |> Dict.get Water
+                    |> AL.get Water
                     |> Maybe.map (calculateEffectiveness [ Water, Steel ])
                     |> Expect.equal (Just 0.625)
         , test "water -> water/dragon" <|
             \_ ->
                 effectiveness
-                    |> Dict.get Water
+                    |> AL.get Water
                     |> Maybe.map (calculateEffectiveness [ Water, Dragon ])
                     |> Expect.equal (Just 0.390625)
         , test "figher -> alolan marowak" <|
             \_ ->
                 effectiveness
-                    |> Dict.get Fighting
+                    |> AL.get Fighting
                     |> Maybe.map (calculateEffectiveness [ Fire, Ghost ])
                     |> Expect.equal (Just 0.390625)
         ]
@@ -93,24 +95,33 @@ evalScoreTests =
 
 azumarill : Pokemon
 azumarill =
-    Pokemon True "Azumarill" "Bubble" (Set.fromList [ "Hydro Pump", "Ice Beam" ]) Dict.empty
+    getPokemon "azumarill"
 
 
 stunfisk : Pokemon
 stunfisk =
-    Pokemon True "Stunfisk" "Muddy Water" (Set.fromList [ "Thunder Shock" ]) Dict.empty
+    getPokemon "stunfisk"
 
 
 ferrothorn : Pokemon
 ferrothorn =
-    Pokemon True "Ferrothorn" "Metal Claw" (Set.fromList [ "Power Whip" ]) Dict.empty
+    getPokemon "ferrothorn"
 
 
 skarmory =
     Dict.get "Skarmory" pokedex
 
 
-getPokemon : String -> Maybe Pokemon
+fromJust mb =
+    case mb of
+        Just m ->
+            m
+
+        Nothing ->
+            Debug.todo "missing"
+
+
+getPokemon : String -> Pokemon
 getPokemon name =
     pokedex
         |> Dict.get name
@@ -118,5 +129,6 @@ getPokemon name =
             (\p ->
                 p.fast
                     |> L.head
-                    |> Maybe.map (\fast -> Pokemon True name fast (Set.fromList p.charged) Dict.empty)
+                    |> Maybe.map (\fast -> Pokemon True fast (Set.fromList p.charged) Dict.empty)
             )
+        |> fromJust
