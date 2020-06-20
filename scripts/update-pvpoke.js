@@ -2,8 +2,18 @@ const fs = require("fs");
 
 const fetch = require('node-fetch');
 
-let r2500 = [ "https://pvpoke.com/data/all/overall/rankings-2500.json", "rankings-2500"];
-let r10000 = ["https://pvpoke.com/data/all/overall/rankings-10000.json", "rankings-10000"];
+function getGamemaster() {
+    let filename = `gamemaster.json`;
+    let url = `https://pvpoke.com/data/${filename}`;
+    let dstLocation = `../src/assets/${filename}`;
+    fetch(url)
+        .then(res => res.json())
+        .then(json => {
+            fs.writeFileSync(dstLocation, JSON.stringify(json));
+            console.log("written", json);
+        })
+        .catch(err => console.log("bad fetch", err));
+}
 
 mapRanking = ranking => {
     delete ranking.matchups;
@@ -15,13 +25,19 @@ mapRanking = ranking => {
 }
 
 function convert(item) {
-    fetch(item[0])
+    let filename = `rankings-${item}.json`;
+    let url = `https://pvpoke.com/data/all/overall/${filename}`;
+    let dstLocation = `../src/assets/${filename}`;
+    fetch(url)
         .then(res => res.json())
         .then(json => {
             json = json.map(mapRanking)
-            fs.writeFileSync(`../src/assets/${item[1]}.json`, JSON.stringify(json));
+            fs.writeFileSync(dstLocation, JSON.stringify(json));
             console.log("written", json);
         });
 }
 
-convert(r2500)
+getGamemaster();
+convert("1500");
+convert("2500");
+convert("10000");

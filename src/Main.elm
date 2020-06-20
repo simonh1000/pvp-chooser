@@ -20,7 +20,6 @@ import Pokemon exposing (Effectiveness, PType, effectiveness, stringFromPType)
 import Ports
 import Result.Extra as RE
 import Set
-import Task exposing (Task)
 
 
 init : Value -> ( Model, Cmd Msg )
@@ -1345,15 +1344,14 @@ getRankings season =
                 }
     in
     case season of
+        Great ->
+            get "rankings-1500.json"
+
         Ultra ->
             get "rankings-2500.json"
 
         Master ->
             get "rankings-10000.json"
-
-        _ ->
-            Task.succeed (Ok Dict.empty)
-                |> Task.perform (OnRankingData season)
 
 
 
