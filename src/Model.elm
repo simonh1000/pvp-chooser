@@ -238,6 +238,19 @@ type alias Pokemon =
     }
 
 
+toggleCharged : String -> Pokemon -> Pokemon
+toggleCharged move pokemon =
+    let
+        updater charged =
+            if Set.member move charged then
+                Set.remove move charged
+
+            else
+                Set.insert move charged
+    in
+    { pokemon | charged = updater pokemon.charged }
+
+
 blankPokemon : Pokemon
 blankPokemon =
     Pokemon True "" Set.empty Dict.empty
