@@ -1351,13 +1351,13 @@ getRankings season =
     in
     case season of
         Great ->
-            get "rankings-1500.json"
+            get "all/rankings-1500.json"
 
         Ultra ->
-            get "rankings-2500.json"
+            get "all/rankings-2500.json"
 
         Master ->
-            get "rankings-10000.json"
+            get "all/rankings-10000.json"
 
 
 

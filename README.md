@@ -17,6 +17,7 @@ A summary page is available while battling - perhaps it will help you choose the
 
 Clone this repo into a new project folder and run `npm install`.
 
+
 ## Developing
 
 Start with Elm debug tool with either
@@ -39,3 +40,5 @@ Build production assets (js and css together) with:
 ```sh
 npm run prod
 ```
+
+Run the script in scripts directory to update the rankings files from pvpoke
