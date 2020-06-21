@@ -312,11 +312,14 @@ update message model =
             case res of
                 Ok rankings ->
                     if season == model.season then
-                        ( addScores
-                            { model
-                                | pokedex = attachRankings rankings model.pokedex
-                                , errorMessage = Nothing
-                            }
+                        ( { model
+                            | pokedex = attachRankings rankings model.pokedex
+                            , errorMessage = Nothing
+                          }
+                            -- pre-populate some opponents
+                            |> updateLeague (prePopulateOpponents rankings)
+                            |> (\m -> { m | page = mkRegisteringPage m })
+                            |> addScores
                         , Cmd.none
                         )
 
@@ -344,6 +347,25 @@ andPersist model =
     ( addScores model
     , Ports.persist <| encodePersisted model
     )
+
+
+prePopulateOpponents : Dict String RankingEntry -> League -> League
+prePopulateOpponents rankings league =
+    if Dict.isEmpty league.opponents then
+        let
+            opponents =
+                rankings
+                    |> Dict.filter (\k _ -> not <| String.contains "shadow" k)
+                    |> Dict.toList
+                    |> L.sortBy (Tuple.second >> .score >> (*) -1)
+                    |> L.take 5
+                    |> L.map (\( k, _ ) -> ( k, blankOpponent ))
+                    |> Dict.fromList
+        in
+        { league | opponents = opponents }
+
+    else
+        league
 
 
 addScores : Model -> Model

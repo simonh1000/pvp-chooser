@@ -508,6 +508,12 @@ type alias Opponent =
     }
 
 
+blankOpponent =
+    { expanded = False
+    , frequency = 1
+    }
+
+
 decodeOpponents : Decoder (Dict String Opponent)
 decodeOpponents =
     Decode.list decodeOpponent
