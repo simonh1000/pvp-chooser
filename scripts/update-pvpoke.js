@@ -9,8 +9,11 @@ function getGamemaster() {
     fetch(url)
         .then(res => res.json())
         .then(json => {
-            fs.writeFileSync(dstLocation, JSON.stringify(json));
-            console.log("written", json);
+            let tmp = {};
+            tmp.pokemon = json.pokemon;
+            tmp.moves = json.moves;
+            fs.writeFileSync(dstLocation, JSON.stringify(tmp));
+            console.log("written", tmp);
         })
         .catch(err => console.log("bad fetch", err));
 }

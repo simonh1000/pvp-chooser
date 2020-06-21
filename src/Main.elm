@@ -33,6 +33,7 @@ init value =
                         , great = flags.persisted.great
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
+                        , premier = flags.persisted.premier
                         , debug = flags.debug
                     }
 
@@ -77,7 +78,7 @@ type Msg
     | ACSearch String
     | ACSelect Bool String -- isMyPokemon name
     | SetAutoComplete SearchTool
-      -- Registering: My pokemons
+      -- Registering: My pokemon
     | ToggleMyPokemon String
     | SelectFastMove String String
     | SelectChargedMove String String
@@ -131,7 +132,7 @@ update message model =
         ACMsg msg ->
             let
                 handler isMyPokemon search autocomplete =
-                    getRelevantChoices search model.pokedex
+                    getRelevantChoices model.season search model.pokedex
                         |> Autocomplete.update (updateConfig isMyPokemon) msg autocomplete
 
                 ( chooser, c ) =
@@ -200,7 +201,7 @@ update message model =
         SetAutoComplete chooser ->
             ( { model | chooser = chooser }, Cmd.none )
 
-        -- My Pokemons
+        -- My Pokemon
         ToggleMyPokemon speciesId ->
             model
                 |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| \p -> { p | expanded = not p.expanded }) l.myPokemon })
@@ -377,14 +378,21 @@ updateConfig isMyPokemon =
     }
 
 
-getRelevantChoices : String -> Dict String PokedexEntry -> List ( String, PokedexEntry )
-getRelevantChoices search pokedex =
+getRelevantChoices : Season -> String -> Dict String PokedexEntry -> List ( String, PokedexEntry )
+getRelevantChoices season search pokedex =
     let
         search_ =
             String.toLower search
+
+        filterFn =
+            if season == Premier then
+                \_ entry -> not (Set.member "mythical" entry.tags || Set.member "legendary" entry.tags) && String.contains search_ (String.toLower entry.speciesName)
+
+            else
+                \_ entry -> String.contains search_ (String.toLower entry.speciesName)
     in
     pokedex
-        |> Dict.filter (\_ { speciesName } -> String.contains search_ (String.toLower speciesName))
+        |> Dict.filter filterFn
         |> Dict.toList
 
 
@@ -419,7 +427,7 @@ view model =
                     [ h2 [] [ text "Introduction" ]
                     , p [] [ text "This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and nowhere else." ]
                     , img [ src "images/screenshot.png", class "mb-2" ] []
-                    , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present)." ]
+                    , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemon' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present)." ]
                     , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. Consequently, it is unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
                     , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
                     , div [] [ mkStyledButton ( SwitchPage <| Registering blankRegistering, "Start", True ) ]
@@ -502,12 +510,7 @@ pvpFooter tgt =
             , span [] [ text ", Code: ", a [ href "https://github.com/simonh1000/pvp-chooser" ] [ text "Github" ] ]
             , span [] [ text ", Feedback: ", a [ href "https://twitter.com/lambda_simon" ] [ text "@lambda_simon" ] ]
             ]
-        , mkRadioButtons
-            [ convert Great
-            , convert Ultra
-            , convert Premier
-            , convert Master
-            ]
+        , seasons |> L.map convert |> mkRadioButtons
         ]
 
 
@@ -548,7 +551,7 @@ viewMyPokemons model m league =
             div [ class "flex flex-row items-center justify-between mb-2" ] <|
                 case model.chooser of
                     MyChooser search state ->
-                        [ viewChooser model.pokedex search state ]
+                        [ viewChooser model.pokedex model.season search state ]
 
                     _ ->
                         [ viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
@@ -571,7 +574,7 @@ viewMyPokemons model m league =
                         ]
                     )
     in
-    [ h2 [] [ text "My Pokemons" ]
+    [ h2 [] [ text <| "My Pokemon for " ++ ppSeason model.season ]
     , chooser
     , if Dict.isEmpty league.myPokemon then
         ul []
@@ -856,7 +859,7 @@ viewOpponentsRegistering model league names =
             div [ class "flex flex-row items-center justify-between mb-2 " ] <|
                 case model.chooser of
                     OpponentChooser search state ->
-                        [ viewChooser model.pokedex search state ]
+                        [ viewChooser model.pokedex model.season search state ]
 
                     _ ->
                         [ viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
@@ -1175,11 +1178,11 @@ viewMoveWithPvPoke attacks entry attack =
 -- -------------------
 
 
-viewChooser : Dict String PokedexEntry -> String -> Autocomplete.State -> Html Msg
-viewChooser pokedex search autocomplete =
+viewChooser : Dict String PokedexEntry -> Season -> String -> Autocomplete.State -> Html Msg
+viewChooser pokedex season search autocomplete =
     let
         choices =
-            getRelevantChoices search pokedex
+            getRelevantChoices season search pokedex
     in
     div [ class "chooser-container flex flex-row justify-between" ]
         [ Autocomplete.view viewConfig autocomplete choices search

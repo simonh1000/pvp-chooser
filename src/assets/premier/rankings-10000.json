@@ -1,1 +1,3728 @@
-[{"speciesId":"togekiss","speciesName":"Togekiss","moveset":["CHARM","ANCIENT_POWER","FLAMETHROWER"],"score":95.9,"scores":[100,85.3,71.4,87.7,100,92.1]},{"speciesId":"metagross","speciesName":"Metagross","moveset":["BULLET_PUNCH","METEOR_MASH","EARTHQUAKE"],"score":95.7,"scores":[93.5,98.8,94.6,96.5,78.7,97.1]},{"speciesId":"metagross_shadow","speciesName":"Metagross (Shadow)","moveset":["BULLET_PUNCH","METEOR_MASH","EARTHQUAKE"],"score":95.1,"scores":[92.5,100,98.6,100,61.9,97.1]},{"speciesId":"snorlax_shadow","speciesName":"Snorlax (Shadow)","moveset":["LICK","BODY_SLAM","SUPER_POWER"],"score":94.5,"scores":[96.9,89.2,100,96.4,74.3,92.4]},{"speciesId":"dragonite","speciesName":"Dragonite","moveset":["DRAGON_BREATH","DRAGON_CLAW","HURRICANE"],"score":90.9,"scores":[95,86.4,66,91.2,83.4,87.6]},{"speciesId":"magnezone_shadow","speciesName":"Magnezone (Shadow)","moveset":["SPARK","WILD_CHARGE","FLASH_CANNON"],"score":90.6,"scores":[90.1,92.4,51.1,91.2,71.2,96.2]},{"speciesId":"garchomp","speciesName":"Garchomp","moveset":["MUD_SHOT","OUTRAGE","EARTHQUAKE"],"score":89.3,"scores":[78.4,98.5,69.2,92.8,53.2,93.3]},{"speciesId":"dragonite_shadow","speciesName":"Dragonite (Shadow)","moveset":["DRAGON_BREATH","DRAGON_CLAW","HURRICANE"],"score":89.1,"scores":[90.7,86.7,59.9,93.8,68,87.6]},{"speciesId":"mamoswine","speciesName":"Mamoswine","moveset":["POWDER_SNOW","AVALANCHE","BULLDOZE"],"score":88.3,"scores":[81,91.1,89.3,92.1,59.6,98.8]},{"speciesId":"swampert_shadow","speciesName":"Swampert (Shadow)","moveset":["MUD_SHOT","HYDRO_CANNON","EARTHQUAKE"],"score":87.3,"scores":[83.2,87.9,78.6,93.6,57.2,91.4]},{"speciesId":"gardevoir_shadow","speciesName":"Gardevoir (Shadow)","moveset":["CHARM","SYNCHRONOISE","SHADOW_BALL"],"score":87,"scores":[89.7,71.3,65,77.4,87.6,97.6]},{"speciesId":"magnezone","speciesName":"Magnezone","moveset":["SPARK","WILD_CHARGE","FLASH_CANNON"],"score":86.9,"scores":[81.2,89.2,52,89.4,63.6,96.2]},{"speciesId":"electivire_shadow","speciesName":"Electivire (Shadow)","moveset":["THUNDER_SHOCK","ICE_PUNCH","WILD_CHARGE"],"score":86.8,"scores":[93.1,92.1,92.7,97.2,45.8,72.6]},{"speciesId":"swampert","speciesName":"Swampert","moveset":["MUD_SHOT","HYDRO_CANNON","EARTHQUAKE"],"score":85.4,"scores":[80.7,85.1,69,88.2,69.7,91.4]},{"speciesId":"gyarados","speciesName":"Gyarados","moveset":["DRAGON_BREATH","CRUNCH","HYDRO_PUMP"],"score":85.2,"scores":[82.9,84.8,89.3,90.2,63.8,86]},{"speciesId":"snorlax","speciesName":"Snorlax","moveset":["LICK","BODY_SLAM","EARTHQUAKE"],"score":85.2,"scores":[82.1,84.8,87,84.9,68.8,93.5]},{"speciesId":"electivire","speciesName":"Electivire","moveset":["THUNDER_SHOCK","ICE_PUNCH","WILD_CHARGE"],"score":85,"scores":[83.4,84,90.6,98.2,53.6,72.6]},{"speciesId":"glaceon","speciesName":"Glaceon","moveset":["ICE_SHARD","ICY_WIND","AVALANCHE"],"score":84.6,"scores":[86.8,78.7,75.9,86.1,57.7,100]},{"speciesId":"conkeldurr","speciesName":"Conkeldurr","moveset":["COUNTER","DYNAMIC_PUNCH","STONE_EDGE"],"score":84.2,"scores":[68.7,95.8,40.7,79.7,52.2,96.9]},{"speciesId":"gyarados_shadow","speciesName":"Gyarados (Shadow)","moveset":["DRAGON_BREATH","CRUNCH","OUTRAGE"],"score":84.2,"scores":[79.3,87.1,76.3,86.8,61.5,90.6]},{"speciesId":"machamp","speciesName":"Machamp","moveset":["COUNTER","CROSS_CHOP","ROCK_SLIDE"],"score":82.9,"scores":[75.5,79.7,85.9,89.5,56.8,92.9]},{"speciesId":"milotic","speciesName":"Milotic","moveset":["WATERFALL","SURF","HYPER_BEAM"],"score":82.3,"scores":[81.8,81.9,66.8,80.2,69.9,94.2]},{"speciesId":"rhyperior","speciesName":"Rhyperior","moveset":["MUD_SLAP","ROCK_WRECKER","SURF"],"score":82,"scores":[76.9,87.7,67,86.5,50.7,84.3]},{"speciesId":"scizor_shadow","speciesName":"Scizor (Shadow)","moveset":["BULLET_PUNCH","NIGHT_SLASH","IRON_HEAD"],"score":81.7,"scores":[78.8,75.6,77.5,88.2,57.9,88.6]},{"speciesId":"gardevoir","speciesName":"Gardevoir","moveset":["CHARM","SYNCHRONOISE","SHADOW_BALL"],"score":81.2,"scores":[85.6,63.2,65.8,76.9,71.4,97.6]},{"speciesId":"scizor","speciesName":"Scizor","moveset":["BULLET_PUNCH","NIGHT_SLASH","IRON_HEAD"],"score":80.9,"scores":[80,72.4,76.6,84.3,69.2,88.6]},{"speciesId":"heracross","speciesName":"Heracross","moveset":["COUNTER","CLOSE_COMBAT","MEGAHORN"],"score":80.8,"scores":[75.8,83.7,48,82.3,49.8,96.4]},{"speciesId":"escavalier","speciesName":"Escavalier","moveset":["COUNTER","DRILL_RUN","MEGAHORN"],"score":80.6,"scores":[84.6,74,73,83.4,53,89.2]},{"speciesId":"vaporeon","speciesName":"Vaporeon","moveset":["WATER_GUN","AQUA_TAIL","HYDRO_PUMP"],"score":80.5,"scores":[77.8,80.3,75.7,81.9,64.8,88.8]},{"speciesId":"typhlosion","speciesName":"Typhlosion","moveset":["SHADOW_CLAW","BLAST_BURN","SOLAR_BEAM"],"score":80.1,"scores":[75.8,83.5,58.2,81.1,45.6,97.7]},{"speciesId":"haxorus","speciesName":"Haxorus","moveset":["COUNTER","DRAGON_CLAW","SURF"],"score":79.3,"scores":[73.9,78.7,47.1,83.3,48.8,94.8]},{"speciesId":"tyranitar_shadow","speciesName":"Tyranitar (Shadow)","moveset":["SMACK_DOWN","CRUNCH","STONE_EDGE"],"score":79.3,"scores":[80.9,71.6,52.2,73,75.8,91.9]},{"speciesId":"empoleon","speciesName":"Empoleon","moveset":["WATERFALL","HYDRO_CANNON","FLASH_CANNON"],"score":78.7,"scores":[77.5,79.8,66.4,74.4,57.6,96]},{"speciesId":"lapras","speciesName":"Lapras","moveset":["ICE_SHARD","SURF","ICE_BEAM"],"score":78.7,"scores":[78.8,79,62.6,75.3,60.2,92.9]},{"speciesId":"charizard_shadow","speciesName":"Charizard (Shadow)","moveset":["FIRE_SPIN","BLAST_BURN","DRAGON_CLAW"],"score":78.6,"scores":[84,78.9,66,86.1,44.4,72.2]},{"speciesId":"tangrowth","speciesName":"Tangrowth","moveset":["VINE_WHIP","POWER_WHIP","ROCK_SLIDE"],"score":78.6,"scores":[76.2,80,64.7,78.3,59.1,89.6]},{"speciesId":"beartic","speciesName":"Beartic","moveset":["POWDER_SNOW","ICE_PUNCH","SURF"],"score":78.4,"scores":[74.9,79.5,71.9,79.1,48,100]},{"speciesId":"gengar","speciesName":"Gengar","moveset":["SHADOW_CLAW","SLUDGE_BOMB","SHADOW_BALL"],"score":77.8,"scores":[72.1,82.2,64.6,82.9,38.4,91.5]},{"speciesId":"gallade_shadow","speciesName":"Gallade (Shadow)","moveset":["CONFUSION","LEAF_BLADE","CLOSE_COMBAT"],"score":77.7,"scores":[76.8,74.3,66,84.4,44.4,86]},{"speciesId":"hydreigon","speciesName":"Hydreigon","moveset":["DRAGON_BREATH","DARK_PULSE","FLASH_CANNON"],"score":77.7,"scores":[72.5,75,46.5,78.6,60.8,96]},{"speciesId":"aggron","speciesName":"Aggron","moveset":["SMACK_DOWN","HEAVY_SLAM","STONE_EDGE"],"score":77.2,"scores":[75.8,74.2,40.9,68,76.2,91.5]},{"speciesId":"charizard","speciesName":"Charizard","moveset":["FIRE_SPIN","BLAST_BURN","DRAGON_CLAW"],"score":77.1,"scores":[81.9,76.4,60.8,81.4,53,72.2]},{"speciesId":"hariyama","speciesName":"Hariyama","moveset":["COUNTER","CLOSE_COMBAT","HEAVY_SLAM"],"score":77.1,"scores":[70.9,78.9,45.2,76,50.1,100]},{"speciesId":"arcanine","speciesName":"Arcanine","moveset":["FIRE_FANG","WILD_CHARGE","CRUNCH"],"score":77,"scores":[70.6,83.5,39.3,66,49.8,100]},{"speciesId":"tyranitar","speciesName":"Tyranitar","moveset":["SMACK_DOWN","CRUNCH","STONE_EDGE"],"score":76.8,"scores":[72.5,78,51.2,71.8,67.4,91.9]},{"speciesId":"gigalith","speciesName":"Gigalith","moveset":["SMACK_DOWN","ROCK_SLIDE","SUPER_POWER"],"score":76.6,"scores":[69.9,83.4,49.6,67.4,59.1,88.3]},{"speciesId":"chandelure","speciesName":"Chandelure","moveset":["HEX","SHADOW_BALL","OVERHEAT"],"score":76.3,"scores":[71.1,89.5,54.3,80.9,27.5,77.6]},{"speciesId":"blaziken","speciesName":"Blaziken","moveset":["COUNTER","BLAZE_KICK","BLAST_BURN"],"score":75.8,"scores":[71.5,75.2,74.4,83.5,42.7,81.8]},{"speciesId":"venusaur_shadow","speciesName":"Venusaur (Shadow)","moveset":["VINE_WHIP","FRENZY_PLANT","SLUDGE_BOMB"],"score":75.8,"scores":[71.8,76.6,61,76,47.7,98]},{"speciesId":"feraligatr","speciesName":"Feraligatr","moveset":["WATERFALL","HYDRO_CANNON","CRUNCH"],"score":75.5,"scores":[66.5,76.3,51.9,75,54.3,99.6]},{"speciesId":"sandslash_alolan","speciesName":"Sandslash (Alolan)","moveset":["POWDER_SNOW","ICE_PUNCH","BLIZZARD"],"score":75.4,"scores":[77.8,69.8,51.8,74,61.2,85.4]},{"speciesId":"excadrill","speciesName":"Excadrill","moveset":["MUD_SLAP","DRILL_RUN","ROCK_SLIDE"],"score":75.2,"scores":[70.6,78.2,58.2,71.6,45,100]},{"speciesId":"lapras_shadow","speciesName":"Lapras (Shadow)","moveset":["WATER_GUN","SURF","ICE_BEAM"],"score":75.1,"scores":[63.3,81.4,61.4,73.9,45,92.8]},{"speciesId":"venusaur","speciesName":"Venusaur","moveset":["VINE_WHIP","FRENZY_PLANT","SLUDGE_BOMB"],"score":75,"scores":[69.9,75.2,57,74.5,51.5,98]},{"speciesId":"darmanitan_galarian_standard","speciesName":"Darmanitan (Galarian)","moveset":["ICE_FANG","AVALANCHE","SUPER_POWER"],"score":74.8,"scores":[69.6,78.4,49.5,67.9,62.3,87.4]},{"speciesId":"arcanine_shadow","speciesName":"Arcanine (Shadow)","moveset":["FIRE_FANG","WILD_CHARGE","CRUNCH"],"score":74.5,"scores":[71.7,75.5,43.6,69.3,50,100]},{"speciesId":"cloyster_shadow","speciesName":"Cloyster (Shadow)","moveset":["ICE_SHARD","ICY_WIND","AVALANCHE"],"score":74.2,"scores":[70.6,66.3,64.2,76.5,49.6,100]},{"speciesId":"cloyster","speciesName":"Cloyster","moveset":["ICE_SHARD","ICY_WIND","AVALANCHE"],"score":74,"scores":[68.7,67.4,59.4,76.3,51.5,100]},{"speciesId":"lucario","speciesName":"Lucario","moveset":["COUNTER","POWER_UP_PUNCH","SHADOW_BALL"],"score":73.8,"scores":[74.4,69.4,50.2,76.7,48.8,85.7]},{"speciesId":"gallade","speciesName":"Gallade","moveset":["CONFUSION","LEAF_BLADE","CLOSE_COMBAT"],"score":73.4,"scores":[73.3,71.3,59.6,75.9,47.1,86]},{"speciesId":"stunfisk_galarian","speciesName":"Stunfisk (Galarian)","moveset":["MUD_SHOT","ROCK_SLIDE","EARTHQUAKE"],"score":73.2,"scores":[69.3,67.7,64.7,79.7,47.5,83.2]},{"speciesId":"alakazam","speciesName":"Alakazam","moveset":["COUNTER","FIRE_PUNCH","SHADOW_BALL"],"score":72.9,"scores":[69,74.3,62.4,78.2,35.7,86.8]},{"speciesId":"magmortar_shadow","speciesName":"Magmortar (Shadow)","moveset":["FIRE_SPIN","FIRE_PUNCH","BRICK_BREAK"],"score":72.9,"scores":[73.6,72.3,57.9,75.6,42.3,85.7]},{"speciesId":"ampharos","speciesName":"Ampharos","moveset":["VOLT_SWITCH","THUNDER_PUNCH","ZAP_CANNON"],"score":72.4,"scores":[76,67.4,38.7,68.7,56.4,82.7]},{"speciesId":"alakazam_shadow","speciesName":"Alakazam (Shadow)","moveset":["COUNTER","FIRE_PUNCH","SHADOW_BALL"],"score":72.3,"scores":[66.2,79.5,38.9,70.4,37.2,86.8]},{"speciesId":"weavile","speciesName":"Weavile","moveset":["SNARL","AVALANCHE","FOCUS_BLAST"],"score":72.1,"scores":[67.3,77.1,34.7,76,27.9,94.1]},{"speciesId":"torterra","speciesName":"Torterra","moveset":["RAZOR_LEAF","SAND_TOMB","FRENZY_PLANT"],"score":72,"scores":[73.9,68.7,49.1,67.4,66.9,79.7]},{"speciesId":"ampharos_shadow","speciesName":"Ampharos (Shadow)","moveset":["VOLT_SWITCH","THUNDER_PUNCH","FOCUS_BLAST"],"score":71.8,"scores":[69.2,63.2,43.9,75.4,54.1,85.8]},{"speciesId":"torterra_shadow","speciesName":"Torterra (Shadow)","moveset":["RAZOR_LEAF","SAND_TOMB","FRENZY_PLANT"],"score":71.7,"scores":[73.9,66.8,51.9,68.5,65,79.7]},{"speciesId":"cryogonal","speciesName":"Cryogonal","moveset":["ICE_SHARD","NIGHT_SLASH","SOLAR_BEAM"],"score":71.6,"scores":[74,68.1,51.9,69,54.5,83.2]},{"speciesId":"clefable","speciesName":"Clefable","moveset":["CHARM","METEOR_MASH","PSYCHIC"],"score":71.3,"scores":[74.4,54.2,51.2,64.5,61,98.5]},{"speciesId":"luxray","speciesName":"Luxray","moveset":["SPARK","WILD_CHARGE","CRUNCH"],"score":71.3,"scores":[53.8,74.7,61.4,78.7,31.1,100]},{"speciesId":"ursaring","speciesName":"Ursaring","moveset":["SHADOW_CLAW","CLOSE_COMBAT","HYPER_BEAM"],"score":71.2,"scores":[64,78.9,45.5,68.3,33.4,90.9]},{"speciesId":"hippowdon","speciesName":"Hippowdon","moveset":["FIRE_FANG","BODY_SLAM","EARTH_POWER"],"score":70.9,"scores":[67.5,71.9,56.3,65.6,54.9,89.9]},{"speciesId":"leafeon","speciesName":"Leafeon","moveset":["RAZOR_LEAF","LEAF_BLADE","LAST_RESORT"],"score":70.8,"scores":[68.4,67.6,42.1,64.7,61.7,99.2]},{"speciesId":"magmortar","speciesName":"Magmortar","moveset":["FIRE_SPIN","FIRE_PUNCH","BRICK_BREAK"],"score":70.8,"scores":[74.3,61.9,53.6,73.9,42,85.7]},{"speciesId":"blastoise_shadow","speciesName":"Blastoise (Shadow)","moveset":["WATER_GUN","HYDRO_CANNON","ICE_BEAM"],"score":70.7,"scores":[61.4,73.9,53.6,69,39.9,98.6]},{"speciesId":"obstagoon","speciesName":"Obstagoon","moveset":["COUNTER","NIGHT_SLASH","CROSS_CHOP"],"score":70.6,"scores":[61.5,67.7,47.2,70.4,54.3,100]},{"speciesId":"golem_alolan","speciesName":"Golem (Alolan)","moveset":["VOLT_SWITCH","WILD_CHARGE","STONE_EDGE"],"score":70.4,"scores":[59.3,75.2,40,67.1,41.6,96.1]},{"speciesId":"roserade","speciesName":"Roserade","moveset":["RAZOR_LEAF","GRASS_KNOT","SLUDGE_BOMB"],"score":69.4,"scores":[69.6,61.1,45.7,62.3,59.5,100]},{"speciesId":"pinsir_shadow","speciesName":"Pinsir (Shadow)","moveset":["FURY_CUTTER","X_SCISSOR","CLOSE_COMBAT"],"score":69.3,"scores":[69,65.7,53.2,75.4,36.8,79]},{"speciesId":"porygon_z","speciesName":"Porygon-Z","moveset":["LOCK_ON","RETURN","SOLAR_BEAM"],"score":69.3,"scores":[48.3,82.1,53.8,74.4,22.2,95.1]},{"speciesId":"blastoise","speciesName":"Blastoise","moveset":["WATER_GUN","HYDRO_CANNON","RETURN"],"score":69.1,"scores":[62.4,71.3,49.7,60.4,52.8,96.3]},{"speciesId":"gliscor","speciesName":"Gliscor","moveset":["WING_ATTACK","NIGHT_SLASH","EARTHQUAKE"],"score":68.9,"scores":[60.1,66.5,62.3,74.5,49.8,77.6]},{"speciesId":"meganium","speciesName":"Meganium","moveset":["VINE_WHIP","FRENZY_PLANT","EARTHQUAKE"],"score":68.8,"scores":[64.3,66.9,46.8,67.6,47.3,98.2]},{"speciesId":"weavile_shadow","speciesName":"Weavile (Shadow)","moveset":["SNARL","AVALANCHE","FOCUS_BLAST"],"score":68.5,"scores":[69.3,73.2,28.3,68,24.3,94.1]},{"speciesId":"infernape","speciesName":"Infernape","moveset":["FIRE_SPIN","CLOSE_COMBAT","BLAST_BURN"],"score":68.3,"scores":[59.9,73.2,40.7,67.3,32.3,94.1]},{"speciesId":"darmanitan_standard","speciesName":"Darmanitan (Standard)","moveset":["FIRE_FANG","ROCK_SLIDE","FOCUS_BLAST"],"score":68.1,"scores":[67.3,63.9,43.3,67.4,48.2,91.5]},{"speciesId":"pinsir","speciesName":"Pinsir","moveset":["FURY_CUTTER","X_SCISSOR","CLOSE_COMBAT"],"score":68,"scores":[64.3,65.2,50.8,73.6,40.3,79]},{"speciesId":"braviary","speciesName":"Braviary","moveset":["AIR_SLASH","ROCK_SLIDE","BRAVE_BIRD"],"score":67.9,"scores":[66.4,67.9,47.2,66.9,41,92.2]},{"speciesId":"klinklang","speciesName":"Klinklang","moveset":["THUNDER_SHOCK","MIRROR_SHOT","FLASH_CANNON"],"score":67.9,"scores":[70.5,55.7,60.8,74.3,52.6,67.9]},{"speciesId":"flygon_shadow","speciesName":"Flygon (Shadow)","moveset":["MUD_SHOT","DRAGON_CLAW","EARTH_POWER"],"score":67.8,"scores":[64.2,70.3,48,72,31.3,84.1]},{"speciesId":"ninetales_alolan","speciesName":"Ninetales (Alolan)","moveset":["POWDER_SNOW","ICE_BEAM","PSYSHOCK"],"score":67.1,"scores":[65.6,70.2,40,68,31.9,86]},{"speciesId":"jolteon","speciesName":"Jolteon","moveset":["VOLT_SWITCH","DISCHARGE","THUNDER"],"score":66.7,"scores":[60.8,69.2,43.3,64.5,37.2,93.2]},{"speciesId":"exeggutor","speciesName":"Exeggutor","moveset":["CONFUSION","SEED_BOMB","PSYCHIC"],"score":66.6,"scores":[64.6,61,46.4,65.6,52,90.6]},{"speciesId":"sceptile","speciesName":"Sceptile","moveset":["BULLET_SEED","LEAF_BLADE","FRENZY_PLANT"],"score":66.6,"scores":[60.8,59.7,50.6,70.7,39.5,93.1]},{"speciesId":"probopass","speciesName":"Probopass","moveset":["ROCK_THROW","ROCK_SLIDE","MAGNET_BOMB"],"score":66.4,"scores":[65.2,57.9,31.3,59.2,59.3,100]},{"speciesId":"vileplume_shadow","speciesName":"Vileplume (Shadow)","moveset":["RAZOR_LEAF","SLUDGE_BOMB","PETAL_BLIZZARD"],"score":66.4,"scores":[67.7,53.1,44.7,60.4,56.4,95.7]},{"speciesId":"omastar","speciesName":"Omastar","moveset":["MUD_SHOT","ROCK_SLIDE","ROCK_BLAST"],"score":66.3,"scores":[62.1,60.2,55,71.7,39.5,82.9]},{"speciesId":"omastar_shadow","speciesName":"Omastar (Shadow)","moveset":["MUD_SHOT","ROCK_SLIDE","ROCK_BLAST"],"score":66.3,"scores":[61.5,63.4,57,72.5,33,82.9]},{"speciesId":"muk","speciesName":"Muk","moveset":["POISON_JAB","THUNDER_PUNCH","DARK_PULSE"],"score":66.1,"scores":[66.4,61.1,53,63.7,45.6,90.7]},{"speciesId":"salamence","speciesName":"Salamence","moveset":["DRAGON_TAIL","OUTRAGE","HYDRO_PUMP"],"score":66.1,"scores":[61.5,64.7,38.4,63.3,46.1,97.1]},{"speciesId":"archeops","speciesName":"Archeops","moveset":["WING_ATTACK","DRAGON_CLAW","CRUNCH"],"score":65.9,"scores":[63.7,61.8,60.7,67.9,36.8,90.7]},{"speciesId":"flygon","speciesName":"Flygon","moveset":["MUD_SHOT","DRAGON_CLAW","EARTHQUAKE"],"score":65.7,"scores":[65.1,52.6,44.1,76.5,30.2,78.5]},{"speciesId":"rampardos","speciesName":"Rampardos","moveset":["SMACK_DOWN","ROCK_SLIDE","FLAMETHROWER"],"score":65.5,"scores":[67.7,52,40.3,58.7,52.6,97.9]},{"speciesId":"emboar","speciesName":"Emboar","moveset":["EMBER","ROCK_SLIDE","FOCUS_BLAST"],"score":65,"scores":[59.2,61,39.3,69.5,38,84.4]},{"speciesId":"lickilicky","speciesName":"Lickilicky","moveset":["LICK","BODY_SLAM","EARTHQUAKE"],"score":64.9,"scores":[54.6,61.8,57.5,66.6,44.1,93.5]},{"speciesId":"politoed_shadow","speciesName":"Politoed (Shadow)","moveset":["BUBBLE","SURF","EARTHQUAKE"],"score":64.8,"scores":[60.1,60.7,48.3,68.5,32.6,92.8]},{"speciesId":"drifblim","speciesName":"Drifblim","moveset":["HEX","ICY_WIND","SHADOW_BALL"],"score":64.6,"scores":[60.2,57.6,55.8,72,34.4,80.3]},{"speciesId":"exeggutor_shadow","speciesName":"Exeggutor (Shadow)","moveset":["CONFUSION","SEED_BOMB","SOLAR_BEAM"],"score":64.6,"scores":[66.4,53.3,44,63.7,48,86.2]},{"speciesId":"rhydon","speciesName":"Rhydon","moveset":["MUD_SLAP","SURF","STONE_EDGE"],"score":64.6,"scores":[56.7,67.6,41.6,62.9,38.4,87.5]},{"speciesId":"samurott","speciesName":"Samurott","moveset":["FURY_CUTTER","MEGAHORN","HYDRO_PUMP"],"score":64.6,"scores":[55.5,70,46.9,68.1,25.2,88.1]},{"speciesId":"donphan","speciesName":"Donphan","moveset":["COUNTER","HEAVY_SLAM","PLAY_ROUGH"],"score":64.5,"scores":[56.4,66.5,40.5,59.5,43.1,93.8]},{"speciesId":"muk_shadow","speciesName":"Muk (Shadow)","moveset":["POISON_JAB","THUNDER_PUNCH","ACID_SPRAY"],"score":64.5,"scores":[64.2,55.8,40.3,57.7,51.7,100]},{"speciesId":"carracosta","speciesName":"Carracosta","moveset":["ROCK_THROW","BODY_SLAM","SURF"],"score":64.2,"scores":[61.4,57.9,50.2,63.4,47.1,92.3]},{"speciesId":"golem","speciesName":"Golem","moveset":["MUD_SHOT","STONE_EDGE","EARTHQUAKE"],"score":64.2,"scores":[53.8,61.1,42.8,69,33.8,92.1]},{"speciesId":"salamence_shadow","speciesName":"Salamence (Shadow)","moveset":["DRAGON_TAIL","OUTRAGE","HYDRO_PUMP"],"score":64,"scores":[61.7,60,37.9,61.7,44.1,97.1]},{"speciesId":"vileplume","speciesName":"Vileplume","moveset":["RAZOR_LEAF","SLUDGE_BOMB","PETAL_BLIZZARD"],"score":63.8,"scores":[63.3,56.1,38,56.8,54.7,95.7]},{"speciesId":"honchkrow","speciesName":"Honchkrow","moveset":["SNARL","SKY_ATTACK","DARK_PULSE"],"score":63.3,"scores":[60.1,61.8,34,66.1,26.2,94.6]},{"speciesId":"piloswine","speciesName":"Piloswine","moveset":["POWDER_SNOW","AVALANCHE","STONE_EDGE"],"score":63.3,"scores":[53.2,65.8,46.4,64.7,28.7,96.7]},{"speciesId":"ferrothorn","speciesName":"Ferrothorn","moveset":["BULLET_SEED","MIRROR_SHOT","POWER_WHIP"],"score":63.1,"scores":[62.1,62.3,47.7,64.2,51.5,69.4]},{"speciesId":"flareon","speciesName":"Flareon","moveset":["FIRE_SPIN","FLAMETHROWER","OVERHEAT"],"score":63.1,"scores":[54.6,67.7,33.3,63.3,36.5,77.8]},{"speciesId":"stoutland","speciesName":"Stoutland","moveset":["LICK","CRUNCH","WILD_CHARGE"],"score":63,"scores":[46.9,67.3,46,59.2,37.2,100]},{"speciesId":"steelix","speciesName":"Steelix","moveset":["DRAGON_TAIL","CRUNCH","EARTHQUAKE"],"score":62.8,"scores":[58.2,61.8,49.2,62.5,45.2,83.4]},{"speciesId":"poliwrath_shadow","speciesName":"Poliwrath (Shadow)","moveset":["MUD_SHOT","POWER_UP_PUNCH","DYNAMIC_PUNCH"],"score":62.7,"scores":[59.9,55.5,32.9,69.3,38,72.6]},{"speciesId":"seismitoad","speciesName":"Seismitoad","moveset":["BUBBLE","MUDDY_WATER","EARTH_POWER"],"score":62.6,"scores":[59,61.8,39.6,62.7,49,76.7]},{"speciesId":"aerodactyl","speciesName":"Aerodactyl","moveset":["ROCK_THROW","ROCK_SLIDE","ANCIENT_POWER"],"score":62.5,"scores":[56.5,61.9,38.1,51.1,51.9,100]},{"speciesId":"scyther_shadow","speciesName":"Scyther (Shadow)","moveset":["FURY_CUTTER","NIGHT_SLASH","X_SCISSOR"],"score":62.5,"scores":[60.4,50.8,43.5,65,32.6,100]},{"speciesId":"durant","speciesName":"Durant","moveset":["BUG_BITE","X_SCISSOR","IRON_HEAD"],"score":62.3,"scores":[60.8,57.4,51.6,62,39.1,90.2]},{"speciesId":"exeggutor_alolan","speciesName":"Exeggutor (Alolan)","moveset":["DRAGON_TAIL","SEED_BOMB","SOLAR_BEAM"],"score":62.1,"scores":[60.7,55,36.8,63.1,43.1,83.4]},{"speciesId":"crustle","speciesName":"Crustle","moveset":["FURY_CUTTER","X_SCISSOR","ROCK_SLIDE"],"score":61.6,"scores":[56.8,57.3,57.4,64.6,40.4,80.3]},{"speciesId":"golurk","speciesName":"Golurk","moveset":["MUD_SLAP","SHADOW_PUNCH","DYNAMIC_PUNCH"],"score":61.6,"scores":[59.9,53.6,40.1,63.2,37.4,88.5]},{"speciesId":"kingdra","speciesName":"Kingdra","moveset":["DRAGON_BREATH","OUTRAGE","OCTAZOOKA"],"score":61.4,"scores":[54.6,62.8,41.5,58,44.8,82.3]},{"speciesId":"politoed","speciesName":"Politoed","moveset":["BUBBLE","SURF","HYDRO_PUMP"],"score":61.4,"scores":[51.6,62.4,39.6,58.6,37.8,96]},{"speciesId":"porygon2","speciesName":"Porygon2","moveset":["LOCK_ON","RETURN","SOLAR_BEAM"],"score":61.1,"scores":[47.3,69.7,46.5,61,19.5,95.1]},{"speciesId":"drapion","speciesName":"Drapion","moveset":["BITE","AQUA_TAIL","FELL_STINGER"],"score":60.8,"scores":[60.4,47.3,47.6,56.6,47.7,100]},{"speciesId":"staraptor","speciesName":"Staraptor","moveset":["QUICK_ATTACK","CLOSE_COMBAT","BRAVE_BIRD"],"score":60.6,"scores":[50,63.6,43.7,59.9,28.7,95]},{"speciesId":"bellossom","speciesName":"Bellossom","moveset":["BULLET_SEED","LEAF_BLADE","RETURN"],"score":60.4,"scores":[55.7,53.3,46.4,61.5,36.6,95.1]},{"speciesId":"bellossom_shadow","speciesName":"Bellossom (Shadow)","moveset":["BULLET_SEED","LEAF_BLADE","DAZZLING_GLEAM"],"score":60.2,"scores":[54.9,52.4,42.1,62.5,31.7,98.9]},{"speciesId":"blissey","speciesName":"Blissey","moveset":["POUND","PSYCHIC","HYPER_BEAM"],"score":60.2,"scores":[47.9,68.9,36.3,45,45.2,87.2]},{"speciesId":"ludicolo","speciesName":"Ludicolo","moveset":["RAZOR_LEAF","ENERGY_BALL","ICE_BEAM"],"score":59.8,"scores":[57.4,52.3,33.5,51.3,53.2,100]},{"speciesId":"crobat_shadow","speciesName":"Crobat (Shadow)","moveset":["AIR_SLASH","SLUDGE_BOMB","SHADOW_BALL"],"score":59.7,"scores":[53.6,48.3,42.3,62.7,37,95.8]},{"speciesId":"slowbro","speciesName":"Slowbro","moveset":["CONFUSION","PSYCHIC","ICE_BEAM"],"score":59.5,"scores":[47.2,66.1,30.5,44.5,40.4,100]},{"speciesId":"abomasnow_shadow","speciesName":"Abomasnow (Shadow)","moveset":["RAZOR_LEAF","ENERGY_BALL","OUTRAGE"],"score":58.8,"scores":[58.5,45.8,34,51.3,50.5,97.6]},{"speciesId":"poliwrath","speciesName":"Poliwrath","moveset":["MUD_SHOT","POWER_UP_PUNCH","DYNAMIC_PUNCH"],"score":58.8,"scores":[52.1,60.8,29.5,58.2,41.8,72.6]},{"speciesId":"scrafty","speciesName":"Scrafty","moveset":["COUNTER","POWER_UP_PUNCH","FOUL_PLAY"],"score":58.7,"scores":[55.1,56.5,33.3,55.2,46.7,86.6]},{"speciesId":"alomomola","speciesName":"Alomomola","moveset":["WATERFALL","PSYCHIC","HYDRO_PUMP"],"score":58.6,"scores":[48.5,63.2,36.4,47.8,42.2,90.5]},{"speciesId":"kingler","speciesName":"Kingler","moveset":["MUD_SHOT","CRABHAMMER","X_SCISSOR"],"score":58.6,"scores":[49.8,54.2,48.3,67,26.6,77.9]},{"speciesId":"houndoom_shadow","speciesName":"Houndoom (Shadow)","moveset":["FIRE_FANG","CRUNCH","FLAMETHROWER"],"score":58.5,"scores":[58.2,46.2,35.3,56.6,41.8,94.2]},{"speciesId":"relicanth","speciesName":"Relicanth","moveset":["WATER_GUN","AQUA_TAIL","HYDRO_PUMP"],"score":58.5,"scores":[55.4,54.9,44.5,56.2,43.3,88.8]},{"speciesId":"houndoom","speciesName":"Houndoom","moveset":["FIRE_FANG","CRUNCH","FLAMETHROWER"],"score":58.3,"scores":[50.7,59.9,32.5,48.7,42,94.2]},{"speciesId":"bronzong","speciesName":"Bronzong","moveset":["CONFUSION","PSYSHOCK","HEAVY_SLAM"],"score":58.1,"scores":[58.9,49.5,37.2,51.9,37.8,96.9]},{"speciesId":"gastrodon_east_sea","speciesName":"Gastrodon (East)","moveset":["MUD_SLAP","BODY_SLAM","EARTH_POWER"],"score":58.1,"scores":[47.6,56.3,36.5,58.9,36.6,90]},{"speciesId":"gastrodon_west_sea","speciesName":"Gastrodon (West)","moveset":["MUD_SLAP","BODY_SLAM","EARTH_POWER"],"score":58.1,"scores":[47.8,56.3,36.5,58.9,36.6,90]},{"speciesId":"crobat","speciesName":"Crobat","moveset":["AIR_SLASH","SLUDGE_BOMB","SHADOW_BALL"],"score":58,"scores":[53.2,53.9,38.1,56.3,38.5,95.8]},{"speciesId":"slowking","speciesName":"Slowking","moveset":["CONFUSION","PSYCHIC","BLIZZARD"],"score":57.5,"scores":[46.6,61.9,31.2,44.7,41.8,96.4]},{"speciesId":"nidoqueen","speciesName":"Nidoqueen","moveset":["POISON_JAB","EARTH_POWER","EARTHQUAKE"],"score":57.4,"scores":[49.8,56.3,35.5,55.4,35.5,95.1]},{"speciesId":"abomasnow","speciesName":"Abomasnow","moveset":["RAZOR_LEAF","ENERGY_BALL","OUTRAGE"],"score":57.1,"scores":[55.5,46.3,33.5,49.4,50.3,97.6]},{"speciesId":"granbull","speciesName":"Granbull","moveset":["SNARL","CRUNCH","CLOSE_COMBAT"],"score":56.9,"scores":[51.3,55.5,36.1,56.9,24.9,100]},{"speciesId":"unfezant","speciesName":"Unfezant","moveset":["AIR_SLASH","SKY_ATTACK","HYPER_BEAM"],"score":56.9,"scores":[51,53.1,40.8,56.8,34.9,90.7]},{"speciesId":"scyther","speciesName":"Scyther","moveset":["FURY_CUTTER","NIGHT_SLASH","X_SCISSOR"],"score":56.7,"scores":[53.3,48.3,39.5,55.8,33.8,100]},{"speciesId":"serperior","speciesName":"Serperior","moveset":["VINE_WHIP","GRASS_KNOT","LEAF_TORNADO"],"score":56.7,"scores":[54.2,54.9,35.1,54.1,43.9,79.8]},{"speciesId":"armaldo","speciesName":"Armaldo","moveset":["FURY_CUTTER","ROCK_BLAST","CROSS_POISON"],"score":56.3,"scores":[50.8,53.3,47.3,55.8,38.5,84.9]},{"speciesId":"skuntank","speciesName":"Skuntank","moveset":["POISON_JAB","CRUNCH","SLUDGE_BOMB"],"score":56.3,"scores":[52.6,54.1,46.3,54.7,31.1,94.2]},{"speciesId":"golduck_shadow","speciesName":"Golduck (Shadow)","moveset":["WATER_GUN","CROSS_CHOP","BUBBLE_BEAM"],"score":56.1,"scores":[50.7,50.7,41.6,54.3,36.3,100]},{"speciesId":"stunfisk","speciesName":"Stunfisk","moveset":["MUD_SHOT","MUD_BOMB","DISCHARGE"],"score":56.1,"scores":[51.9,51.6,41.3,55.2,35.5,91]},{"speciesId":"espeon","speciesName":"Espeon","moveset":["CONFUSION","PSYCHIC","LAST_RESORT"],"score":56,"scores":[50.5,54.9,34.4,44.9,42.7,100]},{"speciesId":"ninetales","speciesName":"Ninetales","moveset":["FIRE_SPIN","OVERHEAT","FLAMETHROWER"],"score":56,"scores":[44.4,61.3,26.3,54.7,29.4,77.8]},{"speciesId":"gothitelle","speciesName":"Gothitelle","moveset":["CONFUSION","ROCK_SLIDE","PSYCHIC"],"score":55.9,"scores":[49.2,56.8,35.5,48.9,35.3,93.2]},{"speciesId":"nidoking","speciesName":"Nidoking","moveset":["FURY_CUTTER","EARTH_POWER","EARTHQUAKE"],"score":55.6,"scores":[44.7,52.6,36.4,59.7,23.5,94.1]},{"speciesId":"ninetales_shadow","speciesName":"Ninetales (Shadow)","moveset":["FIRE_SPIN","FLAMETHROWER","OVERHEAT"],"score":55.6,"scores":[47.8,57,28.8,57.6,29.4,77.8]},{"speciesId":"slaking","speciesName":"Slaking","moveset":["YAWN","BODY_SLAM","HYPER_BEAM"],"score":55.6,"scores":[38.5,63.9,18.9,50.6,24.9,91.9]},{"speciesId":"walrein","speciesName":"Walrein","moveset":["WATERFALL","EARTHQUAKE","WATER_PULSE"],"score":55.6,"scores":[51,53.9,35.6,46.6,44.6,92.7]},{"speciesId":"golduck","speciesName":"Golduck","moveset":["WATER_GUN","CROSS_CHOP","BUBBLE_BEAM"],"score":55.4,"scores":[51.7,48.6,40.8,52.4,38.4,100]},{"speciesId":"kabutops","speciesName":"Kabutops","moveset":["FURY_CUTTER","ANCIENT_POWER","STONE_EDGE"],"score":55.4,"scores":[48.9,59.7,47.9,58.5,21.4,74.5]},{"speciesId":"cradily","speciesName":"Cradily","moveset":["BULLET_SEED","GRASS_KNOT","STONE_EDGE"],"score":55.3,"scores":[46.4,56,39.9,54,27.5,93.3]},{"speciesId":"porygon_z_shadow","speciesName":"Porygon-Z (Shadow)","moveset":["LOCK_ON","HYPER_BEAM","BLIZZARD"],"score":55.3,"scores":[34.1,68.2,26.7,54.1,18,86.7]},{"speciesId":"mismagius","speciesName":"Mismagius","moveset":["HEX","DARK_PULSE","SHADOW_BALL"],"score":54.9,"scores":[46.3,57.8,36.5,56.1,21.4,86.9]},{"speciesId":"muk_alolan","speciesName":"Muk (Alolan)","moveset":["POISON_JAB","DARK_PULSE","ACID_SPRAY"],"score":54.7,"scores":[55.2,57.6,34.7,52.5,45.4,53.4]},{"speciesId":"mismagius_shadow","speciesName":"Mismagius (Shadow)","moveset":["HEX","DARK_PULSE","SHADOW_BALL"],"score":54.6,"scores":[42.5,59.5,29.2,53.9,22.6,86.9]},{"speciesId":"forretress","speciesName":"Forretress","moveset":["BUG_BITE","SAND_TOMB","MIRROR_SHOT"],"score":54.5,"scores":[51.3,48.7,41.2,48.4,41.4,100]},{"speciesId":"tentacruel","speciesName":"Tentacruel","moveset":["POISON_JAB","ACID_SPRAY","HYDRO_PUMP"],"score":54.2,"scores":[53.9,51.6,32.1,54,49.6,60.7]},{"speciesId":"sawk","speciesName":"Sawk","moveset":["POISON_JAB","BODY_SLAM","FOCUS_BLAST"],"score":53.9,"scores":[47.3,48.4,43.3,58,29,79.1]},{"speciesId":"umbreon","speciesName":"Umbreon","moveset":["SNARL","FOUL_PLAY","DARK_PULSE"],"score":53.4,"scores":[47.2,50.5,35.5,49.6,35.5,98.6]},{"speciesId":"yanmega","speciesName":"Yanmega","moveset":["BUG_BITE","AERIAL_ACE","ANCIENT_POWER"],"score":53.3,"scores":[45.8,50.8,34.4,49.6,34.4,100]},{"speciesId":"starmie","speciesName":"Starmie","moveset":["WATER_GUN","PSYCHIC","ICE_BEAM"],"score":51.2,"scores":[42,51.5,29.7,42.1,34.9,100]},{"speciesId":"porygon2_shadow","speciesName":"Porygon2 (Shadow)","moveset":["LOCK_ON","HYPER_BEAM","SOLAR_BEAM"],"score":50.9,"scores":[24.4,65.7,20.9,45.5,17.8,100]},{"speciesId":"kangaskhan","speciesName":"Kangaskhan","moveset":["MUD_SLAP","POWER_UP_PUNCH","STOMP"],"score":50.4,"scores":[47.2,47.1,31.2,45.2,38.2,87.6]},{"speciesId":"sandslash","speciesName":"Sandslash","moveset":["MUD_SHOT","BULLDOZE","EARTHQUAKE"],"score":49.8,"scores":[40.6,47.5,29.9,54.3,17.3,86.4]},{"speciesId":"miltank","speciesName":"Miltank","moveset":["TACKLE","BODY_SLAM","ICE_BEAM"],"score":48.9,"scores":[39.4,49.7,30.7,38.6,35.3,96.6]},{"speciesId":"lunatone","speciesName":"Lunatone","moveset":["CONFUSION","ROCK_SLIDE","PSYCHIC"],"score":48.4,"scores":[41.3,47.8,26.8,41.3,29.8,95.8]},{"speciesId":"solrock","speciesName":"Solrock","moveset":["CONFUSION","ROCK_SLIDE","PSYCHIC"],"score":48.4,"scores":[41.3,47.8,26.8,41.3,29.8,95.8]},{"speciesId":"dusknoir_shadow","speciesName":"Dusknoir (Shadow)","moveset":["HEX","DARK_PULSE","OMINOUS_WIND"],"score":48.2,"scores":[43.1,43.4,34.5,49.3,22,88.2]},{"speciesId":"garbodor","speciesName":"Garbodor","moveset":["INFESTATION","BODY_SLAM","GUNK_SHOT"],"score":47.6,"scores":[46,42.5,34.7,47.8,21.8,82.2]},{"speciesId":"sandslash_shadow","speciesName":"Sandslash (Shadow)","moveset":["MUD_SHOT","BULLDOZE","EARTHQUAKE"],"score":46.9,"scores":[39,38.8,29.1,53.9,15.5,86.4]},{"speciesId":"dusknoir","speciesName":"Dusknoir","moveset":["HEX","DARK_PULSE","RETURN"],"score":46.3,"scores":[36.6,46.8,30.7,44.6,21.4,88.5]},{"speciesId":"grumpig","speciesName":"Grumpig","moveset":["EXTRASENSORY","PSYCHIC","SHADOW_BALL"],"score":46.1,"scores":[33.2,45.4,32.5,43.1,25.4,100]},{"speciesId":"reuniclus","speciesName":"Reuniclus","moveset":["HIDDEN_POWER_FIGHTING","SHADOW_BALL","THUNDER"],"score":45.9,"scores":[33.5,50.8,23.4,33.8,27.3,96.3]},{"speciesId":"sigilyph","speciesName":"Sigilyph","moveset":["AIR_SLASH","SIGNAL_BEAM","ANCIENT_POWER"],"score":45.3,"scores":[39,41.2,32,42.7,30,89.9]},{"speciesId":"exploud","speciesName":"Exploud","moveset":["BITE","CRUNCH","DISARMING_VOICE"],"score":44.1,"scores":[39.4,39.7,31.3,35.1,35.9,100]},{"speciesId":"throh","speciesName":"Throh","moveset":["LOW_KICK","BODY_SLAM","FOCUS_BLAST"],"score":44,"scores":[37,44.9,24.9,38.1,26.6,78.6]},{"speciesId":"tauros","speciesName":"Tauros","moveset":["TACKLE","HORN_ATTACK","IRON_HEAD"],"score":42.9,"scores":[37.5,39.6,31.2,34.4,34,93.9]},{"speciesId":"hitmonlee","speciesName":"Hitmonlee","moveset":["ROCK_SMASH","BRICK_BREAK","CLOSE_COMBAT"],"score":42.7,"scores":[35.9,38,23.2,43.8,25,74.4]},{"speciesId":"hitmonlee_shadow","speciesName":"Hitmonlee (Shadow)","moveset":["ROCK_SMASH","BRICK_BREAK","STONE_EDGE"],"score":42.7,"scores":[39.2,36.7,22.6,40.3,26.6,86.4]},{"speciesId":"weezing","speciesName":"Weezing","moveset":["INFESTATION","SLUDGE_BOMB","DARK_PULSE"],"score":42.7,"scores":[35.1,41.5,27.2,41.4,15.3,100]},{"speciesId":"weezing_galarian","speciesName":"Weezing (Galarian)","moveset":["TACKLE","SLUDGE","PLAY_ROUGH"],"score":39.1,"scores":[35.6,35.1,24.1,32.3,27.1,89.7]},{"speciesId":"cofagrigus","speciesName":"Cofagrigus","moveset":["ASTONISH","DARK_PULSE","SHADOW_BALL"],"score":37.1,"scores":[23.1,38.3,23.6,35.1,17.3,87.5]}]
+[
+  {
+    "speciesId": "togekiss",
+    "speciesName": "Togekiss",
+    "moveset": [
+      "CHARM",
+      "ANCIENT_POWER",
+      "FLAMETHROWER"
+    ],
+    "score": 95.9,
+    "scores": [
+      100,
+      85.3,
+      71.4,
+      87.7,
+      100,
+      92.1
+    ]
+  },
+  {
+    "speciesId": "metagross",
+    "speciesName": "Metagross",
+    "moveset": [
+      "BULLET_PUNCH",
+      "METEOR_MASH",
+      "EARTHQUAKE"
+    ],
+    "score": 95.7,
+    "scores": [
+      93.5,
+      98.8,
+      94.6,
+      96.5,
+      78.7,
+      97.1
+    ]
+  },
+  {
+    "speciesId": "metagross_shadow",
+    "speciesName": "Metagross (Shadow)",
+    "moveset": [
+      "BULLET_PUNCH",
+      "METEOR_MASH",
+      "EARTHQUAKE"
+    ],
+    "score": 95.1,
+    "scores": [
+      92.5,
+      100,
+      98.6,
+      100,
+      61.9,
+      97.1
+    ]
+  },
+  {
+    "speciesId": "snorlax_shadow",
+    "speciesName": "Snorlax (Shadow)",
+    "moveset": [
+      "LICK",
+      "BODY_SLAM",
+      "SUPER_POWER"
+    ],
+    "score": 94.5,
+    "scores": [
+      96.9,
+      89.2,
+      100,
+      96.4,
+      74.3,
+      92.4
+    ]
+  },
+  {
+    "speciesId": "dragonite",
+    "speciesName": "Dragonite",
+    "moveset": [
+      "DRAGON_BREATH",
+      "DRAGON_CLAW",
+      "HURRICANE"
+    ],
+    "score": 90.9,
+    "scores": [
+      95,
+      86.4,
+      66,
+      91.2,
+      83.4,
+      87.6
+    ]
+  },
+  {
+    "speciesId": "magnezone_shadow",
+    "speciesName": "Magnezone (Shadow)",
+    "moveset": [
+      "SPARK",
+      "WILD_CHARGE",
+      "FLASH_CANNON"
+    ],
+    "score": 90.6,
+    "scores": [
+      90.1,
+      92.4,
+      51.1,
+      91.2,
+      71.2,
+      96.2
+    ]
+  },
+  {
+    "speciesId": "garchomp",
+    "speciesName": "Garchomp",
+    "moveset": [
+      "MUD_SHOT",
+      "OUTRAGE",
+      "EARTHQUAKE"
+    ],
+    "score": 89.3,
+    "scores": [
+      78.4,
+      98.5,
+      69.2,
+      92.8,
+      53.2,
+      93.3
+    ]
+  },
+  {
+    "speciesId": "dragonite_shadow",
+    "speciesName": "Dragonite (Shadow)",
+    "moveset": [
+      "DRAGON_BREATH",
+      "DRAGON_CLAW",
+      "HURRICANE"
+    ],
+    "score": 89.1,
+    "scores": [
+      90.7,
+      86.7,
+      59.9,
+      93.8,
+      68,
+      87.6
+    ]
+  },
+  {
+    "speciesId": "mamoswine",
+    "speciesName": "Mamoswine",
+    "moveset": [
+      "POWDER_SNOW",
+      "AVALANCHE",
+      "BULLDOZE"
+    ],
+    "score": 88.3,
+    "scores": [
+      81,
+      91.1,
+      89.3,
+      92.1,
+      59.6,
+      98.8
+    ]
+  },
+  {
+    "speciesId": "swampert_shadow",
+    "speciesName": "Swampert (Shadow)",
+    "moveset": [
+      "MUD_SHOT",
+      "HYDRO_CANNON",
+      "EARTHQUAKE"
+    ],
+    "score": 87.3,
+    "scores": [
+      83.2,
+      87.9,
+      78.6,
+      93.6,
+      57.2,
+      91.4
+    ]
+  },
+  {
+    "speciesId": "gardevoir_shadow",
+    "speciesName": "Gardevoir (Shadow)",
+    "moveset": [
+      "CHARM",
+      "SYNCHRONOISE",
+      "SHADOW_BALL"
+    ],
+    "score": 87,
+    "scores": [
+      89.7,
+      71.3,
+      65,
+      77.4,
+      87.6,
+      97.6
+    ]
+  },
+  {
+    "speciesId": "magnezone",
+    "speciesName": "Magnezone",
+    "moveset": [
+      "SPARK",
+      "WILD_CHARGE",
+      "FLASH_CANNON"
+    ],
+    "score": 86.9,
+    "scores": [
+      81.2,
+      89.2,
+      52,
+      89.4,
+      63.6,
+      96.2
+    ]
+  },
+  {
+    "speciesId": "electivire_shadow",
+    "speciesName": "Electivire (Shadow)",
+    "moveset": [
+      "THUNDER_SHOCK",
+      "ICE_PUNCH",
+      "WILD_CHARGE"
+    ],
+    "score": 86.8,
+    "scores": [
+      93.1,
+      92.1,
+      92.7,
+      97.2,
+      45.8,
+      72.6
+    ]
+  },
+  {
+    "speciesId": "swampert",
+    "speciesName": "Swampert",
+    "moveset": [
+      "MUD_SHOT",
+      "HYDRO_CANNON",
+      "EARTHQUAKE"
+    ],
+    "score": 85.4,
+    "scores": [
+      80.7,
+      85.1,
+      69,
+      88.2,
+      69.7,
+      91.4
+    ]
+  },
+  {
+    "speciesId": "gyarados",
+    "speciesName": "Gyarados",
+    "moveset": [
+      "DRAGON_BREATH",
+      "CRUNCH",
+      "HYDRO_PUMP"
+    ],
+    "score": 85.2,
+    "scores": [
+      82.9,
+      84.8,
+      89.3,
+      90.2,
+      63.8,
+      86
+    ]
+  },
+  {
+    "speciesId": "snorlax",
+    "speciesName": "Snorlax",
+    "moveset": [
+      "LICK",
+      "BODY_SLAM",
+      "EARTHQUAKE"
+    ],
+    "score": 85.2,
+    "scores": [
+      82.1,
+      84.8,
+      87,
+      84.9,
+      68.8,
+      93.5
+    ]
+  },
+  {
+    "speciesId": "electivire",
+    "speciesName": "Electivire",
+    "moveset": [
+      "THUNDER_SHOCK",
+      "ICE_PUNCH",
+      "WILD_CHARGE"
+    ],
+    "score": 85,
+    "scores": [
+      83.4,
+      84,
+      90.6,
+      98.2,
+      53.6,
+      72.6
+    ]
+  },
+  {
+    "speciesId": "glaceon",
+    "speciesName": "Glaceon",
+    "moveset": [
+      "ICE_SHARD",
+      "ICY_WIND",
+      "AVALANCHE"
+    ],
+    "score": 84.6,
+    "scores": [
+      86.8,
+      78.7,
+      75.9,
+      86.1,
+      57.7,
+      100
+    ]
+  },
+  {
+    "speciesId": "conkeldurr",
+    "speciesName": "Conkeldurr",
+    "moveset": [
+      "COUNTER",
+      "DYNAMIC_PUNCH",
+      "STONE_EDGE"
+    ],
+    "score": 84.2,
+    "scores": [
+      68.7,
+      95.8,
+      40.7,
+      79.7,
+      52.2,
+      96.9
+    ]
+  },
+  {
+    "speciesId": "gyarados_shadow",
+    "speciesName": "Gyarados (Shadow)",
+    "moveset": [
+      "DRAGON_BREATH",
+      "CRUNCH",
+      "OUTRAGE"
+    ],
+    "score": 84.2,
+    "scores": [
+      79.3,
+      87.1,
+      76.3,
+      86.8,
+      61.5,
+      90.6
+    ]
+  },
+  {
+    "speciesId": "machamp",
+    "speciesName": "Machamp",
+    "moveset": [
+      "COUNTER",
+      "CROSS_CHOP",
+      "ROCK_SLIDE"
+    ],
+    "score": 82.9,
+    "scores": [
+      75.5,
+      79.7,
+      85.9,
+      89.5,
+      56.8,
+      92.9
+    ]
+  },
+  {
+    "speciesId": "milotic",
+    "speciesName": "Milotic",
+    "moveset": [
+      "WATERFALL",
+      "SURF",
+      "HYPER_BEAM"
+    ],
+    "score": 82.3,
+    "scores": [
+      81.8,
+      81.9,
+      66.8,
+      80.2,
+      69.9,
+      94.2
+    ]
+  },
+  {
+    "speciesId": "rhyperior",
+    "speciesName": "Rhyperior",
+    "moveset": [
+      "MUD_SLAP",
+      "ROCK_WRECKER",
+      "SURF"
+    ],
+    "score": 82,
+    "scores": [
+      76.9,
+      87.7,
+      67,
+      86.5,
+      50.7,
+      84.3
+    ]
+  },
+  {
+    "speciesId": "scizor_shadow",
+    "speciesName": "Scizor (Shadow)",
+    "moveset": [
+      "BULLET_PUNCH",
+      "NIGHT_SLASH",
+      "IRON_HEAD"
+    ],
+    "score": 81.7,
+    "scores": [
+      78.8,
+      75.6,
+      77.5,
+      88.2,
+      57.9,
+      88.6
+    ]
+  },
+  {
+    "speciesId": "gardevoir",
+    "speciesName": "Gardevoir",
+    "moveset": [
+      "CHARM",
+      "SYNCHRONOISE",
+      "SHADOW_BALL"
+    ],
+    "score": 81.2,
+    "scores": [
+      85.6,
+      63.2,
+      65.8,
+      76.9,
+      71.4,
+      97.6
+    ]
+  },
+  {
+    "speciesId": "scizor",
+    "speciesName": "Scizor",
+    "moveset": [
+      "BULLET_PUNCH",
+      "NIGHT_SLASH",
+      "IRON_HEAD"
+    ],
+    "score": 80.9,
+    "scores": [
+      80,
+      72.4,
+      76.6,
+      84.3,
+      69.2,
+      88.6
+    ]
+  },
+  {
+    "speciesId": "heracross",
+    "speciesName": "Heracross",
+    "moveset": [
+      "COUNTER",
+      "CLOSE_COMBAT",
+      "MEGAHORN"
+    ],
+    "score": 80.8,
+    "scores": [
+      75.8,
+      83.7,
+      48,
+      82.3,
+      49.8,
+      96.4
+    ]
+  },
+  {
+    "speciesId": "escavalier",
+    "speciesName": "Escavalier",
+    "moveset": [
+      "COUNTER",
+      "DRILL_RUN",
+      "MEGAHORN"
+    ],
+    "score": 80.6,
+    "scores": [
+      84.6,
+      74,
+      73,
+      83.4,
+      53,
+      89.2
+    ]
+  },
+  {
+    "speciesId": "vaporeon",
+    "speciesName": "Vaporeon",
+    "moveset": [
+      "WATER_GUN",
+      "AQUA_TAIL",
+      "HYDRO_PUMP"
+    ],
+    "score": 80.5,
+    "scores": [
+      77.8,
+      80.3,
+      75.7,
+      81.9,
+      64.8,
+      88.8
+    ]
+  },
+  {
+    "speciesId": "typhlosion",
+    "speciesName": "Typhlosion",
+    "moveset": [
+      "SHADOW_CLAW",
+      "BLAST_BURN",
+      "SOLAR_BEAM"
+    ],
+    "score": 80.1,
+    "scores": [
+      75.8,
+      83.5,
+      58.2,
+      81.1,
+      45.6,
+      97.7
+    ]
+  },
+  {
+    "speciesId": "haxorus",
+    "speciesName": "Haxorus",
+    "moveset": [
+      "COUNTER",
+      "DRAGON_CLAW",
+      "SURF"
+    ],
+    "score": 79.3,
+    "scores": [
+      73.9,
+      78.7,
+      47.1,
+      83.3,
+      48.8,
+      94.8
+    ]
+  },
+  {
+    "speciesId": "tyranitar_shadow",
+    "speciesName": "Tyranitar (Shadow)",
+    "moveset": [
+      "SMACK_DOWN",
+      "CRUNCH",
+      "STONE_EDGE"
+    ],
+    "score": 79.3,
+    "scores": [
+      80.9,
+      71.6,
+      52.2,
+      73,
+      75.8,
+      91.9
+    ]
+  },
+  {
+    "speciesId": "empoleon",
+    "speciesName": "Empoleon",
+    "moveset": [
+      "WATERFALL",
+      "HYDRO_CANNON",
+      "FLASH_CANNON"
+    ],
+    "score": 78.7,
+    "scores": [
+      77.5,
+      79.8,
+      66.4,
+      74.4,
+      57.6,
+      96
+    ]
+  },
+  {
+    "speciesId": "lapras",
+    "speciesName": "Lapras",
+    "moveset": [
+      "ICE_SHARD",
+      "SURF",
+      "ICE_BEAM"
+    ],
+    "score": 78.7,
+    "scores": [
+      78.8,
+      79,
+      62.6,
+      75.3,
+      60.2,
+      92.9
+    ]
+  },
+  {
+    "speciesId": "charizard_shadow",
+    "speciesName": "Charizard (Shadow)",
+    "moveset": [
+      "FIRE_SPIN",
+      "BLAST_BURN",
+      "DRAGON_CLAW"
+    ],
+    "score": 78.6,
+    "scores": [
+      84,
+      78.9,
+      66,
+      86.1,
+      44.4,
+      72.2
+    ]
+  },
+  {
+    "speciesId": "tangrowth",
+    "speciesName": "Tangrowth",
+    "moveset": [
+      "VINE_WHIP",
+      "POWER_WHIP",
+      "ROCK_SLIDE"
+    ],
+    "score": 78.6,
+    "scores": [
+      76.2,
+      80,
+      64.7,
+      78.3,
+      59.1,
+      89.6
+    ]
+  },
+  {
+    "speciesId": "beartic",
+    "speciesName": "Beartic",
+    "moveset": [
+      "POWDER_SNOW",
+      "ICE_PUNCH",
+      "SURF"
+    ],
+    "score": 78.4,
+    "scores": [
+      74.9,
+      79.5,
+      71.9,
+      79.1,
+      48,
+      100
+    ]
+  },
+  {
+    "speciesId": "gengar",
+    "speciesName": "Gengar",
+    "moveset": [
+      "SHADOW_CLAW",
+      "SLUDGE_BOMB",
+      "SHADOW_BALL"
+    ],
+    "score": 77.8,
+    "scores": [
+      72.1,
+      82.2,
+      64.6,
+      82.9,
+      38.4,
+      91.5
+    ]
+  },
+  {
+    "speciesId": "gallade_shadow",
+    "speciesName": "Gallade (Shadow)",
+    "moveset": [
+      "CONFUSION",
+      "LEAF_BLADE",
+      "CLOSE_COMBAT"
+    ],
+    "score": 77.7,
+    "scores": [
+      76.8,
+      74.3,
+      66,
+      84.4,
+      44.4,
+      86
+    ]
+  },
+  {
+    "speciesId": "hydreigon",
+    "speciesName": "Hydreigon",
+    "moveset": [
+      "DRAGON_BREATH",
+      "DARK_PULSE",
+      "FLASH_CANNON"
+    ],
+    "score": 77.7,
+    "scores": [
+      72.5,
+      75,
+      46.5,
+      78.6,
+      60.8,
+      96
+    ]
+  },
+  {
+    "speciesId": "aggron",
+    "speciesName": "Aggron",
+    "moveset": [
+      "SMACK_DOWN",
+      "HEAVY_SLAM",
+      "STONE_EDGE"
+    ],
+    "score": 77.2,
+    "scores": [
+      75.8,
+      74.2,
+      40.9,
+      68,
+      76.2,
+      91.5
+    ]
+  },
+  {
+    "speciesId": "charizard",
+    "speciesName": "Charizard",
+    "moveset": [
+      "FIRE_SPIN",
+      "BLAST_BURN",
+      "DRAGON_CLAW"
+    ],
+    "score": 77.1,
+    "scores": [
+      81.9,
+      76.4,
+      60.8,
+      81.4,
+      53,
+      72.2
+    ]
+  },
+  {
+    "speciesId": "hariyama",
+    "speciesName": "Hariyama",
+    "moveset": [
+      "COUNTER",
+      "CLOSE_COMBAT",
+      "HEAVY_SLAM"
+    ],
+    "score": 77.1,
+    "scores": [
+      70.9,
+      78.9,
+      45.2,
+      76,
+      50.1,
+      100
+    ]
+  },
+  {
+    "speciesId": "arcanine",
+    "speciesName": "Arcanine",
+    "moveset": [
+      "FIRE_FANG",
+      "WILD_CHARGE",
+      "CRUNCH"
+    ],
+    "score": 77,
+    "scores": [
+      70.6,
+      83.5,
+      39.3,
+      66,
+      49.8,
+      100
+    ]
+  },
+  {
+    "speciesId": "tyranitar",
+    "speciesName": "Tyranitar",
+    "moveset": [
+      "SMACK_DOWN",
+      "CRUNCH",
+      "STONE_EDGE"
+    ],
+    "score": 76.8,
+    "scores": [
+      72.5,
+      78,
+      51.2,
+      71.8,
+      67.4,
+      91.9
+    ]
+  },
+  {
+    "speciesId": "gigalith",
+    "speciesName": "Gigalith",
+    "moveset": [
+      "SMACK_DOWN",
+      "ROCK_SLIDE",
+      "SUPER_POWER"
+    ],
+    "score": 76.6,
+    "scores": [
+      69.9,
+      83.4,
+      49.6,
+      67.4,
+      59.1,
+      88.3
+    ]
+  },
+  {
+    "speciesId": "chandelure",
+    "speciesName": "Chandelure",
+    "moveset": [
+      "HEX",
+      "SHADOW_BALL",
+      "OVERHEAT"
+    ],
+    "score": 76.3,
+    "scores": [
+      71.1,
+      89.5,
+      54.3,
+      80.9,
+      27.5,
+      77.6
+    ]
+  },
+  {
+    "speciesId": "blaziken",
+    "speciesName": "Blaziken",
+    "moveset": [
+      "COUNTER",
+      "BLAZE_KICK",
+      "BLAST_BURN"
+    ],
+    "score": 75.8,
+    "scores": [
+      71.5,
+      75.2,
+      74.4,
+      83.5,
+      42.7,
+      81.8
+    ]
+  },
+  {
+    "speciesId": "venusaur_shadow",
+    "speciesName": "Venusaur (Shadow)",
+    "moveset": [
+      "VINE_WHIP",
+      "FRENZY_PLANT",
+      "SLUDGE_BOMB"
+    ],
+    "score": 75.8,
+    "scores": [
+      71.8,
+      76.6,
+      61,
+      76,
+      47.7,
+      98
+    ]
+  },
+  {
+    "speciesId": "feraligatr",
+    "speciesName": "Feraligatr",
+    "moveset": [
+      "WATERFALL",
+      "HYDRO_CANNON",
+      "CRUNCH"
+    ],
+    "score": 75.5,
+    "scores": [
+      66.5,
+      76.3,
+      51.9,
+      75,
+      54.3,
+      99.6
+    ]
+  },
+  {
+    "speciesId": "sandslash_alolan",
+    "speciesName": "Sandslash (Alolan)",
+    "moveset": [
+      "POWDER_SNOW",
+      "ICE_PUNCH",
+      "BLIZZARD"
+    ],
+    "score": 75.4,
+    "scores": [
+      77.8,
+      69.8,
+      51.8,
+      74,
+      61.2,
+      85.4
+    ]
+  },
+  {
+    "speciesId": "excadrill",
+    "speciesName": "Excadrill",
+    "moveset": [
+      "MUD_SLAP",
+      "DRILL_RUN",
+      "ROCK_SLIDE"
+    ],
+    "score": 75.2,
+    "scores": [
+      70.6,
+      78.2,
+      58.2,
+      71.6,
+      45,
+      100
+    ]
+  },
+  {
+    "speciesId": "lapras_shadow",
+    "speciesName": "Lapras (Shadow)",
+    "moveset": [
+      "WATER_GUN",
+      "SURF",
+      "ICE_BEAM"
+    ],
+    "score": 75.1,
+    "scores": [
+      63.3,
+      81.4,
+      61.4,
+      73.9,
+      45,
+      92.8
+    ]
+  },
+  {
+    "speciesId": "venusaur",
+    "speciesName": "Venusaur",
+    "moveset": [
+      "VINE_WHIP",
+      "FRENZY_PLANT",
+      "SLUDGE_BOMB"
+    ],
+    "score": 75,
+    "scores": [
+      69.9,
+      75.2,
+      57,
+      74.5,
+      51.5,
+      98
+    ]
+  },
+  {
+    "speciesId": "darmanitan_galarian_standard",
+    "speciesName": "Darmanitan (Galarian)",
+    "moveset": [
+      "ICE_FANG",
+      "AVALANCHE",
+      "SUPER_POWER"
+    ],
+    "score": 74.8,
+    "scores": [
+      69.6,
+      78.4,
+      49.5,
+      67.9,
+      62.3,
+      87.4
+    ]
+  },
+  {
+    "speciesId": "arcanine_shadow",
+    "speciesName": "Arcanine (Shadow)",
+    "moveset": [
+      "FIRE_FANG",
+      "WILD_CHARGE",
+      "CRUNCH"
+    ],
+    "score": 74.5,
+    "scores": [
+      71.7,
+      75.5,
+      43.6,
+      69.3,
+      50,
+      100
+    ]
+  },
+  {
+    "speciesId": "cloyster_shadow",
+    "speciesName": "Cloyster (Shadow)",
+    "moveset": [
+      "ICE_SHARD",
+      "ICY_WIND",
+      "AVALANCHE"
+    ],
+    "score": 74.2,
+    "scores": [
+      70.6,
+      66.3,
+      64.2,
+      76.5,
+      49.6,
+      100
+    ]
+  },
+  {
+    "speciesId": "cloyster",
+    "speciesName": "Cloyster",
+    "moveset": [
+      "ICE_SHARD",
+      "ICY_WIND",
+      "AVALANCHE"
+    ],
+    "score": 74,
+    "scores": [
+      68.7,
+      67.4,
+      59.4,
+      76.3,
+      51.5,
+      100
+    ]
+  },
+  {
+    "speciesId": "lucario",
+    "speciesName": "Lucario",
+    "moveset": [
+      "COUNTER",
+      "POWER_UP_PUNCH",
+      "SHADOW_BALL"
+    ],
+    "score": 73.8,
+    "scores": [
+      74.4,
+      69.4,
+      50.2,
+      76.7,
+      48.8,
+      85.7
+    ]
+  },
+  {
+    "speciesId": "gallade",
+    "speciesName": "Gallade",
+    "moveset": [
+      "CONFUSION",
+      "LEAF_BLADE",
+      "CLOSE_COMBAT"
+    ],
+    "score": 73.4,
+    "scores": [
+      73.3,
+      71.3,
+      59.6,
+      75.9,
+      47.1,
+      86
+    ]
+  },
+  {
+    "speciesId": "stunfisk_galarian",
+    "speciesName": "Stunfisk (Galarian)",
+    "moveset": [
+      "MUD_SHOT",
+      "ROCK_SLIDE",
+      "EARTHQUAKE"
+    ],
+    "score": 73.2,
+    "scores": [
+      69.3,
+      67.7,
+      64.7,
+      79.7,
+      47.5,
+      83.2
+    ]
+  },
+  {
+    "speciesId": "alakazam",
+    "speciesName": "Alakazam",
+    "moveset": [
+      "COUNTER",
+      "FIRE_PUNCH",
+      "SHADOW_BALL"
+    ],
+    "score": 72.9,
+    "scores": [
+      69,
+      74.3,
+      62.4,
+      78.2,
+      35.7,
+      86.8
+    ]
+  },
+  {
+    "speciesId": "magmortar_shadow",
+    "speciesName": "Magmortar (Shadow)",
+    "moveset": [
+      "FIRE_SPIN",
+      "FIRE_PUNCH",
+      "BRICK_BREAK"
+    ],
+    "score": 72.9,
+    "scores": [
+      73.6,
+      72.3,
+      57.9,
+      75.6,
+      42.3,
+      85.7
+    ]
+  },
+  {
+    "speciesId": "ampharos",
+    "speciesName": "Ampharos",
+    "moveset": [
+      "VOLT_SWITCH",
+      "THUNDER_PUNCH",
+      "ZAP_CANNON"
+    ],
+    "score": 72.4,
+    "scores": [
+      76,
+      67.4,
+      38.7,
+      68.7,
+      56.4,
+      82.7
+    ]
+  },
+  {
+    "speciesId": "alakazam_shadow",
+    "speciesName": "Alakazam (Shadow)",
+    "moveset": [
+      "COUNTER",
+      "FIRE_PUNCH",
+      "SHADOW_BALL"
+    ],
+    "score": 72.3,
+    "scores": [
+      66.2,
+      79.5,
+      38.9,
+      70.4,
+      37.2,
+      86.8
+    ]
+  },
+  {
+    "speciesId": "weavile",
+    "speciesName": "Weavile",
+    "moveset": [
+      "SNARL",
+      "AVALANCHE",
+      "FOCUS_BLAST"
+    ],
+    "score": 72.1,
+    "scores": [
+      67.3,
+      77.1,
+      34.7,
+      76,
+      27.9,
+      94.1
+    ]
+  },
+  {
+    "speciesId": "torterra",
+    "speciesName": "Torterra",
+    "moveset": [
+      "RAZOR_LEAF",
+      "SAND_TOMB",
+      "FRENZY_PLANT"
+    ],
+    "score": 72,
+    "scores": [
+      73.9,
+      68.7,
+      49.1,
+      67.4,
+      66.9,
+      79.7
+    ]
+  },
+  {
+    "speciesId": "ampharos_shadow",
+    "speciesName": "Ampharos (Shadow)",
+    "moveset": [
+      "VOLT_SWITCH",
+      "THUNDER_PUNCH",
+      "FOCUS_BLAST"
+    ],
+    "score": 71.8,
+    "scores": [
+      69.2,
+      63.2,
+      43.9,
+      75.4,
+      54.1,
+      85.8
+    ]
+  },
+  {
+    "speciesId": "torterra_shadow",
+    "speciesName": "Torterra (Shadow)",
+    "moveset": [
+      "RAZOR_LEAF",
+      "SAND_TOMB",
+      "FRENZY_PLANT"
+    ],
+    "score": 71.7,
+    "scores": [
+      73.9,
+      66.8,
+      51.9,
+      68.5,
+      65,
+      79.7
+    ]
+  },
+  {
+    "speciesId": "cryogonal",
+    "speciesName": "Cryogonal",
+    "moveset": [
+      "ICE_SHARD",
+      "NIGHT_SLASH",
+      "SOLAR_BEAM"
+    ],
+    "score": 71.6,
+    "scores": [
+      74,
+      68.1,
+      51.9,
+      69,
+      54.5,
+      83.2
+    ]
+  },
+  {
+    "speciesId": "clefable",
+    "speciesName": "Clefable",
+    "moveset": [
+      "CHARM",
+      "METEOR_MASH",
+      "PSYCHIC"
+    ],
+    "score": 71.3,
+    "scores": [
+      74.4,
+      54.2,
+      51.2,
+      64.5,
+      61,
+      98.5
+    ]
+  },
+  {
+    "speciesId": "luxray",
+    "speciesName": "Luxray",
+    "moveset": [
+      "SPARK",
+      "WILD_CHARGE",
+      "CRUNCH"
+    ],
+    "score": 71.3,
+    "scores": [
+      53.8,
+      74.7,
+      61.4,
+      78.7,
+      31.1,
+      100
+    ]
+  },
+  {
+    "speciesId": "ursaring",
+    "speciesName": "Ursaring",
+    "moveset": [
+      "SHADOW_CLAW",
+      "CLOSE_COMBAT",
+      "HYPER_BEAM"
+    ],
+    "score": 71.2,
+    "scores": [
+      64,
+      78.9,
+      45.5,
+      68.3,
+      33.4,
+      90.9
+    ]
+  },
+  {
+    "speciesId": "hippowdon",
+    "speciesName": "Hippowdon",
+    "moveset": [
+      "FIRE_FANG",
+      "BODY_SLAM",
+      "EARTH_POWER"
+    ],
+    "score": 70.9,
+    "scores": [
+      67.5,
+      71.9,
+      56.3,
+      65.6,
+      54.9,
+      89.9
+    ]
+  },
+  {
+    "speciesId": "leafeon",
+    "speciesName": "Leafeon",
+    "moveset": [
+      "RAZOR_LEAF",
+      "LEAF_BLADE",
+      "LAST_RESORT"
+    ],
+    "score": 70.8,
+    "scores": [
+      68.4,
+      67.6,
+      42.1,
+      64.7,
+      61.7,
+      99.2
+    ]
+  },
+  {
+    "speciesId": "magmortar",
+    "speciesName": "Magmortar",
+    "moveset": [
+      "FIRE_SPIN",
+      "FIRE_PUNCH",
+      "BRICK_BREAK"
+    ],
+    "score": 70.8,
+    "scores": [
+      74.3,
+      61.9,
+      53.6,
+      73.9,
+      42,
+      85.7
+    ]
+  },
+  {
+    "speciesId": "blastoise_shadow",
+    "speciesName": "Blastoise (Shadow)",
+    "moveset": [
+      "WATER_GUN",
+      "HYDRO_CANNON",
+      "ICE_BEAM"
+    ],
+    "score": 70.7,
+    "scores": [
+      61.4,
+      73.9,
+      53.6,
+      69,
+      39.9,
+      98.6
+    ]
+  },
+  {
+    "speciesId": "obstagoon",
+    "speciesName": "Obstagoon",
+    "moveset": [
+      "COUNTER",
+      "NIGHT_SLASH",
+      "CROSS_CHOP"
+    ],
+    "score": 70.6,
+    "scores": [
+      61.5,
+      67.7,
+      47.2,
+      70.4,
+      54.3,
+      100
+    ]
+  },
+  {
+    "speciesId": "golem_alolan",
+    "speciesName": "Golem (Alolan)",
+    "moveset": [
+      "VOLT_SWITCH",
+      "WILD_CHARGE",
+      "STONE_EDGE"
+    ],
+    "score": 70.4,
+    "scores": [
+      59.3,
+      75.2,
+      40,
+      67.1,
+      41.6,
+      96.1
+    ]
+  },
+  {
+    "speciesId": "roserade",
+    "speciesName": "Roserade",
+    "moveset": [
+      "RAZOR_LEAF",
+      "GRASS_KNOT",
+      "SLUDGE_BOMB"
+    ],
+    "score": 69.4,
+    "scores": [
+      69.6,
+      61.1,
+      45.7,
+      62.3,
+      59.5,
+      100
+    ]
+  },
+  {
+    "speciesId": "pinsir_shadow",
+    "speciesName": "Pinsir (Shadow)",
+    "moveset": [
+      "FURY_CUTTER",
+      "X_SCISSOR",
+      "CLOSE_COMBAT"
+    ],
+    "score": 69.3,
+    "scores": [
+      69,
+      65.7,
+      53.2,
+      75.4,
+      36.8,
+      79
+    ]
+  },
+  {
+    "speciesId": "porygon_z",
+    "speciesName": "Porygon-Z",
+    "moveset": [
+      "LOCK_ON",
+      "RETURN",
+      "SOLAR_BEAM"
+    ],
+    "score": 69.3,
+    "scores": [
+      48.3,
+      82.1,
+      53.8,
+      74.4,
+      22.2,
+      95.1
+    ]
+  },
+  {
+    "speciesId": "blastoise",
+    "speciesName": "Blastoise",
+    "moveset": [
+      "WATER_GUN",
+      "HYDRO_CANNON",
+      "RETURN"
+    ],
+    "score": 69.1,
+    "scores": [
+      62.4,
+      71.3,
+      49.7,
+      60.4,
+      52.8,
+      96.3
+    ]
+  },
+  {
+    "speciesId": "gliscor",
+    "speciesName": "Gliscor",
+    "moveset": [
+      "WING_ATTACK",
+      "NIGHT_SLASH",
+      "EARTHQUAKE"
+    ],
+    "score": 68.9,
+    "scores": [
+      60.1,
+      66.5,
+      62.3,
+      74.5,
+      49.8,
+      77.6
+    ]
+  },
+  {
+    "speciesId": "meganium",
+    "speciesName": "Meganium",
+    "moveset": [
+      "VINE_WHIP",
+      "FRENZY_PLANT",
+      "EARTHQUAKE"
+    ],
+    "score": 68.8,
+    "scores": [
+      64.3,
+      66.9,
+      46.8,
+      67.6,
+      47.3,
+      98.2
+    ]
+  },
+  {
+    "speciesId": "weavile_shadow",
+    "speciesName": "Weavile (Shadow)",
+    "moveset": [
+      "SNARL",
+      "AVALANCHE",
+      "FOCUS_BLAST"
+    ],
+    "score": 68.5,
+    "scores": [
+      69.3,
+      73.2,
+      28.3,
+      68,
+      24.3,
+      94.1
+    ]
+  },
+  {
+    "speciesId": "infernape",
+    "speciesName": "Infernape",
+    "moveset": [
+      "FIRE_SPIN",
+      "CLOSE_COMBAT",
+      "BLAST_BURN"
+    ],
+    "score": 68.3,
+    "scores": [
+      59.9,
+      73.2,
+      40.7,
+      67.3,
+      32.3,
+      94.1
+    ]
+  },
+  {
+    "speciesId": "darmanitan_standard",
+    "speciesName": "Darmanitan (Standard)",
+    "moveset": [
+      "FIRE_FANG",
+      "ROCK_SLIDE",
+      "FOCUS_BLAST"
+    ],
+    "score": 68.1,
+    "scores": [
+      67.3,
+      63.9,
+      43.3,
+      67.4,
+      48.2,
+      91.5
+    ]
+  },
+  {
+    "speciesId": "pinsir",
+    "speciesName": "Pinsir",
+    "moveset": [
+      "FURY_CUTTER",
+      "X_SCISSOR",
+      "CLOSE_COMBAT"
+    ],
+    "score": 68,
+    "scores": [
+      64.3,
+      65.2,
+      50.8,
+      73.6,
+      40.3,
+      79
+    ]
+  },
+  {
+    "speciesId": "braviary",
+    "speciesName": "Braviary",
+    "moveset": [
+      "AIR_SLASH",
+      "ROCK_SLIDE",
+      "BRAVE_BIRD"
+    ],
+    "score": 67.9,
+    "scores": [
+      66.4,
+      67.9,
+      47.2,
+      66.9,
+      41,
+      92.2
+    ]
+  },
+  {
+    "speciesId": "klinklang",
+    "speciesName": "Klinklang",
+    "moveset": [
+      "THUNDER_SHOCK",
+      "MIRROR_SHOT",
+      "FLASH_CANNON"
+    ],
+    "score": 67.9,
+    "scores": [
+      70.5,
+      55.7,
+      60.8,
+      74.3,
+      52.6,
+      67.9
+    ]
+  },
+  {
+    "speciesId": "flygon_shadow",
+    "speciesName": "Flygon (Shadow)",
+    "moveset": [
+      "MUD_SHOT",
+      "DRAGON_CLAW",
+      "EARTH_POWER"
+    ],
+    "score": 67.8,
+    "scores": [
+      64.2,
+      70.3,
+      48,
+      72,
+      31.3,
+      84.1
+    ]
+  },
+  {
+    "speciesId": "ninetales_alolan",
+    "speciesName": "Ninetales (Alolan)",
+    "moveset": [
+      "POWDER_SNOW",
+      "ICE_BEAM",
+      "PSYSHOCK"
+    ],
+    "score": 67.1,
+    "scores": [
+      65.6,
+      70.2,
+      40,
+      68,
+      31.9,
+      86
+    ]
+  },
+  {
+    "speciesId": "jolteon",
+    "speciesName": "Jolteon",
+    "moveset": [
+      "VOLT_SWITCH",
+      "DISCHARGE",
+      "THUNDER"
+    ],
+    "score": 66.7,
+    "scores": [
+      60.8,
+      69.2,
+      43.3,
+      64.5,
+      37.2,
+      93.2
+    ]
+  },
+  {
+    "speciesId": "exeggutor",
+    "speciesName": "Exeggutor",
+    "moveset": [
+      "CONFUSION",
+      "SEED_BOMB",
+      "PSYCHIC"
+    ],
+    "score": 66.6,
+    "scores": [
+      64.6,
+      61,
+      46.4,
+      65.6,
+      52,
+      90.6
+    ]
+  },
+  {
+    "speciesId": "sceptile",
+    "speciesName": "Sceptile",
+    "moveset": [
+      "BULLET_SEED",
+      "LEAF_BLADE",
+      "FRENZY_PLANT"
+    ],
+    "score": 66.6,
+    "scores": [
+      60.8,
+      59.7,
+      50.6,
+      70.7,
+      39.5,
+      93.1
+    ]
+  },
+  {
+    "speciesId": "probopass",
+    "speciesName": "Probopass",
+    "moveset": [
+      "ROCK_THROW",
+      "ROCK_SLIDE",
+      "MAGNET_BOMB"
+    ],
+    "score": 66.4,
+    "scores": [
+      65.2,
+      57.9,
+      31.3,
+      59.2,
+      59.3,
+      100
+    ]
+  },
+  {
+    "speciesId": "vileplume_shadow",
+    "speciesName": "Vileplume (Shadow)",
+    "moveset": [
+      "RAZOR_LEAF",
+      "SLUDGE_BOMB",
+      "PETAL_BLIZZARD"
+    ],
+    "score": 66.4,
+    "scores": [
+      67.7,
+      53.1,
+      44.7,
+      60.4,
+      56.4,
+      95.7
+    ]
+  },
+  {
+    "speciesId": "omastar",
+    "speciesName": "Omastar",
+    "moveset": [
+      "MUD_SHOT",
+      "ROCK_SLIDE",
+      "ROCK_BLAST"
+    ],
+    "score": 66.3,
+    "scores": [
+      62.1,
+      60.2,
+      55,
+      71.7,
+      39.5,
+      82.9
+    ]
+  },
+  {
+    "speciesId": "omastar_shadow",
+    "speciesName": "Omastar (Shadow)",
+    "moveset": [
+      "MUD_SHOT",
+      "ROCK_SLIDE",
+      "ROCK_BLAST"
+    ],
+    "score": 66.3,
+    "scores": [
+      61.5,
+      63.4,
+      57,
+      72.5,
+      33,
+      82.9
+    ]
+  },
+  {
+    "speciesId": "muk",
+    "speciesName": "Muk",
+    "moveset": [
+      "POISON_JAB",
+      "THUNDER_PUNCH",
+      "DARK_PULSE"
+    ],
+    "score": 66.1,
+    "scores": [
+      66.4,
+      61.1,
+      53,
+      63.7,
+      45.6,
+      90.7
+    ]
+  },
+  {
+    "speciesId": "salamence",
+    "speciesName": "Salamence",
+    "moveset": [
+      "DRAGON_TAIL",
+      "OUTRAGE",
+      "HYDRO_PUMP"
+    ],
+    "score": 66.1,
+    "scores": [
+      61.5,
+      64.7,
+      38.4,
+      63.3,
+      46.1,
+      97.1
+    ]
+  },
+  {
+    "speciesId": "archeops",
+    "speciesName": "Archeops",
+    "moveset": [
+      "WING_ATTACK",
+      "DRAGON_CLAW",
+      "CRUNCH"
+    ],
+    "score": 65.9,
+    "scores": [
+      63.7,
+      61.8,
+      60.7,
+      67.9,
+      36.8,
+      90.7
+    ]
+  },
+  {
+    "speciesId": "flygon",
+    "speciesName": "Flygon",
+    "moveset": [
+      "MUD_SHOT",
+      "DRAGON_CLAW",
+      "EARTHQUAKE"
+    ],
+    "score": 65.7,
+    "scores": [
+      65.1,
+      52.6,
+      44.1,
+      76.5,
+      30.2,
+      78.5
+    ]
+  },
+  {
+    "speciesId": "rampardos",
+    "speciesName": "Rampardos",
+    "moveset": [
+      "SMACK_DOWN",
+      "ROCK_SLIDE",
+      "FLAMETHROWER"
+    ],
+    "score": 65.5,
+    "scores": [
+      67.7,
+      52,
+      40.3,
+      58.7,
+      52.6,
+      97.9
+    ]
+  },
+  {
+    "speciesId": "emboar",
+    "speciesName": "Emboar",
+    "moveset": [
+      "EMBER",
+      "ROCK_SLIDE",
+      "FOCUS_BLAST"
+    ],
+    "score": 65,
+    "scores": [
+      59.2,
+      61,
+      39.3,
+      69.5,
+      38,
+      84.4
+    ]
+  },
+  {
+    "speciesId": "lickilicky",
+    "speciesName": "Lickilicky",
+    "moveset": [
+      "LICK",
+      "BODY_SLAM",
+      "EARTHQUAKE"
+    ],
+    "score": 64.9,
+    "scores": [
+      54.6,
+      61.8,
+      57.5,
+      66.6,
+      44.1,
+      93.5
+    ]
+  },
+  {
+    "speciesId": "politoed_shadow",
+    "speciesName": "Politoed (Shadow)",
+    "moveset": [
+      "BUBBLE",
+      "SURF",
+      "EARTHQUAKE"
+    ],
+    "score": 64.8,
+    "scores": [
+      60.1,
+      60.7,
+      48.3,
+      68.5,
+      32.6,
+      92.8
+    ]
+  },
+  {
+    "speciesId": "drifblim",
+    "speciesName": "Drifblim",
+    "moveset": [
+      "HEX",
+      "ICY_WIND",
+      "SHADOW_BALL"
+    ],
+    "score": 64.6,
+    "scores": [
+      60.2,
+      57.6,
+      55.8,
+      72,
+      34.4,
+      80.3
+    ]
+  },
+  {
+    "speciesId": "exeggutor_shadow",
+    "speciesName": "Exeggutor (Shadow)",
+    "moveset": [
+      "CONFUSION",
+      "SEED_BOMB",
+      "SOLAR_BEAM"
+    ],
+    "score": 64.6,
+    "scores": [
+      66.4,
+      53.3,
+      44,
+      63.7,
+      48,
+      86.2
+    ]
+  },
+  {
+    "speciesId": "rhydon",
+    "speciesName": "Rhydon",
+    "moveset": [
+      "MUD_SLAP",
+      "SURF",
+      "STONE_EDGE"
+    ],
+    "score": 64.6,
+    "scores": [
+      56.7,
+      67.6,
+      41.6,
+      62.9,
+      38.4,
+      87.5
+    ]
+  },
+  {
+    "speciesId": "samurott",
+    "speciesName": "Samurott",
+    "moveset": [
+      "FURY_CUTTER",
+      "MEGAHORN",
+      "HYDRO_PUMP"
+    ],
+    "score": 64.6,
+    "scores": [
+      55.5,
+      70,
+      46.9,
+      68.1,
+      25.2,
+      88.1
+    ]
+  },
+  {
+    "speciesId": "donphan",
+    "speciesName": "Donphan",
+    "moveset": [
+      "COUNTER",
+      "HEAVY_SLAM",
+      "PLAY_ROUGH"
+    ],
+    "score": 64.5,
+    "scores": [
+      56.4,
+      66.5,
+      40.5,
+      59.5,
+      43.1,
+      93.8
+    ]
+  },
+  {
+    "speciesId": "muk_shadow",
+    "speciesName": "Muk (Shadow)",
+    "moveset": [
+      "POISON_JAB",
+      "THUNDER_PUNCH",
+      "ACID_SPRAY"
+    ],
+    "score": 64.5,
+    "scores": [
+      64.2,
+      55.8,
+      40.3,
+      57.7,
+      51.7,
+      100
+    ]
+  },
+  {
+    "speciesId": "carracosta",
+    "speciesName": "Carracosta",
+    "moveset": [
+      "ROCK_THROW",
+      "BODY_SLAM",
+      "SURF"
+    ],
+    "score": 64.2,
+    "scores": [
+      61.4,
+      57.9,
+      50.2,
+      63.4,
+      47.1,
+      92.3
+    ]
+  },
+  {
+    "speciesId": "golem",
+    "speciesName": "Golem",
+    "moveset": [
+      "MUD_SHOT",
+      "STONE_EDGE",
+      "EARTHQUAKE"
+    ],
+    "score": 64.2,
+    "scores": [
+      53.8,
+      61.1,
+      42.8,
+      69,
+      33.8,
+      92.1
+    ]
+  },
+  {
+    "speciesId": "salamence_shadow",
+    "speciesName": "Salamence (Shadow)",
+    "moveset": [
+      "DRAGON_TAIL",
+      "OUTRAGE",
+      "HYDRO_PUMP"
+    ],
+    "score": 64,
+    "scores": [
+      61.7,
+      60,
+      37.9,
+      61.7,
+      44.1,
+      97.1
+    ]
+  },
+  {
+    "speciesId": "vileplume",
+    "speciesName": "Vileplume",
+    "moveset": [
+      "RAZOR_LEAF",
+      "SLUDGE_BOMB",
+      "PETAL_BLIZZARD"
+    ],
+    "score": 63.8,
+    "scores": [
+      63.3,
+      56.1,
+      38,
+      56.8,
+      54.7,
+      95.7
+    ]
+  },
+  {
+    "speciesId": "honchkrow",
+    "speciesName": "Honchkrow",
+    "moveset": [
+      "SNARL",
+      "SKY_ATTACK",
+      "DARK_PULSE"
+    ],
+    "score": 63.3,
+    "scores": [
+      60.1,
+      61.8,
+      34,
+      66.1,
+      26.2,
+      94.6
+    ]
+  },
+  {
+    "speciesId": "piloswine",
+    "speciesName": "Piloswine",
+    "moveset": [
+      "POWDER_SNOW",
+      "AVALANCHE",
+      "STONE_EDGE"
+    ],
+    "score": 63.3,
+    "scores": [
+      53.2,
+      65.8,
+      46.4,
+      64.7,
+      28.7,
+      96.7
+    ]
+  },
+  {
+    "speciesId": "ferrothorn",
+    "speciesName": "Ferrothorn",
+    "moveset": [
+      "BULLET_SEED",
+      "MIRROR_SHOT",
+      "POWER_WHIP"
+    ],
+    "score": 63.1,
+    "scores": [
+      62.1,
+      62.3,
+      47.7,
+      64.2,
+      51.5,
+      69.4
+    ]
+  },
+  {
+    "speciesId": "flareon",
+    "speciesName": "Flareon",
+    "moveset": [
+      "FIRE_SPIN",
+      "FLAMETHROWER",
+      "OVERHEAT"
+    ],
+    "score": 63.1,
+    "scores": [
+      54.6,
+      67.7,
+      33.3,
+      63.3,
+      36.5,
+      77.8
+    ]
+  },
+  {
+    "speciesId": "stoutland",
+    "speciesName": "Stoutland",
+    "moveset": [
+      "LICK",
+      "CRUNCH",
+      "WILD_CHARGE"
+    ],
+    "score": 63,
+    "scores": [
+      46.9,
+      67.3,
+      46,
+      59.2,
+      37.2,
+      100
+    ]
+  },
+  {
+    "speciesId": "steelix",
+    "speciesName": "Steelix",
+    "moveset": [
+      "DRAGON_TAIL",
+      "CRUNCH",
+      "EARTHQUAKE"
+    ],
+    "score": 62.8,
+    "scores": [
+      58.2,
+      61.8,
+      49.2,
+      62.5,
+      45.2,
+      83.4
+    ]
+  },
+  {
+    "speciesId": "poliwrath_shadow",
+    "speciesName": "Poliwrath (Shadow)",
+    "moveset": [
+      "MUD_SHOT",
+      "POWER_UP_PUNCH",
+      "DYNAMIC_PUNCH"
+    ],
+    "score": 62.7,
+    "scores": [
+      59.9,
+      55.5,
+      32.9,
+      69.3,
+      38,
+      72.6
+    ]
+  },
+  {
+    "speciesId": "seismitoad",
+    "speciesName": "Seismitoad",
+    "moveset": [
+      "BUBBLE",
+      "MUDDY_WATER",
+      "EARTH_POWER"
+    ],
+    "score": 62.6,
+    "scores": [
+      59,
+      61.8,
+      39.6,
+      62.7,
+      49,
+      76.7
+    ]
+  },
+  {
+    "speciesId": "aerodactyl",
+    "speciesName": "Aerodactyl",
+    "moveset": [
+      "ROCK_THROW",
+      "ROCK_SLIDE",
+      "ANCIENT_POWER"
+    ],
+    "score": 62.5,
+    "scores": [
+      56.5,
+      61.9,
+      38.1,
+      51.1,
+      51.9,
+      100
+    ]
+  },
+  {
+    "speciesId": "scyther_shadow",
+    "speciesName": "Scyther (Shadow)",
+    "moveset": [
+      "FURY_CUTTER",
+      "NIGHT_SLASH",
+      "X_SCISSOR"
+    ],
+    "score": 62.5,
+    "scores": [
+      60.4,
+      50.8,
+      43.5,
+      65,
+      32.6,
+      100
+    ]
+  },
+  {
+    "speciesId": "durant",
+    "speciesName": "Durant",
+    "moveset": [
+      "BUG_BITE",
+      "X_SCISSOR",
+      "IRON_HEAD"
+    ],
+    "score": 62.3,
+    "scores": [
+      60.8,
+      57.4,
+      51.6,
+      62,
+      39.1,
+      90.2
+    ]
+  },
+  {
+    "speciesId": "exeggutor_alolan",
+    "speciesName": "Exeggutor (Alolan)",
+    "moveset": [
+      "DRAGON_TAIL",
+      "SEED_BOMB",
+      "SOLAR_BEAM"
+    ],
+    "score": 62.1,
+    "scores": [
+      60.7,
+      55,
+      36.8,
+      63.1,
+      43.1,
+      83.4
+    ]
+  },
+  {
+    "speciesId": "crustle",
+    "speciesName": "Crustle",
+    "moveset": [
+      "FURY_CUTTER",
+      "X_SCISSOR",
+      "ROCK_SLIDE"
+    ],
+    "score": 61.6,
+    "scores": [
+      56.8,
+      57.3,
+      57.4,
+      64.6,
+      40.4,
+      80.3
+    ]
+  },
+  {
+    "speciesId": "golurk",
+    "speciesName": "Golurk",
+    "moveset": [
+      "MUD_SLAP",
+      "SHADOW_PUNCH",
+      "DYNAMIC_PUNCH"
+    ],
+    "score": 61.6,
+    "scores": [
+      59.9,
+      53.6,
+      40.1,
+      63.2,
+      37.4,
+      88.5
+    ]
+  },
+  {
+    "speciesId": "kingdra",
+    "speciesName": "Kingdra",
+    "moveset": [
+      "DRAGON_BREATH",
+      "OUTRAGE",
+      "OCTAZOOKA"
+    ],
+    "score": 61.4,
+    "scores": [
+      54.6,
+      62.8,
+      41.5,
+      58,
+      44.8,
+      82.3
+    ]
+  },
+  {
+    "speciesId": "politoed",
+    "speciesName": "Politoed",
+    "moveset": [
+      "BUBBLE",
+      "SURF",
+      "HYDRO_PUMP"
+    ],
+    "score": 61.4,
+    "scores": [
+      51.6,
+      62.4,
+      39.6,
+      58.6,
+      37.8,
+      96
+    ]
+  },
+  {
+    "speciesId": "porygon2",
+    "speciesName": "Porygon2",
+    "moveset": [
+      "LOCK_ON",
+      "RETURN",
+      "SOLAR_BEAM"
+    ],
+    "score": 61.1,
+    "scores": [
+      47.3,
+      69.7,
+      46.5,
+      61,
+      19.5,
+      95.1
+    ]
+  },
+  {
+    "speciesId": "drapion",
+    "speciesName": "Drapion",
+    "moveset": [
+      "BITE",
+      "AQUA_TAIL",
+      "FELL_STINGER"
+    ],
+    "score": 60.8,
+    "scores": [
+      60.4,
+      47.3,
+      47.6,
+      56.6,
+      47.7,
+      100
+    ]
+  },
+  {
+    "speciesId": "staraptor",
+    "speciesName": "Staraptor",
+    "moveset": [
+      "QUICK_ATTACK",
+      "CLOSE_COMBAT",
+      "BRAVE_BIRD"
+    ],
+    "score": 60.6,
+    "scores": [
+      50,
+      63.6,
+      43.7,
+      59.9,
+      28.7,
+      95
+    ]
+  },
+  {
+    "speciesId": "bellossom",
+    "speciesName": "Bellossom",
+    "moveset": [
+      "BULLET_SEED",
+      "LEAF_BLADE",
+      "RETURN"
+    ],
+    "score": 60.4,
+    "scores": [
+      55.7,
+      53.3,
+      46.4,
+      61.5,
+      36.6,
+      95.1
+    ]
+  },
+  {
+    "speciesId": "bellossom_shadow",
+    "speciesName": "Bellossom (Shadow)",
+    "moveset": [
+      "BULLET_SEED",
+      "LEAF_BLADE",
+      "DAZZLING_GLEAM"
+    ],
+    "score": 60.2,
+    "scores": [
+      54.9,
+      52.4,
+      42.1,
+      62.5,
+      31.7,
+      98.9
+    ]
+  },
+  {
+    "speciesId": "blissey",
+    "speciesName": "Blissey",
+    "moveset": [
+      "POUND",
+      "PSYCHIC",
+      "HYPER_BEAM"
+    ],
+    "score": 60.2,
+    "scores": [
+      47.9,
+      68.9,
+      36.3,
+      45,
+      45.2,
+      87.2
+    ]
+  },
+  {
+    "speciesId": "ludicolo",
+    "speciesName": "Ludicolo",
+    "moveset": [
+      "RAZOR_LEAF",
+      "ENERGY_BALL",
+      "ICE_BEAM"
+    ],
+    "score": 59.8,
+    "scores": [
+      57.4,
+      52.3,
+      33.5,
+      51.3,
+      53.2,
+      100
+    ]
+  },
+  {
+    "speciesId": "crobat_shadow",
+    "speciesName": "Crobat (Shadow)",
+    "moveset": [
+      "AIR_SLASH",
+      "SLUDGE_BOMB",
+      "SHADOW_BALL"
+    ],
+    "score": 59.7,
+    "scores": [
+      53.6,
+      48.3,
+      42.3,
+      62.7,
+      37,
+      95.8
+    ]
+  },
+  {
+    "speciesId": "slowbro",
+    "speciesName": "Slowbro",
+    "moveset": [
+      "CONFUSION",
+      "PSYCHIC",
+      "ICE_BEAM"
+    ],
+    "score": 59.5,
+    "scores": [
+      47.2,
+      66.1,
+      30.5,
+      44.5,
+      40.4,
+      100
+    ]
+  },
+  {
+    "speciesId": "abomasnow_shadow",
+    "speciesName": "Abomasnow (Shadow)",
+    "moveset": [
+      "RAZOR_LEAF",
+      "ENERGY_BALL",
+      "OUTRAGE"
+    ],
+    "score": 58.8,
+    "scores": [
+      58.5,
+      45.8,
+      34,
+      51.3,
+      50.5,
+      97.6
+    ]
+  },
+  {
+    "speciesId": "poliwrath",
+    "speciesName": "Poliwrath",
+    "moveset": [
+      "MUD_SHOT",
+      "POWER_UP_PUNCH",
+      "DYNAMIC_PUNCH"
+    ],
+    "score": 58.8,
+    "scores": [
+      52.1,
+      60.8,
+      29.5,
+      58.2,
+      41.8,
+      72.6
+    ]
+  },
+  {
+    "speciesId": "scrafty",
+    "speciesName": "Scrafty",
+    "moveset": [
+      "COUNTER",
+      "POWER_UP_PUNCH",
+      "FOUL_PLAY"
+    ],
+    "score": 58.7,
+    "scores": [
+      55.1,
+      56.5,
+      33.3,
+      55.2,
+      46.7,
+      86.6
+    ]
+  },
+  {
+    "speciesId": "alomomola",
+    "speciesName": "Alomomola",
+    "moveset": [
+      "WATERFALL",
+      "PSYCHIC",
+      "HYDRO_PUMP"
+    ],
+    "score": 58.6,
+    "scores": [
+      48.5,
+      63.2,
+      36.4,
+      47.8,
+      42.2,
+      90.5
+    ]
+  },
+  {
+    "speciesId": "kingler",
+    "speciesName": "Kingler",
+    "moveset": [
+      "MUD_SHOT",
+      "CRABHAMMER",
+      "X_SCISSOR"
+    ],
+    "score": 58.6,
+    "scores": [
+      49.8,
+      54.2,
+      48.3,
+      67,
+      26.6,
+      77.9
+    ]
+  },
+  {
+    "speciesId": "houndoom_shadow",
+    "speciesName": "Houndoom (Shadow)",
+    "moveset": [
+      "FIRE_FANG",
+      "CRUNCH",
+      "FLAMETHROWER"
+    ],
+    "score": 58.5,
+    "scores": [
+      58.2,
+      46.2,
+      35.3,
+      56.6,
+      41.8,
+      94.2
+    ]
+  },
+  {
+    "speciesId": "relicanth",
+    "speciesName": "Relicanth",
+    "moveset": [
+      "WATER_GUN",
+      "AQUA_TAIL",
+      "HYDRO_PUMP"
+    ],
+    "score": 58.5,
+    "scores": [
+      55.4,
+      54.9,
+      44.5,
+      56.2,
+      43.3,
+      88.8
+    ]
+  },
+  {
+    "speciesId": "houndoom",
+    "speciesName": "Houndoom",
+    "moveset": [
+      "FIRE_FANG",
+      "CRUNCH",
+      "FLAMETHROWER"
+    ],
+    "score": 58.3,
+    "scores": [
+      50.7,
+      59.9,
+      32.5,
+      48.7,
+      42,
+      94.2
+    ]
+  },
+  {
+    "speciesId": "bronzong",
+    "speciesName": "Bronzong",
+    "moveset": [
+      "CONFUSION",
+      "PSYSHOCK",
+      "HEAVY_SLAM"
+    ],
+    "score": 58.1,
+    "scores": [
+      58.9,
+      49.5,
+      37.2,
+      51.9,
+      37.8,
+      96.9
+    ]
+  },
+  {
+    "speciesId": "gastrodon_east_sea",
+    "speciesName": "Gastrodon (East)",
+    "moveset": [
+      "MUD_SLAP",
+      "BODY_SLAM",
+      "EARTH_POWER"
+    ],
+    "score": 58.1,
+    "scores": [
+      47.6,
+      56.3,
+      36.5,
+      58.9,
+      36.6,
+      90
+    ]
+  },
+  {
+    "speciesId": "gastrodon_west_sea",
+    "speciesName": "Gastrodon (West)",
+    "moveset": [
+      "MUD_SLAP",
+      "BODY_SLAM",
+      "EARTH_POWER"
+    ],
+    "score": 58.1,
+    "scores": [
+      47.8,
+      56.3,
+      36.5,
+      58.9,
+      36.6,
+      90
+    ]
+  },
+  {
+    "speciesId": "crobat",
+    "speciesName": "Crobat",
+    "moveset": [
+      "AIR_SLASH",
+      "SLUDGE_BOMB",
+      "SHADOW_BALL"
+    ],
+    "score": 58,
+    "scores": [
+      53.2,
+      53.9,
+      38.1,
+      56.3,
+      38.5,
+      95.8
+    ]
+  },
+  {
+    "speciesId": "slowking",
+    "speciesName": "Slowking",
+    "moveset": [
+      "CONFUSION",
+      "PSYCHIC",
+      "BLIZZARD"
+    ],
+    "score": 57.5,
+    "scores": [
+      46.6,
+      61.9,
+      31.2,
+      44.7,
+      41.8,
+      96.4
+    ]
+  },
+  {
+    "speciesId": "nidoqueen",
+    "speciesName": "Nidoqueen",
+    "moveset": [
+      "POISON_JAB",
+      "EARTH_POWER",
+      "EARTHQUAKE"
+    ],
+    "score": 57.4,
+    "scores": [
+      49.8,
+      56.3,
+      35.5,
+      55.4,
+      35.5,
+      95.1
+    ]
+  },
+  {
+    "speciesId": "abomasnow",
+    "speciesName": "Abomasnow",
+    "moveset": [
+      "RAZOR_LEAF",
+      "ENERGY_BALL",
+      "OUTRAGE"
+    ],
+    "score": 57.1,
+    "scores": [
+      55.5,
+      46.3,
+      33.5,
+      49.4,
+      50.3,
+      97.6
+    ]
+  },
+  {
+    "speciesId": "granbull",
+    "speciesName": "Granbull",
+    "moveset": [
+      "SNARL",
+      "CRUNCH",
+      "CLOSE_COMBAT"
+    ],
+    "score": 56.9,
+    "scores": [
+      51.3,
+      55.5,
+      36.1,
+      56.9,
+      24.9,
+      100
+    ]
+  },
+  {
+    "speciesId": "unfezant",
+    "speciesName": "Unfezant",
+    "moveset": [
+      "AIR_SLASH",
+      "SKY_ATTACK",
+      "HYPER_BEAM"
+    ],
+    "score": 56.9,
+    "scores": [
+      51,
+      53.1,
+      40.8,
+      56.8,
+      34.9,
+      90.7
+    ]
+  },
+  {
+    "speciesId": "scyther",
+    "speciesName": "Scyther",
+    "moveset": [
+      "FURY_CUTTER",
+      "NIGHT_SLASH",
+      "X_SCISSOR"
+    ],
+    "score": 56.7,
+    "scores": [
+      53.3,
+      48.3,
+      39.5,
+      55.8,
+      33.8,
+      100
+    ]
+  },
+  {
+    "speciesId": "serperior",
+    "speciesName": "Serperior",
+    "moveset": [
+      "VINE_WHIP",
+      "GRASS_KNOT",
+      "LEAF_TORNADO"
+    ],
+    "score": 56.7,
+    "scores": [
+      54.2,
+      54.9,
+      35.1,
+      54.1,
+      43.9,
+      79.8
+    ]
+  },
+  {
+    "speciesId": "armaldo",
+    "speciesName": "Armaldo",
+    "moveset": [
+      "FURY_CUTTER",
+      "ROCK_BLAST",
+      "CROSS_POISON"
+    ],
+    "score": 56.3,
+    "scores": [
+      50.8,
+      53.3,
+      47.3,
+      55.8,
+      38.5,
+      84.9
+    ]
+  },
+  {
+    "speciesId": "skuntank",
+    "speciesName": "Skuntank",
+    "moveset": [
+      "POISON_JAB",
+      "CRUNCH",
+      "SLUDGE_BOMB"
+    ],
+    "score": 56.3,
+    "scores": [
+      52.6,
+      54.1,
+      46.3,
+      54.7,
+      31.1,
+      94.2
+    ]
+  },
+  {
+    "speciesId": "golduck_shadow",
+    "speciesName": "Golduck (Shadow)",
+    "moveset": [
+      "WATER_GUN",
+      "CROSS_CHOP",
+      "BUBBLE_BEAM"
+    ],
+    "score": 56.1,
+    "scores": [
+      50.7,
+      50.7,
+      41.6,
+      54.3,
+      36.3,
+      100
+    ]
+  },
+  {
+    "speciesId": "stunfisk",
+    "speciesName": "Stunfisk",
+    "moveset": [
+      "MUD_SHOT",
+      "MUD_BOMB",
+      "DISCHARGE"
+    ],
+    "score": 56.1,
+    "scores": [
+      51.9,
+      51.6,
+      41.3,
+      55.2,
+      35.5,
+      91
+    ]
+  },
+  {
+    "speciesId": "espeon",
+    "speciesName": "Espeon",
+    "moveset": [
+      "CONFUSION",
+      "PSYCHIC",
+      "LAST_RESORT"
+    ],
+    "score": 56,
+    "scores": [
+      50.5,
+      54.9,
+      34.4,
+      44.9,
+      42.7,
+      100
+    ]
+  },
+  {
+    "speciesId": "ninetales",
+    "speciesName": "Ninetales",
+    "moveset": [
+      "FIRE_SPIN",
+      "OVERHEAT",
+      "FLAMETHROWER"
+    ],
+    "score": 56,
+    "scores": [
+      44.4,
+      61.3,
+      26.3,
+      54.7,
+      29.4,
+      77.8
+    ]
+  },
+  {
+    "speciesId": "gothitelle",
+    "speciesName": "Gothitelle",
+    "moveset": [
+      "CONFUSION",
+      "ROCK_SLIDE",
+      "PSYCHIC"
+    ],
+    "score": 55.9,
+    "scores": [
+      49.2,
+      56.8,
+      35.5,
+      48.9,
+      35.3,
+      93.2
+    ]
+  },
+  {
+    "speciesId": "nidoking",
+    "speciesName": "Nidoking",
+    "moveset": [
+      "FURY_CUTTER",
+      "EARTH_POWER",
+      "EARTHQUAKE"
+    ],
+    "score": 55.6,
+    "scores": [
+      44.7,
+      52.6,
+      36.4,
+      59.7,
+      23.5,
+      94.1
+    ]
+  },
+  {
+    "speciesId": "ninetales_shadow",
+    "speciesName": "Ninetales (Shadow)",
+    "moveset": [
+      "FIRE_SPIN",
+      "FLAMETHROWER",
+      "OVERHEAT"
+    ],
+    "score": 55.6,
+    "scores": [
+      47.8,
+      57,
+      28.8,
+      57.6,
+      29.4,
+      77.8
+    ]
+  },
+  {
+    "speciesId": "slaking",
+    "speciesName": "Slaking",
+    "moveset": [
+      "YAWN",
+      "BODY_SLAM",
+      "HYPER_BEAM"
+    ],
+    "score": 55.6,
+    "scores": [
+      38.5,
+      63.9,
+      18.9,
+      50.6,
+      24.9,
+      91.9
+    ]
+  },
+  {
+    "speciesId": "walrein",
+    "speciesName": "Walrein",
+    "moveset": [
+      "WATERFALL",
+      "EARTHQUAKE",
+      "WATER_PULSE"
+    ],
+    "score": 55.6,
+    "scores": [
+      51,
+      53.9,
+      35.6,
+      46.6,
+      44.6,
+      92.7
+    ]
+  },
+  {
+    "speciesId": "golduck",
+    "speciesName": "Golduck",
+    "moveset": [
+      "WATER_GUN",
+      "CROSS_CHOP",
+      "BUBBLE_BEAM"
+    ],
+    "score": 55.4,
+    "scores": [
+      51.7,
+      48.6,
+      40.8,
+      52.4,
+      38.4,
+      100
+    ]
+  },
+  {
+    "speciesId": "kabutops",
+    "speciesName": "Kabutops",
+    "moveset": [
+      "FURY_CUTTER",
+      "ANCIENT_POWER",
+      "STONE_EDGE"
+    ],
+    "score": 55.4,
+    "scores": [
+      48.9,
+      59.7,
+      47.9,
+      58.5,
+      21.4,
+      74.5
+    ]
+  },
+  {
+    "speciesId": "cradily",
+    "speciesName": "Cradily",
+    "moveset": [
+      "BULLET_SEED",
+      "GRASS_KNOT",
+      "STONE_EDGE"
+    ],
+    "score": 55.3,
+    "scores": [
+      46.4,
+      56,
+      39.9,
+      54,
+      27.5,
+      93.3
+    ]
+  },
+  {
+    "speciesId": "porygon_z_shadow",
+    "speciesName": "Porygon-Z (Shadow)",
+    "moveset": [
+      "LOCK_ON",
+      "HYPER_BEAM",
+      "BLIZZARD"
+    ],
+    "score": 55.3,
+    "scores": [
+      34.1,
+      68.2,
+      26.7,
+      54.1,
+      18,
+      86.7
+    ]
+  },
+  {
+    "speciesId": "mismagius",
+    "speciesName": "Mismagius",
+    "moveset": [
+      "HEX",
+      "DARK_PULSE",
+      "SHADOW_BALL"
+    ],
+    "score": 54.9,
+    "scores": [
+      46.3,
+      57.8,
+      36.5,
+      56.1,
+      21.4,
+      86.9
+    ]
+  },
+  {
+    "speciesId": "muk_alolan",
+    "speciesName": "Muk (Alolan)",
+    "moveset": [
+      "POISON_JAB",
+      "DARK_PULSE",
+      "ACID_SPRAY"
+    ],
+    "score": 54.7,
+    "scores": [
+      55.2,
+      57.6,
+      34.7,
+      52.5,
+      45.4,
+      53.4
+    ]
+  },
+  {
+    "speciesId": "mismagius_shadow",
+    "speciesName": "Mismagius (Shadow)",
+    "moveset": [
+      "HEX",
+      "DARK_PULSE",
+      "SHADOW_BALL"
+    ],
+    "score": 54.6,
+    "scores": [
+      42.5,
+      59.5,
+      29.2,
+      53.9,
+      22.6,
+      86.9
+    ]
+  },
+  {
+    "speciesId": "forretress",
+    "speciesName": "Forretress",
+    "moveset": [
+      "BUG_BITE",
+      "SAND_TOMB",
+      "MIRROR_SHOT"
+    ],
+    "score": 54.5,
+    "scores": [
+      51.3,
+      48.7,
+      41.2,
+      48.4,
+      41.4,
+      100
+    ]
+  },
+  {
+    "speciesId": "tentacruel",
+    "speciesName": "Tentacruel",
+    "moveset": [
+      "POISON_JAB",
+      "ACID_SPRAY",
+      "HYDRO_PUMP"
+    ],
+    "score": 54.2,
+    "scores": [
+      53.9,
+      51.6,
+      32.1,
+      54,
+      49.6,
+      60.7
+    ]
+  },
+  {
+    "speciesId": "sawk",
+    "speciesName": "Sawk",
+    "moveset": [
+      "POISON_JAB",
+      "BODY_SLAM",
+      "FOCUS_BLAST"
+    ],
+    "score": 53.9,
+    "scores": [
+      47.3,
+      48.4,
+      43.3,
+      58,
+      29,
+      79.1
+    ]
+  },
+  {
+    "speciesId": "umbreon",
+    "speciesName": "Umbreon",
+    "moveset": [
+      "SNARL",
+      "FOUL_PLAY",
+      "DARK_PULSE"
+    ],
+    "score": 53.4,
+    "scores": [
+      47.2,
+      50.5,
+      35.5,
+      49.6,
+      35.5,
+      98.6
+    ]
+  },
+  {
+    "speciesId": "yanmega",
+    "speciesName": "Yanmega",
+    "moveset": [
+      "BUG_BITE",
+      "AERIAL_ACE",
+      "ANCIENT_POWER"
+    ],
+    "score": 53.3,
+    "scores": [
+      45.8,
+      50.8,
+      34.4,
+      49.6,
+      34.4,
+      100
+    ]
+  },
+  {
+    "speciesId": "starmie",
+    "speciesName": "Starmie",
+    "moveset": [
+      "WATER_GUN",
+      "PSYCHIC",
+      "ICE_BEAM"
+    ],
+    "score": 51.2,
+    "scores": [
+      42,
+      51.5,
+      29.7,
+      42.1,
+      34.9,
+      100
+    ]
+  },
+  {
+    "speciesId": "porygon2_shadow",
+    "speciesName": "Porygon2 (Shadow)",
+    "moveset": [
+      "LOCK_ON",
+      "HYPER_BEAM",
+      "SOLAR_BEAM"
+    ],
+    "score": 50.9,
+    "scores": [
+      24.4,
+      65.7,
+      20.9,
+      45.5,
+      17.8,
+      100
+    ]
+  },
+  {
+    "speciesId": "kangaskhan",
+    "speciesName": "Kangaskhan",
+    "moveset": [
+      "MUD_SLAP",
+      "POWER_UP_PUNCH",
+      "STOMP"
+    ],
+    "score": 50.4,
+    "scores": [
+      47.2,
+      47.1,
+      31.2,
+      45.2,
+      38.2,
+      87.6
+    ]
+  },
+  {
+    "speciesId": "sandslash",
+    "speciesName": "Sandslash",
+    "moveset": [
+      "MUD_SHOT",
+      "BULLDOZE",
+      "EARTHQUAKE"
+    ],
+    "score": 49.8,
+    "scores": [
+      40.6,
+      47.5,
+      29.9,
+      54.3,
+      17.3,
+      86.4
+    ]
+  },
+  {
+    "speciesId": "miltank",
+    "speciesName": "Miltank",
+    "moveset": [
+      "TACKLE",
+      "BODY_SLAM",
+      "ICE_BEAM"
+    ],
+    "score": 48.9,
+    "scores": [
+      39.4,
+      49.7,
+      30.7,
+      38.6,
+      35.3,
+      96.6
+    ]
+  },
+  {
+    "speciesId": "lunatone",
+    "speciesName": "Lunatone",
+    "moveset": [
+      "CONFUSION",
+      "ROCK_SLIDE",
+      "PSYCHIC"
+    ],
+    "score": 48.4,
+    "scores": [
+      41.3,
+      47.8,
+      26.8,
+      41.3,
+      29.8,
+      95.8
+    ]
+  },
+  {
+    "speciesId": "solrock",
+    "speciesName": "Solrock",
+    "moveset": [
+      "CONFUSION",
+      "ROCK_SLIDE",
+      "PSYCHIC"
+    ],
+    "score": 48.4,
+    "scores": [
+      41.3,
+      47.8,
+      26.8,
+      41.3,
+      29.8,
+      95.8
+    ]
+  },
+  {
+    "speciesId": "dusknoir_shadow",
+    "speciesName": "Dusknoir (Shadow)",
+    "moveset": [
+      "HEX",
+      "DARK_PULSE",
+      "OMINOUS_WIND"
+    ],
+    "score": 48.2,
+    "scores": [
+      43.1,
+      43.4,
+      34.5,
+      49.3,
+      22,
+      88.2
+    ]
+  },
+  {
+    "speciesId": "garbodor",
+    "speciesName": "Garbodor",
+    "moveset": [
+      "INFESTATION",
+      "BODY_SLAM",
+      "GUNK_SHOT"
+    ],
+    "score": 47.6,
+    "scores": [
+      46,
+      42.5,
+      34.7,
+      47.8,
+      21.8,
+      82.2
+    ]
+  },
+  {
+    "speciesId": "sandslash_shadow",
+    "speciesName": "Sandslash (Shadow)",
+    "moveset": [
+      "MUD_SHOT",
+      "BULLDOZE",
+      "EARTHQUAKE"
+    ],
+    "score": 46.9,
+    "scores": [
+      39,
+      38.8,
+      29.1,
+      53.9,
+      15.5,
+      86.4
+    ]
+  },
+  {
+    "speciesId": "dusknoir",
+    "speciesName": "Dusknoir",
+    "moveset": [
+      "HEX",
+      "DARK_PULSE",
+      "RETURN"
+    ],
+    "score": 46.3,
+    "scores": [
+      36.6,
+      46.8,
+      30.7,
+      44.6,
+      21.4,
+      88.5
+    ]
+  },
+  {
+    "speciesId": "grumpig",
+    "speciesName": "Grumpig",
+    "moveset": [
+      "EXTRASENSORY",
+      "PSYCHIC",
+      "SHADOW_BALL"
+    ],
+    "score": 46.1,
+    "scores": [
+      33.2,
+      45.4,
+      32.5,
+      43.1,
+      25.4,
+      100
+    ]
+  },
+  {
+    "speciesId": "reuniclus",
+    "speciesName": "Reuniclus",
+    "moveset": [
+      "HIDDEN_POWER_FIGHTING",
+      "SHADOW_BALL",
+      "THUNDER"
+    ],
+    "score": 45.9,
+    "scores": [
+      33.5,
+      50.8,
+      23.4,
+      33.8,
+      27.3,
+      96.3
+    ]
+  },
+  {
+    "speciesId": "sigilyph",
+    "speciesName": "Sigilyph",
+    "moveset": [
+      "AIR_SLASH",
+      "SIGNAL_BEAM",
+      "ANCIENT_POWER"
+    ],
+    "score": 45.3,
+    "scores": [
+      39,
+      41.2,
+      32,
+      42.7,
+      30,
+      89.9
+    ]
+  },
+  {
+    "speciesId": "exploud",
+    "speciesName": "Exploud",
+    "moveset": [
+      "BITE",
+      "CRUNCH",
+      "DISARMING_VOICE"
+    ],
+    "score": 44.1,
+    "scores": [
+      39.4,
+      39.7,
+      31.3,
+      35.1,
+      35.9,
+      100
+    ]
+  },
+  {
+    "speciesId": "throh",
+    "speciesName": "Throh",
+    "moveset": [
+      "LOW_KICK",
+      "BODY_SLAM",
+      "FOCUS_BLAST"
+    ],
+    "score": 44,
+    "scores": [
+      37,
+      44.9,
+      24.9,
+      38.1,
+      26.6,
+      78.6
+    ]
+  },
+  {
+    "speciesId": "tauros",
+    "speciesName": "Tauros",
+    "moveset": [
+      "TACKLE",
+      "HORN_ATTACK",
+      "IRON_HEAD"
+    ],
+    "score": 42.9,
+    "scores": [
+      37.5,
+      39.6,
+      31.2,
+      34.4,
+      34,
+      93.9
+    ]
+  },
+  {
+    "speciesId": "hitmonlee",
+    "speciesName": "Hitmonlee",
+    "moveset": [
+      "ROCK_SMASH",
+      "BRICK_BREAK",
+      "CLOSE_COMBAT"
+    ],
+    "score": 42.7,
+    "scores": [
+      35.9,
+      38,
+      23.2,
+      43.8,
+      25,
+      74.4
+    ]
+  },
+  {
+    "speciesId": "hitmonlee_shadow",
+    "speciesName": "Hitmonlee (Shadow)",
+    "moveset": [
+      "ROCK_SMASH",
+      "BRICK_BREAK",
+      "STONE_EDGE"
+    ],
+    "score": 42.7,
+    "scores": [
+      39.2,
+      36.7,
+      22.6,
+      40.3,
+      26.6,
+      86.4
+    ]
+  },
+  {
+    "speciesId": "weezing",
+    "speciesName": "Weezing",
+    "moveset": [
+      "INFESTATION",
+      "SLUDGE_BOMB",
+      "DARK_PULSE"
+    ],
+    "score": 42.7,
+    "scores": [
+      35.1,
+      41.5,
+      27.2,
+      41.4,
+      15.3,
+      100
+    ]
+  },
+  {
+    "speciesId": "weezing_galarian",
+    "speciesName": "Weezing (Galarian)",
+    "moveset": [
+      "TACKLE",
+      "SLUDGE",
+      "PLAY_ROUGH"
+    ],
+    "score": 39.1,
+    "scores": [
+      35.6,
+      35.1,
+      24.1,
+      32.3,
+      27.1,
+      89.7
+    ]
+  },
+  {
+    "speciesId": "cofagrigus",
+    "speciesName": "Cofagrigus",
+    "moveset": [
+      "ASTONISH",
+      "DARK_PULSE",
+      "SHADOW_BALL"
+    ],
+    "score": 37.1,
+    "scores": [
+      23.1,
+      38.3,
+      23.6,
+      35.1,
+      17.3,
+      87.5
+    ]
+  }
+]
