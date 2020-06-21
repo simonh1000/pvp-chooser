@@ -331,11 +331,15 @@ update message model =
 
 mkRegisteringPage : Model -> Page
 mkRegisteringPage model =
-    let
-        opponents =
-            model |> getCurrentLeague |> .opponents |> sortOpponents
-    in
-    Registering { blankRegistering | opponents = opponents }
+    if model.page == Intro then
+        Intro
+
+    else
+        let
+            opponents =
+                model |> getCurrentLeague |> .opponents |> sortOpponents
+        in
+        Registering { blankRegistering | opponents = opponents }
 
 
 andPersist : Model -> ( Model, Cmd msg )
