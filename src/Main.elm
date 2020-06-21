@@ -1074,10 +1074,6 @@ summariseTeamInner attacks pokemons =
 -- -------------------
 
 
-ppFloat =
-    FormatNumber.format { usLocale | decimals = Exact 1 }
-
-
 viewNameTitle : String -> Html msg
 viewNameTitle name =
     h3 [ class "text-xl font-bold truncate ml-1" ] [ text name ]
@@ -1103,6 +1099,8 @@ viewPokedexResistsAndWeaknesses entry =
     ]
 
 
+{-| returns a dictionary of attack effectiveness against the list of types
+-}
 getDefenceMeta : Effectiveness -> List PType -> AL.Dict PType Float
 getDefenceMeta effectiveness tps =
     let
@@ -1231,10 +1229,12 @@ toggleBtn msg expanded =
         [ matIcon <| ifThenElse expanded "chevron-down" "chevron-right" ]
 
 
+cardClass : String
 cardClass =
     "rounded overflow-hidden shadow-lg p-1 bg-white"
 
 
+pvpPokeLogo : Html msg
 pvpPokeLogo =
     img
         [ src "images/pvpoke.png"
@@ -1310,8 +1310,14 @@ badge col str =
         [ text str ]
 
 
+matIcon : String -> Html msg
 matIcon t =
     span [ class <| "mdi mdi-" ++ t ] []
+
+
+ppFloat : Float -> String
+ppFloat =
+    FormatNumber.format { usLocale | decimals = Exact 1 }
 
 
 

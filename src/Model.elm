@@ -204,7 +204,10 @@ type alias League =
 
 blankLeague : League
 blankLeague =
-    League Dict.empty blankTeam Dict.empty
+    { myPokemon = Dict.empty
+    , team = blankTeam
+    , opponents = Dict.empty
+    }
 
 
 decodeLeague : Decoder League
@@ -532,7 +535,8 @@ type alias PokedexEntry =
     , fast : List String
     , charged : List String
     , elite : List String
-    , recMoves : List String
+    , -- from rankings
+      recMoves : List String
     , score : Maybe Float
     }
 
