@@ -24,10 +24,10 @@ mapRanking = ranking => {
     return ranking;
 }
 
-function convert(item) {
+function convert(league, item) {
     let filename = `rankings-${item}.json`;
-    let url = `https://pvpoke.com/data/all/overall/${filename}`;
-    let dstLocation = `../src/assets/${filename}`;
+    let url = `https://pvpoke.com/data/${league}/overall/${filename}`;
+    let dstLocation = `../src/assets/${league}/${filename}`;
     fetch(url)
         .then(res => res.json())
         .then(json => {
@@ -38,6 +38,7 @@ function convert(item) {
 }
 
 getGamemaster();
-convert("1500");
-convert("2500");
-convert("10000");
+convert("all","1500");
+convert("all","2500");
+convert("all","10000");
+convert("premier","10000");

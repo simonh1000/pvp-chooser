@@ -16,6 +16,7 @@ type alias Model =
     , great : League
     , ultra : League
     , master : League
+    , premier : League
     , -- session data
       page : Page
     , chooser : SearchTool
@@ -33,6 +34,7 @@ defaultModel =
     , great = blankLeague
     , ultra = blankLeague
     , master = blankLeague
+    , premier = blankLeague
     , debug = False
     , page = LoadingDex
     , chooser = MyChooser "" Autocomplete.empty
@@ -54,8 +56,11 @@ updateLeague fn model =
         Master ->
             { model | master = fn model.master }
 
+        Premier ->
+            { model | premier = fn model.premier }
 
-getCurrentLeague : { a | season : Season, great : League, ultra : League, master : League } -> League
+
+getCurrentLeague : Model -> League
 getCurrentLeague model =
     case model.season of
         Great ->
@@ -66,6 +71,9 @@ getCurrentLeague model =
 
         Master ->
             model.master
+
+        Premier ->
+            model.premier
 
 
 
@@ -164,6 +172,7 @@ type Season
     = Great
     | Ultra
     | Master
+    | Premier
 
 
 decodeSeason : Decoder Season
@@ -172,21 +181,29 @@ decodeSeason =
         [ ( "Great", Great )
         , ( "Ultra", Ultra )
         , ( "Master", Master )
+        , ( "Premier", Premier )
         ]
 
 
 encodeSeason : Season -> Value
-encodeSeason s =
-    Encode.string <|
-        case s of
-            Great ->
-                "Great"
+encodeSeason =
+    Encode.string << stringFromSeason
 
-            Ultra ->
-                "Ultra"
 
-            Master ->
-                "Master"
+stringFromSeason : Season -> String
+stringFromSeason s =
+    case s of
+        Great ->
+            "Great"
+
+        Ultra ->
+            "Ultra"
+
+        Master ->
+            "Master"
+
+        Premier ->
+            "Premier"
 
 
 

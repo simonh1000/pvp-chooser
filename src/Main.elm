@@ -491,6 +491,10 @@ pvpHeader lst tgt =
 
 pvpFooter : Season -> Html Msg
 pvpFooter tgt =
+    let
+        convert season =
+            ( SwitchSeason season, stringFromSeason season, season == tgt )
+    in
     footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
         [ span [ class "text-sm" ]
             [ span [] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "PvPoke" ] ]
@@ -499,9 +503,10 @@ pvpFooter tgt =
             , span [] [ text ", Feedback: ", a [ href "https://twitter.com/lambda_simon" ] [ text "@lambda_simon" ] ]
             ]
         , mkRadioButtons
-            [ ( SwitchSeason Great, "Great", Great == tgt )
-            , ( SwitchSeason Ultra, "Ultra", Ultra == tgt )
-            , ( SwitchSeason Master, "Master", Master == tgt )
+            [ convert Great
+            , convert Ultra
+            , convert Premier
+            , convert Master
             ]
         ]
 
@@ -1358,6 +1363,9 @@ getRankings season =
 
         Master ->
             get "all/rankings-10000.json"
+
+        Premier ->
+            get "premier/rankings-10000.json"
 
 
 
