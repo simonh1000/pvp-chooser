@@ -204,7 +204,10 @@ type alias League =
 
 blankLeague : League
 blankLeague =
-    League Dict.empty blankTeam Dict.empty
+    { myPokemon = Dict.empty
+    , team = blankTeam
+    , opponents = Dict.empty
+    }
 
 
 decodeLeague : Decoder League
@@ -236,6 +239,19 @@ type alias Pokemon =
     , charged : Set String
     , scores : Dict String Float -- opponent name => score
     }
+
+
+toggleCharged : String -> Pokemon -> Pokemon
+toggleCharged move pokemon =
+    let
+        updater charged =
+            if Set.member move charged then
+                Set.remove move charged
+
+            else
+                Set.insert move charged
+    in
+    { pokemon | charged = updater pokemon.charged }
 
 
 blankPokemon : Pokemon
@@ -519,7 +535,8 @@ type alias PokedexEntry =
     , fast : List String
     , charged : List String
     , elite : List String
-    , recMoves : List String
+    , -- from rankings
+      recMoves : List String
     , score : Maybe Float
     }
 

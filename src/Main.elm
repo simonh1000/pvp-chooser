@@ -20,7 +20,6 @@ import Pokemon exposing (Effectiveness, PType, effectiveness, stringFromPType)
 import Ports
 import Result.Extra as RE
 import Set
-import Task exposing (Task)
 
 
 init : Value -> ( Model, Cmd Msg )
@@ -89,7 +88,6 @@ type Msg
     | SwapTeam Bool -- isTopTwo
       -- Team chooser
     | PinTeamMember String
-    | SetTeam Team
       -- Registering: opponents
     | ToggleOpponent String
     | UpdateOpponentFrequency String Int -- name
@@ -202,7 +200,7 @@ update message model =
         SetAutoComplete chooser ->
             ( { model | chooser = chooser }, Cmd.none )
 
-        -- My Pokemones
+        -- My Pokemons
         ToggleMyPokemon speciesId ->
             model
                 |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| \p -> { p | expanded = not p.expanded }) l.myPokemon })
@@ -214,16 +212,8 @@ update message model =
                 |> andPersist
 
         SelectChargedMove speciesId move ->
-            let
-                updater charged =
-                    if Set.member move charged then
-                        Set.remove move charged
-
-                    else
-                        Set.insert move charged
-            in
             model
-                |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| \p -> { p | charged = updater p.charged }) l.myPokemon })
+                |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| toggleCharged move) l.myPokemon })
                 |> andPersist
 
         RemovePokemon speciesId ->
@@ -253,27 +243,19 @@ update message model =
                 |> updateLeague updater
                 |> andPersist
 
-        -- team chooser
-        SetTeam team ->
-            let
-                updater l =
-                    { l | team = team }
-            in
-            model
-                |> updateLeague updater
-                |> andPersist
-
-        SelectCandidate pokemon ->
-            let
-                fn m =
-                    { m | selectedPokemon = ifThenElse (Just pokemon == m.selectedPokemon) Nothing (Just pokemon) }
-            in
-            ( { model | page = mapRegistering fn model.page }, Cmd.none )
-
         UpdateTeam team ->
+            -- mapRegistering has no effect on TeamChoosing page
             { model | page = mapRegistering (\m -> { m | selectedPokemon = Nothing }) model.page }
                 |> updateLeague (\l -> { l | team = team })
                 |> andPersist
+
+        -- team chooser
+        SelectCandidate pokemon ->
+            let
+                mapFn m =
+                    { m | selectedPokemon = ifThenElse (Just pokemon == m.selectedPokemon) Nothing (Just pokemon) }
+            in
+            ( { model | page = mapRegistering mapFn model.page }, Cmd.none )
 
         SwapTeam isTopTwo ->
             let
@@ -315,12 +297,7 @@ update message model =
                 Ok ( moves, pokedex ) ->
                     ( addScores
                         { model
-                            | page =
-                                if model.page == LoadingDex then
-                                    mkRegisteringPage model
-
-                                else
-                                    model.page
+                            | page = mkRegisteringPage model
                             , moves = moves
                             , pokedex = pokedex
                         }
@@ -730,7 +707,7 @@ viewTeamOptions model league =
                     , ( "mb-1 flex flex-row justify-between cursor-pointer", True )
                     , ( "bg-blue-100", selected )
                     ]
-                , onClick <| SetTeam team
+                , onClick <| UpdateTeam team
                 ]
                 [ span [] [ text title ]
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
@@ -1097,10 +1074,6 @@ summariseTeamInner attacks pokemons =
 -- -------------------
 
 
-ppFloat =
-    FormatNumber.format { usLocale | decimals = Exact 1 }
-
-
 viewNameTitle : String -> Html msg
 viewNameTitle name =
     h3 [ class "text-xl font-bold truncate ml-1" ] [ text name ]
@@ -1121,10 +1094,13 @@ viewPokedexResistsAndWeaknesses entry =
             getDefenceMeta effectiveness entry.types
     in
     [ viewTypes (\_ f -> f > 1.1) effectivenesses "Weak to"
+    , hr [] []
     , viewTypes (\_ f -> f < 0.9) effectivenesses "Resists"
     ]
 
 
+{-| returns a dictionary of attack effectiveness against the list of types
+-}
 getDefenceMeta : Effectiveness -> List PType -> AL.Dict PType Float
 getDefenceMeta effectiveness tps =
     let
@@ -1136,18 +1112,18 @@ getDefenceMeta effectiveness tps =
 
 
 viewTypes : (PType -> Float -> Bool) -> AL.Dict PType Float -> String -> Html msg
-viewTypes fn weaknesses title =
+viewTypes fn moves title =
     let
         ( normals, supers ) =
-            weaknesses
+            moves
                 |> AL.filter fn
                 |> AL.toList
                 |> L.partition (\( _, v ) -> v > 0.5 && v < 1.5)
     in
     div [ class "flex flex-row items-center mb-2" ]
         [ span [ class "mr-3" ] [ text title ]
-        , div [ class "badge-list flex flex-row items-center" ]
-            [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div [ class "flex flex-row" ]
+        , div [ class "badge-list flex flex-col" ]
+            [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             ]
         ]
@@ -1253,10 +1229,12 @@ toggleBtn msg expanded =
         [ matIcon <| ifThenElse expanded "chevron-down" "chevron-right" ]
 
 
+cardClass : String
 cardClass =
     "rounded overflow-hidden shadow-lg p-1 bg-white"
 
 
+pvpPokeLogo : Html msg
 pvpPokeLogo =
     img
         [ src "images/pvpoke.png"
@@ -1332,8 +1310,14 @@ badge col str =
         [ text str ]
 
 
+matIcon : String -> Html msg
 matIcon t =
     span [ class <| "mdi mdi-" ++ t ] []
+
+
+ppFloat : Float -> String
+ppFloat =
+    FormatNumber.format { usLocale | decimals = Exact 1 }
 
 
 
@@ -1366,15 +1350,14 @@ getRankings season =
                 }
     in
     case season of
+        Great ->
+            get "rankings-1500.json"
+
         Ultra ->
             get "rankings-2500.json"
 
         Master ->
             get "rankings-10000.json"
-
-        _ ->
-            Task.succeed (Ok Dict.empty)
-                |> Task.perform (OnRankingData season)
 
 
 
