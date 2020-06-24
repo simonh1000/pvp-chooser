@@ -71,7 +71,7 @@ decodeFlags =
 
 
 type Msg
-    = SwitchPage Page
+    = SwitchPage Bool Page
     | SwitchSeason Season
       -- Autocomplete
     | ACMsg Autocomplete.Msg
@@ -101,8 +101,10 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
-        SwitchPage page ->
-            ( { model | page = page }, Cmd.none )
+        SwitchPage overRideIntro page ->
+            ( switchPage page { model | page = ifThenElse overRideIntro registerPage model.page }
+            , Cmd.none
+            )
 
         SwitchSeason season ->
             if season == model.season then
@@ -296,12 +298,12 @@ update message model =
         OnPokedex res ->
             case res of
                 Ok ( moves, pokedex ) ->
-                    ( addScores
-                        { model
-                            | page = mkRegisteringPage model
-                            , moves = moves
-                            , pokedex = pokedex
-                        }
+                    ( { model
+                        | moves = moves
+                        , pokedex = pokedex
+                      }
+                        |> switchPage registerPage
+                        |> addScores
                     , getRankings model.season
                     )
 
@@ -318,7 +320,7 @@ update message model =
                           }
                             -- pre-populate some opponents
                             |> updateLeague (prePopulateOpponents rankings)
-                            |> (\m -> { m | page = mkRegisteringPage m })
+                            |> switchPage registerPage
                             |> addScores
                         , Cmd.none
                         )
@@ -333,21 +335,28 @@ update message model =
                     )
 
 
-mkRegisteringPage : Model -> Page
-mkRegisteringPage model =
-    case model.page of
-        Intro ->
-            model.page
+switchPage : Page -> Model -> Model
+switchPage page model =
+    let
+        newPage =
+            case ( page, model.page ) of
+                ( _, Intro ) ->
+                    model.page
 
-        FatalError _ ->
-            model.page
+                ( _, FatalError _ ) ->
+                    model.page
 
-        _ ->
-            let
-                opponents =
-                    model |> getCurrentLeague |> .opponents |> sortOpponents
-            in
-            Registering { blankRegistering | opponents = opponents }
+                ( Registering _, _ ) ->
+                    let
+                        opponents =
+                            model |> getCurrentLeague |> .opponents |> sortOpponents
+                    in
+                    Registering { blankRegistering | opponents = opponents }
+
+                _ ->
+                    page
+    in
+    { model | page = newPage }
 
 
 andPersist : Model -> ( Model, Cmd msg )
@@ -445,22 +454,20 @@ view model =
 
         league =
             getCurrentLeague model
-
-        lst =
-            sortOpponents league.opponents
     in
     div [ class "h-screen flex flex-col" ]
-        [ pvpHeader lst model.page
+        [ pvpHeader model.page
         , case model.page of
             Intro ->
                 div [ class "intro flex-grow p-3" ]
                     [ h2 [] [ text "Introduction" ]
                     , p [] [ text "This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and nowhere else." ]
                     , img [ src "images/screenshot.png", class "mb-2" ] []
-                    , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemon' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present)." ]
-                    , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. Consequently, it is unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
+                    , p [] [ text "To start, add some of your pokemon, and select their movesets (PvPoke's recommendations are shown in line)." ]
+                    , p [] [ text "Then add some of the opponents you encounter - a few of the most common are pre-populated for you - and their relative frequency." ]
+                    , p [] [ text "The app then enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. Consequently, it is unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
                     , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
-                    , div [] [ mkStyledButton ( SwitchPage <| Registering blankRegistering, "Start", True ) ]
+                    , div [] [ mkStyledButton ( SwitchPage True registerPage, "Start", True ) ]
                     ]
 
             LoadingDex ->
@@ -503,14 +510,14 @@ sortOpponents opponents =
         |> L.map Tuple.first
 
 
-pvpHeader : List String -> Page -> Html Msg
-pvpHeader lst tgt =
+pvpHeader : Page -> Html Msg
+pvpHeader tgt =
     let
         switcher =
             mkRadioButtons
-                [ ( SwitchPage <| Registering { blankRegistering | opponents = lst }, "Registering", isRegistering tgt )
-                , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
-                , ( SwitchPage Battling, "Battling", Battling == tgt )
+                [ ( SwitchPage False registerPage, "Registering", isRegistering tgt )
+                , ( SwitchPage False TeamOptions, "Team options", TeamOptions == tgt )
+                , ( SwitchPage False Battling, "Battling", Battling == tgt )
                 ]
     in
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ]

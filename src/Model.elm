@@ -107,6 +107,10 @@ type alias RegisteringModel =
     }
 
 
+registerPage =
+    Registering blankRegistering
+
+
 blankRegistering : RegisteringModel
 blankRegistering =
     { opponents = [], selectedPokemon = Nothing }
