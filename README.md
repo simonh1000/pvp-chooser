@@ -12,7 +12,6 @@ The app enables you to build teams of three and to compare them. Each team gets 
 
 A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!
 
-
 ## Installation - see also https://github.com/simonh1000/elm-webpack-starter
 
 Clone this repo into a new project folder and run `npm install`.
@@ -26,11 +25,9 @@ or
 $ npm start --nodebug
 ```
 
-the `--nodebug` removes the Elm debug tool. This can become valuable when your model becomes very large.
+the `--nodebug` removes the Elm debug tool. This can become valuable if your model becomes very large.
 
 Open http://localhost:3000 and start modifying the code in /src.  **Note** that this starter expects you have installed [elm-format globally](https://github.com/avh4/elm-format#installation-). 
-
-An example using Routing is provided in the `navigation` branch
 
 ## Production
 
@@ -39,3 +36,9 @@ Build production assets (js and css together) with:
 ```sh
 npm run prod
 ```
+
+Run the script in scripts directory to update the rankings files from pvpoke
+
+## Changelog
+
+1.1 Add support for Premier Cup

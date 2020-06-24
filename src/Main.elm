@@ -33,6 +33,7 @@ init value =
                         , great = flags.persisted.great
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
+                        , premier = flags.persisted.premier
                         , debug = flags.debug
                     }
 
@@ -70,14 +71,14 @@ decodeFlags =
 
 
 type Msg
-    = SwitchPage Page
+    = SwitchPage Bool Page
     | SwitchSeason Season
       -- Autocomplete
     | ACMsg Autocomplete.Msg
     | ACSearch String
     | ACSelect Bool String -- isMyPokemon name
     | SetAutoComplete SearchTool
-      -- Registering: My pokemons
+      -- Registering: My pokemon
     | ToggleMyPokemon String
     | SelectFastMove String String
     | SelectChargedMove String String
@@ -100,8 +101,10 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
     case message of
-        SwitchPage page ->
-            ( { model | page = page }, Cmd.none )
+        SwitchPage overRideIntro page ->
+            ( switchPage page { model | page = ifThenElse overRideIntro registerPage model.page }
+            , Cmd.none
+            )
 
         SwitchSeason season ->
             if season == model.season then
@@ -131,7 +134,7 @@ update message model =
         ACMsg msg ->
             let
                 handler isMyPokemon search autocomplete =
-                    getRelevantChoices search model.pokedex
+                    getRelevantChoices model.season search model.pokedex
                         |> Autocomplete.update (updateConfig isMyPokemon) msg autocomplete
 
                 ( chooser, c ) =
@@ -200,7 +203,7 @@ update message model =
         SetAutoComplete chooser ->
             ( { model | chooser = chooser }, Cmd.none )
 
-        -- My Pokemons
+        -- My Pokemon
         ToggleMyPokemon speciesId ->
             model
                 |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| \p -> { p | expanded = not p.expanded }) l.myPokemon })
@@ -295,12 +298,12 @@ update message model =
         OnPokedex res ->
             case res of
                 Ok ( moves, pokedex ) ->
-                    ( addScores
-                        { model
-                            | page = mkRegisteringPage model
-                            , moves = moves
-                            , pokedex = pokedex
-                        }
+                    ( { model
+                        | moves = moves
+                        , pokedex = pokedex
+                      }
+                        |> switchPage registerPage
+                        |> addScores
                     , getRankings model.season
                     )
 
@@ -311,11 +314,14 @@ update message model =
             case res of
                 Ok rankings ->
                     if season == model.season then
-                        ( addScores
-                            { model
-                                | pokedex = attachRankings rankings model.pokedex
-                                , errorMessage = Nothing
-                            }
+                        ( { model
+                            | pokedex = attachRankings rankings model.pokedex
+                            , errorMessage = Nothing
+                          }
+                            -- pre-populate some opponents
+                            |> updateLeague (prePopulateOpponents rankings)
+                            |> switchPage registerPage
+                            |> addScores
                         , Cmd.none
                         )
 
@@ -329,21 +335,28 @@ update message model =
                     )
 
 
-mkRegisteringPage : Model -> Page
-mkRegisteringPage model =
-    case model.page of
-        Intro ->
-            model.page
+switchPage : Page -> Model -> Model
+switchPage page model =
+    let
+        newPage =
+            case ( page, model.page ) of
+                ( _, Intro ) ->
+                    model.page
 
-        FatalError _ ->
-            model.page
+                ( _, FatalError _ ) ->
+                    model.page
 
-        _ ->
-            let
-                opponents =
-                    model |> getCurrentLeague |> .opponents |> sortOpponents
-            in
-            Registering { blankRegistering | opponents = opponents }
+                ( Registering _, _ ) ->
+                    let
+                        opponents =
+                            model |> getCurrentLeague |> .opponents |> sortOpponents
+                    in
+                    Registering { blankRegistering | opponents = opponents }
+
+                _ ->
+                    page
+    in
+    { model | page = newPage }
 
 
 andPersist : Model -> ( Model, Cmd msg )
@@ -351,6 +364,25 @@ andPersist model =
     ( addScores model
     , Ports.persist <| encodePersisted model
     )
+
+
+prePopulateOpponents : Dict String RankingEntry -> League -> League
+prePopulateOpponents rankings league =
+    if Dict.isEmpty league.opponents then
+        let
+            opponents =
+                rankings
+                    |> Dict.filter (\k _ -> not <| String.contains "shadow" k)
+                    |> Dict.toList
+                    |> L.sortBy (Tuple.second >> .score >> (*) -1)
+                    |> L.take 5
+                    |> L.map (\( k, _ ) -> ( k, blankOpponent ))
+                    |> Dict.fromList
+        in
+        { league | opponents = opponents }
+
+    else
+        league
 
 
 addScores : Model -> Model
@@ -385,14 +417,21 @@ updateConfig isMyPokemon =
     }
 
 
-getRelevantChoices : String -> Dict String PokedexEntry -> List ( String, PokedexEntry )
-getRelevantChoices search pokedex =
+getRelevantChoices : Season -> String -> Dict String PokedexEntry -> List ( String, PokedexEntry )
+getRelevantChoices season search pokedex =
     let
         search_ =
             String.toLower search
+
+        filterFn =
+            if season == Premier then
+                \_ entry -> not (Set.member "mythical" entry.tags || Set.member "legendary" entry.tags) && String.contains search_ (String.toLower entry.speciesName)
+
+            else
+                \_ entry -> String.contains search_ (String.toLower entry.speciesName)
     in
     pokedex
-        |> Dict.filter (\_ { speciesName } -> String.contains search_ (String.toLower speciesName))
+        |> Dict.filter filterFn
         |> Dict.toList
 
 
@@ -415,22 +454,20 @@ view model =
 
         league =
             getCurrentLeague model
-
-        lst =
-            sortOpponents league.opponents
     in
     div [ class "h-screen flex flex-col" ]
-        [ pvpHeader lst model.page
+        [ pvpHeader model.page
         , case model.page of
             Intro ->
                 div [ class "intro flex-grow p-3" ]
                     [ h2 [] [ text "Introduction" ]
                     , p [] [ text "This app will help you keep track of your pokemon and their types as well as of the competitors you encounter. The data you add is stored on your computer and nowhere else." ]
                     , img [ src "images/screenshot.png", class "mb-2" ] []
-                    , p [] [ text "To start, you add your pokemon for each league, and those that you encounter in combat. You select you pokemons' attacks, and the PvPoke recommendations are shown in line (Ultra League only at present)." ]
-                    , p [] [ text "The app enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. Consequently, it is unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
+                    , p [] [ text "To start, add some of your pokemon, and select their movesets (PvPoke's recommendations are shown in line)." ]
+                    , p [] [ text "Then add some of the opponents you encounter - a few of the most common are pre-populated for you - and their relative frequency." ]
+                    , p [] [ text "The app then enables you to build teams of three and to compare them. Each team gets a score. The absolute value is meaningless, but the relative scores may help you. The algorithm focuses on type dominance and does not take into account the details of energy generation and usage. Consequently, it is unlikely to recommend an unbalanced team, even though some top players are using them - I reached level 8 in season 1 so don't consider me an expert! YMMV" ]
                     , p [] [ text "A summary page is available while battling - perhaps it will help you choose the right attack in the heat of the moment!" ]
-                    , div [] [ mkStyledButton ( SwitchPage <| Registering blankRegistering, "Start", True ) ]
+                    , div [] [ mkStyledButton ( SwitchPage True registerPage, "Start", True ) ]
                     ]
 
             LoadingDex ->
@@ -473,14 +510,14 @@ sortOpponents opponents =
         |> L.map Tuple.first
 
 
-pvpHeader : List String -> Page -> Html Msg
-pvpHeader lst tgt =
+pvpHeader : Page -> Html Msg
+pvpHeader tgt =
     let
         switcher =
             mkRadioButtons
-                [ ( SwitchPage <| Registering { blankRegistering | opponents = lst }, "Registering", isRegistering tgt )
-                , ( SwitchPage TeamOptions, "Team options", TeamOptions == tgt )
-                , ( SwitchPage Battling, "Battling", Battling == tgt )
+                [ ( SwitchPage False registerPage, "Registering", isRegistering tgt )
+                , ( SwitchPage False TeamOptions, "Team options", TeamOptions == tgt )
+                , ( SwitchPage False Battling, "Battling", Battling == tgt )
                 ]
     in
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
@@ -499,6 +536,10 @@ pvpHeader lst tgt =
 
 pvpFooter : Season -> Html Msg
 pvpFooter tgt =
+    let
+        convert season =
+            ( SwitchSeason season, stringFromSeason season, season == tgt )
+    in
     footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
         [ span [ class "text-sm" ]
             [ span [] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "PvPoke" ] ]
@@ -506,11 +547,7 @@ pvpFooter tgt =
             , span [] [ text ", Code: ", a [ href "https://github.com/simonh1000/pvp-chooser" ] [ text "Github" ] ]
             , span [] [ text ", Feedback: ", a [ href "https://twitter.com/lambda_simon" ] [ text "@lambda_simon" ] ]
             ]
-        , mkRadioButtons
-            [ ( SwitchSeason Great, "Great", Great == tgt )
-            , ( SwitchSeason Ultra, "Ultra", Ultra == tgt )
-            , ( SwitchSeason Master, "Master", Master == tgt )
-            ]
+        , seasons |> L.map convert |> mkRadioButtons
         ]
 
 
@@ -551,7 +588,7 @@ viewMyPokemons model m league =
             div [ class "flex flex-row items-center justify-between mb-2" ] <|
                 case model.chooser of
                     MyChooser search state ->
-                        [ viewChooser model.pokedex search state ]
+                        [ viewChooser model.pokedex model.season search state ]
 
                     _ ->
                         [ viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
@@ -574,7 +611,7 @@ viewMyPokemons model m league =
                         ]
                     )
     in
-    [ h2 [] [ text "My Pokemons" ]
+    [ h2 [] [ text <| "My Pokemon for " ++ ppSeason model.season ]
     , chooser
     , if Dict.isEmpty league.myPokemon then
         ul []
@@ -859,7 +896,7 @@ viewOpponentsRegistering model league names =
             div [ class "flex flex-row items-center justify-between mb-2 " ] <|
                 case model.chooser of
                     OpponentChooser search state ->
-                        [ viewChooser model.pokedex search state ]
+                        [ viewChooser model.pokedex model.season search state ]
 
                     _ ->
                         [ viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
@@ -1178,11 +1215,11 @@ viewMoveWithPvPoke attacks entry attack =
 -- -------------------
 
 
-viewChooser : Dict String PokedexEntry -> String -> Autocomplete.State -> Html Msg
-viewChooser pokedex search autocomplete =
+viewChooser : Dict String PokedexEntry -> Season -> String -> Autocomplete.State -> Html Msg
+viewChooser pokedex season search autocomplete =
     let
         choices =
-            getRelevantChoices search pokedex
+            getRelevantChoices season search pokedex
     in
     div [ class "chooser-container flex flex-row justify-between" ]
         [ Autocomplete.view viewConfig autocomplete choices search
@@ -1359,13 +1396,16 @@ getRankings season =
     in
     case season of
         Great ->
-            get "rankings-1500.json"
+            get "all/rankings-1500.json"
 
         Ultra ->
-            get "rankings-2500.json"
+            get "all/rankings-2500.json"
 
         Master ->
-            get "rankings-10000.json"
+            get "all/rankings-10000.json"
+
+        Premier ->
+            get "premier/rankings-10000.json"
 
 
 

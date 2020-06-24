@@ -9,8 +9,11 @@ function getGamemaster() {
     fetch(url)
         .then(res => res.json())
         .then(json => {
-            fs.writeFileSync(dstLocation, JSON.stringify(json));
-            console.log("written", json);
+            let tmp = {};
+            tmp.pokemon = json.pokemon;
+            tmp.moves = json.moves;
+            fs.writeFileSync(dstLocation, JSON.stringify(tmp));
+            console.log("written", tmp);
         })
         .catch(err => console.log("bad fetch", err));
 }
@@ -24,10 +27,10 @@ mapRanking = ranking => {
     return ranking;
 }
 
-function convert(item) {
+function convert(league, item) {
     let filename = `rankings-${item}.json`;
-    let url = `https://pvpoke.com/data/all/overall/${filename}`;
-    let dstLocation = `../src/assets/${filename}`;
+    let url = `https://pvpoke.com/data/${league}/overall/${filename}`;
+    let dstLocation = `../src/assets/${league}/${filename}`;
     fetch(url)
         .then(res => res.json())
         .then(json => {
@@ -38,6 +41,7 @@ function convert(item) {
 }
 
 getGamemaster();
-convert("1500");
-convert("2500");
-convert("10000");
+convert("all","1500");
+convert("all","2500");
+convert("all","10000");
+convert("premier","10000");
