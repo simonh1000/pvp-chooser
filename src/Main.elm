@@ -7,7 +7,7 @@ import Common.CoreHelpers exposing (addCmd, ifThenElse, rejectByList)
 import Dict exposing (Dict)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
-import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupName)
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookup2, lookupName)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -33,7 +33,6 @@ init value =
                         , great = flags.persisted.great
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
-                        , premier = flags.persisted.premier
                         , debug = flags.debug
                     }
 
@@ -452,6 +451,9 @@ view model =
         cls s =
             class <| "p-2 main flex-grow flex flex-row " ++ s
 
+        leagueDex =
+            getCurrentLeagueDex model
+
         league =
             getCurrentLeague model
     in
@@ -475,21 +477,21 @@ view model =
 
             Registering m ->
                 div [ cls "choosing grid grid-cols-1 md:grid-cols-3 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model m league)
-                    , div [ class "my-team flex flex-col" ] (viewTeam model m.selectedPokemon league)
+                    [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model m leagueDex)
+                    , div [ class "my-team flex flex-col" ] (viewTeam model m.selectedPokemon leagueDex)
                     , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
                     ]
 
             TeamOptions ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-4 gap-2" ]
                     [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model league)
-                    , div [ class "my-team flex flex-col" ] (viewTeam model Nothing league)
+                    , div [ class "my-team flex flex-col" ] (viewTeam model Nothing leagueDex)
                     , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
             Battling ->
                 div [ cls "battling grid grid-cols-1 md:grid-cols-3 gap-2" ]
-                    [ div [ class "my-team flex flex-col" ] (viewTeam model Nothing league)
+                    [ div [ class "my-team flex flex-col" ] (viewTeam model Nothing leagueDex)
                     , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
@@ -551,37 +553,13 @@ pvpFooter tgt =
         ]
 
 
-mkRadioButtons : List ( msg, String, Bool ) -> Html msg
-mkRadioButtons list =
-    list
-        |> L.map (mkStyledButton >> (\htm -> li [ class "mr-3" ] [ htm ]))
-        |> ul [ class "flex" ]
-
-
-mkStyledButton : ( msg, String, Bool ) -> Html msg
-mkStyledButton ( msg, txt, selected ) =
-    let
-        cls =
-            if selected then
-                "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
-
-            else
-                "inline-block border border-white rounded hover:border-gray-200 text-blue-500 hover:bg-gray-200 py-1 px-3"
-    in
-    button
-        [ class cls
-        , onClick msg
-        ]
-        [ text txt ]
-
-
 
 -- -------------------
 -- LHS Choosing
 -- -------------------
 
 
-viewMyPokemons : Model -> RegisteringModel -> League -> List (Html Msg)
+viewMyPokemons : Model -> RegisteringModel -> LeagueDex -> List (Html Msg)
 viewMyPokemons model m league =
     let
         chooser =
@@ -595,21 +573,9 @@ viewMyPokemons model m league =
                         , pvpPokeLogo
                         ]
 
-        addData speciesId pokemon =
-            MyPokemonData speciesId pokemon (Dict.get speciesId model.pokedex)
-
-        viewer : MyPokemonData -> Html Msg
-        viewer { speciesId, pokemon, dex } =
-            Maybe.map (viewMyPokemon model m.selectedPokemon speciesId pokemon) dex
-                |> Maybe.withDefault
-                    (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
-                        [ div [ class "flex flex-row items-center justify-between" ]
-                            [ viewNameTitle speciesId
-                            , deleteIcon <| RemovePokemon speciesId
-                            ]
-                        , div [] [ text <| "Unexpected error looking up. Please delete and re-add" ]
-                        ]
-                    )
+        viewer : ( String, MyPokemonData ) -> Html Msg
+        viewer ( speciesId, { pokemon, dex } ) =
+            viewMyPokemon model m.selectedPokemon speciesId pokemon dex
     in
     [ h2 [] [ text <| "My Pokemon for " ++ ppSeason model.season ]
     , chooser
@@ -623,19 +589,11 @@ viewMyPokemons model m league =
       else
         league.myPokemon
             |> rejectByList (L.filterMap extractSpeciesId <| mkTeamList league.team)
-            |> Dict.map addData
-            |> Dict.values
-            |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .score |> Maybe.withDefault 0 |> (*) -1)
+            |> Dict.toList
+            |> L.sortBy (\( _, { dex } ) -> dex.score |> Maybe.withDefault 0 |> (*) -1)
             |> L.map viewer
             |> div []
     ]
-
-
-type alias MyPokemonData =
-    { speciesId : String
-    , pokemon : Pokemon
-    , dex : Maybe PokedexEntry
-    }
 
 
 viewMyPokemon : Model -> Maybe String -> String -> Pokemon -> PokedexEntry -> Html Msg
@@ -772,7 +730,7 @@ viewTeamOptions model league =
 -- -------------------
 
 
-viewTeam : Model -> Maybe String -> League -> List (Html Msg)
+viewTeam : Model -> Maybe String -> LeagueDex -> List (Html Msg)
 viewTeam model selectedPokemon league =
     let
         team =
@@ -780,20 +738,15 @@ viewTeam model selectedPokemon league =
 
         lookupTeamMember : TeamMember -> Result String Pokemon
         lookupTeamMember =
-            extractSpeciesId >> Result.fromMaybe "Team member not chosen" >> Result.andThen (lookupName league.myPokemon)
+            extractSpeciesId >> Result.fromMaybe "Team member not chosen" >> Result.andThen (lookup2 league.myPokemon)
 
         viewMbCand updater mbCand =
             let
                 handler name isPinned =
-                    lookupName league.myPokemon name
-                        |> Result.andThen
-                            (\pokemon ->
-                                model.pokedex
-                                    |> Dict.get name
-                                    |> Maybe.map (Tuple.pair pokemon)
-                                    |> Result.fromMaybe ("Could not look up " ++ name ++ " in pokedex")
-                            )
-                        |> Result.map (\( pokemon, entry ) -> viewTeamMember updater model name entry isPinned pokemon)
+                    league.myPokemon
+                        |> Dict.get name
+                        |> Result.fromMaybe ("Could not look up " ++ name)
+                        |> Result.map (\{ pokemon, dex } -> viewTeamMember updater model name dex isPinned pokemon)
                         |> RE.extract (\err -> [ text err ])
 
                 content =
@@ -1263,6 +1216,30 @@ viewConfig =
 -- -------------------
 -- View Helpers
 -- -------------------
+
+
+mkRadioButtons : List ( msg, String, Bool ) -> Html msg
+mkRadioButtons list =
+    list
+        |> L.map (mkStyledButton >> (\htm -> li [ class "mr-3" ] [ htm ]))
+        |> ul [ class "flex" ]
+
+
+mkStyledButton : ( msg, String, Bool ) -> Html msg
+mkStyledButton ( msg, txt, selected ) =
+    let
+        cls =
+            if selected then
+                "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
+
+            else
+                "inline-block border border-white rounded hover:border-gray-200 text-blue-500 hover:bg-gray-200 py-1 px-3"
+    in
+    button
+        [ class cls
+        , onClick msg
+        ]
+        [ text txt ]
 
 
 toggleBtn : msg -> Bool -> Html msg

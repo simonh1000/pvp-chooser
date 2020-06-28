@@ -3,6 +3,7 @@ module Model exposing (..)
 import Autocomplete exposing (..)
 import Common.CoreHelpers exposing (decodeSimpleCustomTypes, exactMatchString, ifThenElse)
 import Dict exposing (Dict)
+import Dict.Extra as DE
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra as DE exposing (andMap)
 import Json.Encode as Encode
@@ -16,7 +17,6 @@ type alias Model =
     , great : League
     , ultra : League
     , master : League
-    , premier : League
     , -- session data
       page : Page
     , chooser : SearchTool
@@ -34,7 +34,6 @@ defaultModel =
     , great = blankLeague
     , ultra = blankLeague
     , master = blankLeague
-    , premier = blankLeague
     , debug = False
     , page = LoadingDex
     , chooser = MyChooser "" Autocomplete.empty
@@ -57,7 +56,7 @@ updateLeague fn model =
             { model | master = fn model.master }
 
         Premier ->
-            { model | premier = fn model.premier }
+            { model | master = fn model.master }
 
 
 getCurrentLeague : Model -> League
@@ -73,7 +72,7 @@ getCurrentLeague model =
             model.master
 
         Premier ->
-            model.premier
+            model.master
 
 
 
@@ -137,7 +136,6 @@ type alias Persisted =
     , great : League
     , ultra : League
     , master : League
-    , premier : League
     }
 
 
@@ -155,7 +153,6 @@ decodePersisted =
         |> andMap (dec "great")
         |> andMap (dec "ultra")
         |> andMap (dec "master")
-        |> andMap (dec "premier")
 
 
 encodePersisted : Model -> Encode.Value
@@ -165,7 +162,6 @@ encodePersisted model =
         , ( "great", encodeLeague model.great )
         , ( "ultra", encodeLeague model.ultra )
         , ( "master", encodeLeague model.master )
-        , ( "premier", encodeLeague model.premier )
         ]
 
 
@@ -182,6 +178,7 @@ type Season
     | Premier
 
 
+seasons : List Season
 seasons =
     [ Great, Ultra, Master, Premier ]
 
@@ -230,6 +227,60 @@ ppSeason s =
 
         Premier ->
             "Premier Cup"
+
+
+
+-- -----------------------
+-- LeagueDex
+-- -----------------------
+
+
+type alias LeagueDex =
+    { myPokemon : Dict String MyPokemonData
+    , team : Team
+    , opponents : Dict String Opponent -- name => opponent
+    }
+
+
+type alias MyPokemonData =
+    { pokemon : Pokemon
+    , dex : PokedexEntry
+    }
+
+
+getCurrentLeagueDex : Model -> LeagueDex
+getCurrentLeagueDex model =
+    let
+        convert : League -> LeagueDex
+        convert league =
+            { myPokemon =
+                DE.filterMap
+                    (\speciesId pokemon ->
+                        model.pokedex
+                            |> Dict.get speciesId
+                            |> Maybe.map (MyPokemonData pokemon)
+                    )
+                    league.myPokemon
+            , team = league.team
+            , opponents = league.opponents
+            }
+    in
+    case model.season of
+        Great ->
+            convert model.great
+
+        Ultra ->
+            convert model.ultra
+
+        Master ->
+            convert model.master
+
+        Premier ->
+            let
+                league_ =
+                    convert model.master
+            in
+            { league_ | myPokemon = Dict.filter (\_ { dex } -> not <| isLegendary dex) league_.myPokemon }
 
 
 
@@ -588,6 +639,11 @@ type alias PokedexEntry =
       recMoves : List String
     , score : Maybe Float
     }
+
+
+isLegendary : PokedexEntry -> Bool
+isLegendary entry =
+    Set.member "legendary" entry.tags || Set.member "mythical" entry.tags
 
 
 resetRanking : PokedexEntry -> PokedexEntry
