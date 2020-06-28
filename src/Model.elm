@@ -281,11 +281,7 @@ getCurrentLeagueDex model =
             convert model.master
 
         Premier ->
-            let
-                league_ =
-                    convert model.master
-            in
-            { league_ | myPokemon = Dict.filter (\_ { dex } -> not <| isLegendary dex) league_.myPokemon }
+            convert model.premier
 
 
 

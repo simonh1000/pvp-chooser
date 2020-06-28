@@ -94,6 +94,12 @@ lookupName myPokemon speciesId =
         |> Result.fromMaybe ("Could not lookup: " ++ speciesId)
 
 
+lookupMyPokemon : Dict String MyPokemonData -> String -> Maybe Pokemon
+lookupMyPokemon myPokemon speciesId =
+    Dict.get speciesId myPokemon
+        |> Maybe.map .pokemon
+
+
 calcWeightedTotal : Dict String Opponent -> Float
 calcWeightedTotal opponents =
     opponents |> Dict.values |> L.map .frequency |> L.sum |> toFloat

@@ -7,7 +7,7 @@ import Common.CoreHelpers exposing (addCmd, ifThenElse, rejectByList)
 import Dict exposing (Dict)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
-import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupName)
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupMyPokemon, lookupName)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -33,6 +33,7 @@ init value =
                         , great = flags.persisted.great
                         , ultra = flags.persisted.ultra
                         , master = flags.persisted.master
+                        , premier = flags.persisted.premier
                         , debug = flags.debug
                     }
 
@@ -453,9 +454,6 @@ view model =
 
         leagueDex =
             getCurrentLeagueDex model
-
-        league =
-            getCurrentLeague model
     in
     div [ class "h-screen flex flex-col" ]
         [ pvpHeader model.page
@@ -479,20 +477,20 @@ view model =
                 div [ cls "choosing grid grid-cols-1 md:grid-cols-3 gap-2" ]
                     [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model m leagueDex)
                     , div [ class "my-team flex flex-col" ] (viewTeam model m.selectedPokemon leagueDex)
-                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
+                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model leagueDex m.opponents)
                     ]
 
             TeamOptions ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-4 gap-2" ]
                     [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model leagueDex)
                     , div [ class "my-team flex flex-col" ] (viewTeam model Nothing leagueDex)
-                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model leagueDex)
                     ]
 
             Battling ->
                 div [ cls "battling grid grid-cols-1 md:grid-cols-3 gap-2" ]
                     [ div [ class "my-team flex flex-col" ] (viewTeam model Nothing leagueDex)
-                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model leagueDex)
                     ]
 
             FatalError string ->
@@ -841,7 +839,7 @@ viewTeamMember updater model speciesId entry isPinned pokemon =
 -- -------------------
 
 
-viewOpponentsRegistering : Model -> League -> List String -> List (Html Msg)
+viewOpponentsRegistering : Model -> LeagueDex -> List String -> List (Html Msg)
 viewOpponentsRegistering model league names =
     let
         chooser =
@@ -918,7 +916,7 @@ viewOpponentsRegistering model league names =
     ]
 
 
-viewOpponentsBattling : Model -> League -> List (Html Msg)
+viewOpponentsBattling : Model -> LeagueDex -> List (Html Msg)
 viewOpponentsBattling model league =
     let
         team : List ( String, PType )
@@ -999,17 +997,17 @@ checkAttackAgainstDefenderType effectiveness team defenderTypes =
     L.foldr go ( [], [] ) team
 
 
-summariseTeam : Model -> League -> List ( String, PType )
+summariseTeam : Model -> LeagueDex -> List ( String, PType )
 summariseTeam model league =
     [ league.team.cand1
     , league.team.cand2
     , league.team.cand3
     ]
         |> L.filterMap extractSpeciesId
-        |> summariseTeam2 model.moves league.myPokemon
+        |> summariseTeam2 model.moves (Dict.map (\_ -> .pokemon) league.myPokemon)
 
 
-calcTeamScores : Model -> League -> String -> String
+calcTeamScores : Model -> LeagueDex -> String -> String
 calcTeamScores model league opName =
     let
         mkItemInner speciesId pokemon =
@@ -1038,11 +1036,6 @@ summariseTeam2 attacks myPokemon team =
         |> L.filterMap (\speciesId -> Dict.get speciesId myPokemon |> Maybe.map (Tuple.pair speciesId))
         |> Dict.fromList
         |> summariseTeamInner attacks
-
-
-lookupMyPokemon : Dict String Pokemon -> String -> Maybe Pokemon
-lookupMyPokemon myPokemon speciesId =
-    Dict.get speciesId myPokemon
 
 
 summariseTeamInner : Dict String MoveType -> Dict String Pokemon -> List ( String, PType )
