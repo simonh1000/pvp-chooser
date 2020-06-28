@@ -7,7 +7,7 @@ import Common.CoreHelpers exposing (addCmd, ifThenElse, rejectByList)
 import Dict exposing (Dict)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
-import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookup2)
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookup2, lookupName)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -484,7 +484,7 @@ view model =
 
             TeamOptions ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-4 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model league)
+                    [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model leagueDex)
                     , div [ class "my-team flex flex-col" ] (viewTeam model Nothing leagueDex)
                     , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
@@ -690,7 +690,7 @@ summariseMoves attacks pokemon =
 -- -------------------
 
 
-viewTeamOptions : Model -> League -> List (Html Msg)
+viewTeamOptions : Model -> LeagueDex -> List (Html Msg)
 viewTeamOptions model league =
     let
         viewOption : ( Team, Float ) -> Html Msg
@@ -736,9 +736,8 @@ viewTeam model selectedPokemon league =
         team =
             league.team
 
-        lookupTeamMember : TeamMember -> Result String Pokemon
         lookupTeamMember =
-            extractSpeciesId >> Result.fromMaybe "Team member not chosen" >> Result.andThen (lookup2 league.myPokemon)
+            extractSpeciesId >> Result.fromMaybe "Team member not chosen" >> Result.andThen (lookupName league.myPokemon)
 
         viewMbCand updater mbCand =
             let
