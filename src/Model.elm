@@ -3,7 +3,7 @@ module Model exposing (..)
 import Autocomplete exposing (..)
 import Common.CoreHelpers exposing (decodeSimpleCustomTypes, exactMatchString, ifThenElse)
 import Dict exposing (Dict)
-import Dict.Extra as DE
+import Dict.Extra
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra as DE exposing (andMap)
 import Json.Encode as Encode
@@ -17,6 +17,7 @@ type alias Model =
     , great : League
     , ultra : League
     , master : League
+    , premier : League
     , -- session data
       page : Page
     , chooser : SearchTool
@@ -34,6 +35,7 @@ defaultModel =
     , great = blankLeague
     , ultra = blankLeague
     , master = blankLeague
+    , premier = blankLeague
     , debug = False
     , page = LoadingDex
     , chooser = MyChooser "" Autocomplete.empty
@@ -136,6 +138,7 @@ type alias Persisted =
     , great : League
     , ultra : League
     , master : League
+    , premier : League
     }
 
 
@@ -153,6 +156,7 @@ decodePersisted =
         |> andMap (dec "great")
         |> andMap (dec "ultra")
         |> andMap (dec "master")
+        |> andMap (dec "premier")
 
 
 encodePersisted : Model -> Encode.Value
@@ -162,6 +166,7 @@ encodePersisted model =
         , ( "great", encodeLeague model.great )
         , ( "ultra", encodeLeague model.ultra )
         , ( "master", encodeLeague model.master )
+        , ( "premier", encodeLeague model.premier )
         ]
 
 
@@ -254,7 +259,7 @@ getCurrentLeagueDex model =
         convert : League -> LeagueDex
         convert league =
             { myPokemon =
-                DE.filterMap
+                Dict.Extra.filterMap
                     (\speciesId pokemon ->
                         model.pokedex
                             |> Dict.get speciesId

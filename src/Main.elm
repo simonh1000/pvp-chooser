@@ -7,7 +7,7 @@ import Common.CoreHelpers exposing (addCmd, ifThenElse, rejectByList)
 import Dict exposing (Dict)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
-import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookup2, lookupName)
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupName)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -422,12 +422,12 @@ getRelevantChoices season search pokedex =
         search_ =
             String.toLower search
 
-        filterFn =
+        filterFn _ entry =
             if season == Premier then
-                \_ entry -> not (Set.member "mythical" entry.tags || Set.member "legendary" entry.tags) && String.contains search_ (String.toLower entry.speciesName)
+                not (isLegendary entry) && String.contains search_ (String.toLower entry.speciesName)
 
             else
-                \_ entry -> String.contains search_ (String.toLower entry.speciesName)
+                String.contains search_ (String.toLower entry.speciesName)
     in
     pokedex
         |> Dict.filter filterFn
