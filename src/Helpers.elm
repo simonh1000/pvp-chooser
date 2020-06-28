@@ -35,7 +35,7 @@ mkTeams2 tl =
 -- calculate team scores
 
 
-evaluateTeams : League -> List ( Team, Float )
+evaluateTeams : LeagueDex -> List ( Team, Float )
 evaluateTeams league =
     let
         sumFreqs =
@@ -50,13 +50,13 @@ evaluateTeams league =
         newTeam lst =
             L.foldl (addToTeam << Chosen) pinnedTeam lst
 
-        pinnedMembers : List ( String, Pokemon )
+        --pinnedMembers : List ( String, Pokemon )
         pinnedMembers =
             mkTeamList league.team
                 |> L.filterMap getPinnedMember
                 |> L.filterMap (\n -> lookupName league.myPokemon n |> Result.toMaybe |> Maybe.map (Tuple.pair n))
 
-        teams : List ( Team, ( Pokemon, Pokemon, Pokemon ) )
+        teams : List ( Team, ( MyPokemonData, MyPokemonData, MyPokemonData ) )
         teams =
             -- built taking into account which team members are pinned
             case pinnedMembers of
@@ -87,7 +87,7 @@ evaluateTeams league =
         |> L.sortBy (Tuple.second >> (*) -1)
 
 
-lookupName : Dict String Pokemon -> String -> Result String Pokemon
+lookupName : Dict String MyPokemonData -> String -> Result String MyPokemonData
 lookupName myPokemon speciesId =
     myPokemon
         |> Dict.get speciesId
@@ -125,7 +125,7 @@ summariseTeam opponents scores =
 {-| Looks at how we a team will do against each opponent. Teams that are all weak to a particular opponent
 are particularly penalised.
 -}
-evaluateTeam : ( Pokemon, Pokemon, Pokemon ) -> Dict String Float
+evaluateTeam : ( MyPokemonData, MyPokemonData, MyPokemonData ) -> Dict String Float
 evaluateTeam ( p1, p2, p3 ) =
     let
         evalTeam scores =
@@ -144,7 +144,7 @@ evaluateTeam ( p1, p2, p3 ) =
     in
     Dict.foldl
         (\name s1 acc ->
-            case Maybe.map2 (\s2 s3 -> evalTeam [ s1, s2, s3 ]) (Dict.get name p2.scores) (Dict.get name p3.scores) of
+            case Maybe.map2 (\s2 s3 -> evalTeam [ s1, s2, s3 ]) (Dict.get name p2.pokemon.scores) (Dict.get name p3.pokemon.scores) of
                 Just score ->
                     Dict.insert name score acc
 
@@ -152,7 +152,7 @@ evaluateTeam ( p1, p2, p3 ) =
                     acc
         )
         Dict.empty
-        p1.scores
+        p1.pokemon.scores
 
 
 

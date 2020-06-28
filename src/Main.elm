@@ -7,7 +7,7 @@ import Common.CoreHelpers exposing (addCmd, ifThenElse, rejectByList)
 import Dict exposing (Dict)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
-import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookup2, lookupName)
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookup2)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
