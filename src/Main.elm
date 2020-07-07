@@ -452,7 +452,7 @@ view model =
         cls s =
             class <| "p-2 main flex-grow flex flex-row " ++ s
 
-        leagueDex =
+        league =
             getCurrentLeagueDex model
     in
     div [ class "h-screen flex flex-col" ]
@@ -475,22 +475,22 @@ view model =
 
             Registering m ->
                 div [ cls "choosing grid grid-cols-1 md:grid-cols-3 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model m leagueDex)
-                    , div [ class "my-team flex flex-col" ] (viewTeam model m.selectedPokemon leagueDex)
-                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model leagueDex m.opponents)
+                    [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model m league)
+                    , div [ class "my-team flex flex-col" ] (viewTeam model m.selectedPokemon league)
+                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
                     ]
 
             TeamOptions ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-4 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model leagueDex)
-                    , div [ class "my-team flex flex-col" ] (viewTeam model Nothing leagueDex)
-                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model leagueDex)
+                    [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model league)
+                    , div [ class "my-team flex flex-col" ] (viewTeam model Nothing league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
             Battling ->
                 div [ cls "battling grid grid-cols-1 md:grid-cols-3 gap-2" ]
-                    [ div [ class "my-team flex flex-col" ] (viewTeam model Nothing leagueDex)
-                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model leagueDex)
+                    [ div [ class "my-team flex flex-col" ] (viewTeam model Nothing league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
             FatalError string ->
@@ -923,12 +923,8 @@ viewOpponentsBattling model league =
         team =
             summariseTeam model league
 
-        mkBadge ( mySpeciesId, pType ) =
-            model.pokedex
-                |> Dict.get mySpeciesId
-                |> Maybe.map .speciesName
-                |> Maybe.withDefault mySpeciesId
-                |> colouredBadge pType
+        mkBadge name ( _, pType ) =
+            colouredBadge pType name
 
         viewOpponent speciesId entry =
             let
@@ -941,7 +937,7 @@ viewOpponentsBattling model league =
 
                     else
                         div [ class <| "flex flex-row flex-wrap items-baseline ml-4 p-1 " ++ cls ] <|
-                            L.map mkBadge lst
+                            L.map (mkBadge entry.speciesName) lst
             in
             div [ class <| cardClass ++ " flex flex-row  items-center justify-between mb-1" ]
                 [ div [ class "flex flex-row items-center" ]
