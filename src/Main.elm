@@ -390,6 +390,7 @@ addScores model =
     { model
         | great = addScoresToLeague model model.great
         , ultra = addScoresToLeague model model.ultra
+        , premier = addScoresToLeague model model.premier
         , master = addScoresToLeague model model.master
     }
 
