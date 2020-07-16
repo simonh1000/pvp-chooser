@@ -740,7 +740,7 @@ viewTeamOptions model league =
         viewOption ( { cand1, cand2, cand3 } as team, score ) =
             let
                 selected =
-                    team == league.team
+                    getTeamList league.team == getTeamList team
 
                 title =
                     [ cand1, cand2, cand3 ]

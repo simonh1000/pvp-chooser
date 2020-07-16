@@ -395,6 +395,10 @@ mkTeamList t =
     [ t.cand1, t.cand2, t.cand3 ]
 
 
+getTeamList =
+    mkTeamList >> L.filterMap extractSpeciesId >> L.sort
+
+
 removeFromTeam : String -> Team -> Team
 removeFromTeam name team =
     { cand1 = ifThenElse (eqMember name team.cand1) Unset team.cand1
