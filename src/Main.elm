@@ -977,7 +977,7 @@ viewOpponentsBattling model league =
         mkBadge ( mySpeciesId, pType ) =
             model.pokedex
                 |> Dict.get mySpeciesId
-                |> Maybe.map .speciesName
+                |> Maybe.andThen (.speciesName >> String.split " " >> L.head)
                 |> Maybe.withDefault mySpeciesId
                 |> colouredBadge pType
 
