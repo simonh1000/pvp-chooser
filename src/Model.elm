@@ -178,12 +178,12 @@ encodePersisted model =
 type Season
     = Great
     | Ultra
-    | Master
     | Premier
+    | Master
 
 
 seasons =
-    [ Great, Ultra, Master, Premier ]
+    [ Great, Ultra, Premier, Master ]
 
 
 decodeSeason : Decoder Season
