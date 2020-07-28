@@ -187,7 +187,7 @@ evaluateBattle pokedex attacks speciesId pokemon opSpeciesId =
         handler myDexEntry opDexEntry =
             let
                 attackScore =
-                    evaluateAgainstOpponent attacks pokemon (Debug.log "azu" opDexEntry.types)
+                    evaluateAgainstOpponent attacks pokemon opDexEntry.types
 
                 defenceScore =
                     evaluateOpponentAttacks attacks opDexEntry myDexEntry.types
