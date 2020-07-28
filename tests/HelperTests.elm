@@ -36,9 +36,17 @@ mkTeamsTests =
 
 evaluateBattleTests =
     describe "evaluateBattle"
-        [ test "despite a good attack, azumarill repels a stunfisk much better" <|
+        [ test "stunfisk vs Azumarill" <|
             \_ ->
-                evaluateBattle pokedex attacks "stunfisk" stunfisk "Azumarill"
+                evaluateAgainstOpponent attacks stunfisk [ Water, Fairy ]
+                    |> Expect.equal ( "THUNDER_SHOCK, DISCHARGE", 1.6 )
+        , test "Azu vs stunfisk" <|
+            \_ ->
+                evaluateOpponentAttacks attacks azuEntry stunfiskEntry.types
+                    |> Expect.within (Absolute 0.1) 1.36
+        , test "despite a good attack, azumarill repels a stunfisk much better" <|
+            \_ ->
+                evaluateBattle pokedex attacks "stunfisk" stunfisk "azumarill"
                     |> Result.withDefault -1
                     |> Expect.within (Absolute 0.1) 0.8
         ]
@@ -46,10 +54,22 @@ evaluateBattleTests =
 
 evaluateAgainstOpponentTests =
     describe "evaluateAgainstOpponent"
-        [ test "simple" <|
+        [ test "azumarill vs flyer" <|
             \_ ->
                 evaluateAgainstOpponent attacks azumarill [ Flying ]
+                    |> Tuple.second
                     |> Expect.within (Absolute 0.1) 1.3
+        ]
+
+
+evalScoreTests =
+    describe "eval score"
+        [ test "ferrothorn (bullet seed, thunder) -> skarmory" <|
+            \_ ->
+                skarmory
+                    |> Maybe.map .types
+                    |> Maybe.map (evaluateAgainstOpponent attacks ferrothorn)
+                    |> Expect.equal (Just ( "BULLET_SEED, THUNDER", 0.9953125 ))
         ]
 
 
@@ -73,7 +93,7 @@ calculateEffectivenessTests =
                     |> AL.get Water
                     |> Maybe.map (calculateEffectiveness [ Water, Dragon ])
                     |> Expect.equal (Just 0.390625)
-        , test "figher -> alolan marowak" <|
+        , test "fighter -> alolan marowak" <|
             \_ ->
                 effectiveness
                     |> AL.get Fighting
@@ -82,20 +102,13 @@ calculateEffectivenessTests =
         ]
 
 
-evalScoreTests =
-    describe "eval score"
-        [ test "ferrothorn -> skarmory" <|
-            \_ ->
-                skarmory
-                    |> Maybe.map .types
-                    |> Maybe.map (evaluateAgainstOpponent attacks ferrothorn)
-                    |> Expect.equal (Just 0.5078125)
-        ]
-
-
 azumarill : Pokemon
 azumarill =
     getPokemon "azumarill"
+
+
+azuEntry =
+    Dict.get "azumarill" pokedex |> fromJust
 
 
 stunfisk : Pokemon
@@ -103,13 +116,18 @@ stunfisk =
     getPokemon "stunfisk"
 
 
+stunfiskEntry =
+    Dict.get "stunfisk" pokedex |> fromJust
+
+
 ferrothorn : Pokemon
 ferrothorn =
     getPokemon "ferrothorn"
 
 
+skarmory : Maybe PokedexEntry
 skarmory =
-    Dict.get "Skarmory" pokedex
+    Dict.get "skarmory" pokedex
 
 
 fromJust mb =
