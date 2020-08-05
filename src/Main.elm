@@ -170,7 +170,7 @@ update message model =
                         let
                             pokemon =
                                 { blankPokemon
-                                    | fast = model.pokedex |> Dict.get speciesId |> Debug.log "***" |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
+                                    | fast = model.pokedex |> Dict.get speciesId |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
                                     , charged = Set.empty
                                 }
                         in
@@ -590,13 +590,14 @@ viewPvPokeRecs model league =
         mkItem ( speciesId, entry ) =
             li [ class <| cardClass ++ " mb-2 bg-white" ]
                 [ div [ class "flex flex-row justify-between" ]
-                    [ div []
+                    [ div [ class "flex flex-row align-center" ]
                         [ button
                             [ onClick <| ACSelect True speciesId
                             , class "toggle"
                             , title "Add to My Pokemon"
                             ]
                             [ matIcon "plus toggle" ]
+                        , ppTypes entry.types
                         , span [ class "font-bold" ] [ text <| entry.speciesName ++ " " ]
                         ]
                     , div [ class "text-sm" ] [ text (ppFloat <| convScore entry.score) ]
