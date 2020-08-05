@@ -76,7 +76,7 @@ type Msg
       -- Autocomplete
     | ACMsg Autocomplete.Msg
     | ACSearch String
-    | ACSelect Bool String -- isMyPokemon name
+    | ACSelect Bool String -- isMyPokemon (or is selecting an opponent) name
     | SetAutoComplete SearchTool
       -- Registering: My pokemon
     | ToggleMyPokemon String
@@ -170,7 +170,7 @@ update message model =
                         let
                             pokemon =
                                 { blankPokemon
-                                    | fast = model.pokedex |> Dict.get speciesId |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
+                                    | fast = model.pokedex |> Dict.get speciesId |> Debug.log "***" |> Maybe.andThen (\{ fast } -> L.head fast) |> Maybe.withDefault ""
                                     , charged = Set.empty
                                 }
                         in
@@ -183,16 +183,12 @@ update message model =
                     updateLeague updater model
 
                 page =
-                    case model.page of
-                        Registering m ->
-                            if isMyPokemon then
-                                Registering m
+                    case ( model.page, isMyPokemon ) of
+                        ( Registering m, False ) ->
+                            Registering <| { m | opponents = speciesId :: m.opponents }
 
-                            else
-                                Registering <| { m | opponents = speciesId :: m.opponents }
-
-                        p ->
-                            p
+                        _ ->
+                            model.page
             in
             { newModel
                 | chooser = resetSearch model.chooser
@@ -475,10 +471,10 @@ view model =
                 div [ class "loading flex-grow" ] []
 
             Registering m ->
-                div [ cls "choosing grid grid-cols-1 md:grid-cols-3 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col" ] (viewMyPokemons model m league)
-                    , div [ class "my-team flex flex-col" ] (viewTeam model m.selectedPokemon league)
-                    , div [ class "opponents flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
+                div [ cls "choosing grid grid-cols-1 md:grid-cols-5 gap-2" ]
+                    [ div [ class "pvpoke flex flex-col" ] <| viewPvPokeRecs model league
+                    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewMyPokemons model m league)
+                    , div [ class "opponents col-span-2 flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
                     ]
 
             TeamOptions ->
@@ -578,6 +574,51 @@ mkStyledButton ( msg, txt, selected ) =
 
 
 -- -------------------
+-- LHS PvPoke list
+-- -------------------
+
+
+viewPvPokeRecs : Model -> League -> List (Html Msg)
+viewPvPokeRecs model league =
+    let
+        convScore =
+            Maybe.withDefault -99
+
+        alreadyUsed =
+            Dict.keys league.myPokemon
+
+        mkItem ( speciesId, entry ) =
+            li [ class <| cardClass ++ " mb-2 bg-white" ]
+                [ div [ class "flex flex-row justify-between" ]
+                    [ div []
+                        [ button
+                            [ onClick <| ACSelect True speciesId
+                            , class "toggle"
+                            , title "Add to My Pokemon"
+                            ]
+                            [ matIcon "plus toggle" ]
+                        , span [ class "font-bold" ] [ text <| entry.speciesName ++ " " ]
+                        ]
+                    , div [ class "text-sm" ] [ text (ppFloat <| convScore entry.score) ]
+                    ]
+                ]
+
+        recs =
+            model.pokedex
+                |> rejectByList alreadyUsed
+                |> Dict.toList
+                |> L.sortBy (Tuple.second >> .score >> convScore >> (*) -1)
+                |> L.take 40
+                |> L.map mkItem
+                |> ul []
+    in
+    [ h2 [] [ text <| "PvPoke recommendations for " ++ ppSeason model.season ]
+    , recs
+    ]
+
+
+
+-- -------------------
 -- LHS Choosing
 -- -------------------
 
@@ -623,7 +664,7 @@ viewMyPokemons model m league =
 
       else
         league.myPokemon
-            |> rejectByList (L.filterMap extractSpeciesId <| mkTeamList league.team)
+            --|> rejectByList (L.filterMap extractSpeciesId <| mkTeamList league.team)
             |> Dict.map addData
             |> Dict.values
             |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .score |> Maybe.withDefault 0 |> (*) -1)
@@ -875,11 +916,11 @@ viewTeamMember updater model speciesId entry isPinned pokemon =
 
         middlePart =
             case model.page of
-                Registering _ ->
-                    viewAttacksWithRecommendations model.moves entry speciesId pokemon
+                Battling ->
+                    []
 
                 _ ->
-                    []
+                    viewAttacksWithRecommendations model.moves entry speciesId pokemon
     in
     topLine :: middlePart ++ viewPokedexResistsAndWeaknesses entry
 
