@@ -15,9 +15,10 @@ import Set exposing (Set)
 type alias Model =
     { season : Season
     , great : League
+    , ultraPremier : League
     , ultra : League
+    , masterPremier : League
     , master : League
-    , premier : League
     , -- session data
       page : Page
     , chooser : SearchTool
@@ -33,9 +34,10 @@ defaultModel : Model
 defaultModel =
     { season = Great
     , great = blankLeague
+    , ultraPremier = blankLeague
     , ultra = blankLeague
     , master = blankLeague
-    , premier = blankLeague
+    , masterPremier = blankLeague
     , debug = False
     , page = LoadingDex
     , chooser = MyChooser "" Autocomplete.empty
@@ -51,13 +53,16 @@ updateLeague fn model =
         Great ->
             { model | great = fn model.great }
 
+        UltraPremier ->
+            { model | ultraPremier = fn model.ultraPremier }
+
         Ultra ->
             { model | ultra = fn model.ultra }
 
-        Master ->
-            { model | master = fn model.master }
+        MasterPremier ->
+            { model | masterPremier = fn model.masterPremier }
 
-        Premier ->
+        Master ->
             { model | master = fn model.master }
 
 
@@ -67,13 +72,16 @@ getCurrentLeague model =
         Great ->
             model.great
 
+        UltraPremier ->
+            model.ultraPremier
+
         Ultra ->
             model.ultra
 
-        Master ->
-            model.master
+        MasterPremier ->
+            model.masterPremier
 
-        Premier ->
+        Master ->
             model.master
 
 
@@ -136,9 +144,10 @@ isRegistering page =
 type alias Persisted =
     { season : Maybe Season -- Nothing on first load
     , great : League
+    , ultraPremier : League
     , ultra : League
+    , masterPremier : League
     , master : League
-    , premier : League
     }
 
 
@@ -154,9 +163,10 @@ decodePersisted =
     Decode.succeed Persisted
         |> andMap (Decode.maybe <| Decode.field "season" decodeSeason)
         |> andMap (dec "great")
+        |> andMap (dec "ultra-premier")
         |> andMap (dec "ultra")
-        |> andMap (dec "master")
         |> andMap (dec "premier")
+        |> andMap (dec "master")
 
 
 encodePersisted : Model -> Encode.Value
@@ -164,9 +174,10 @@ encodePersisted model =
     Encode.object
         [ ( "season", encodeSeason model.season )
         , ( "great", encodeLeague model.great )
+        , ( "ultra-premier", encodeLeague model.ultraPremier )
         , ( "ultra", encodeLeague model.ultra )
         , ( "master", encodeLeague model.master )
-        , ( "premier", encodeLeague model.premier )
+        , ( "premier", encodeLeague model.masterPremier )
         ]
 
 
@@ -178,14 +189,15 @@ encodePersisted model =
 
 type Season
     = Great
+    | UltraPremier
     | Ultra
+    | MasterPremier
     | Master
-    | Premier
 
 
 seasons : List Season
 seasons =
-    [ Great, Ultra, Master, Premier ]
+    [ Great, UltraPremier, Ultra, MasterPremier, Master ]
 
 
 decodeSeason : Decoder Season
@@ -208,14 +220,17 @@ stringFromSeason s =
         Great ->
             "Great"
 
+        UltraPremier ->
+            "UltraPremier"
+
         Ultra ->
             "Ultra"
 
+        MasterPremier ->
+            "Premier"
+
         Master ->
             "Master"
-
-        Premier ->
-            "Premier"
 
 
 ppSeason : Season -> String
@@ -224,14 +239,17 @@ ppSeason s =
         Great ->
             "Great League"
 
+        UltraPremier ->
+            "Ultra: Premier Cup"
+
         Ultra ->
             "Ultra League"
 
+        MasterPremier ->
+            "Master: Premier Cup"
+
         Master ->
             "Master League"
-
-        Premier ->
-            "Premier Cup"
 
 
 
@@ -274,14 +292,17 @@ getCurrentLeagueDex model =
         Great ->
             convert model.great
 
+        UltraPremier ->
+            convert model.ultraPremier
+
         Ultra ->
             convert model.ultra
 
+        MasterPremier ->
+            convert model.masterPremier
+
         Master ->
             convert model.master
-
-        Premier ->
-            convert model.premier
 
 
 
@@ -445,6 +466,10 @@ mapTeam fn team =
 mkTeamList : Team -> List TeamMember
 mkTeamList t =
     [ t.cand1, t.cand2, t.cand3 ]
+
+
+getTeamList =
+    mkTeamList >> L.filterMap extractSpeciesId >> L.sort
 
 
 removeFromTeam : String -> Team -> Team

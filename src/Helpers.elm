@@ -198,7 +198,7 @@ evaluateBattle pokedex attacks speciesId pokemon opSpeciesId =
                 defenceScore =
                     evaluateOpponentAttacks attacks opDexEntry myDexEntry.types
             in
-            attackScore / defenceScore
+            Tuple.second attackScore / defenceScore
     in
     Maybe.map2 handler (Dict.get speciesId pokedex) (Dict.get opSpeciesId pokedex)
         |> Result.fromMaybe ("could not look up one of : " ++ opSpeciesId ++ ", or " ++ speciesId)
@@ -206,7 +206,7 @@ evaluateBattle pokedex attacks speciesId pokemon opSpeciesId =
 
 {-| Calculates effect of my pokemon's chosen attacks on an opponent
 -}
-evaluateAgainstOpponent : Dict String MoveType -> Pokemon -> List PType -> Float
+evaluateAgainstOpponent : Dict String MoveType -> Pokemon -> List PType -> ( String, Float )
 evaluateAgainstOpponent attacks pokemon opponentTypes =
     let
         lookup attack =
@@ -216,19 +216,18 @@ evaluateAgainstOpponent attacks pokemon opponentTypes =
                 |> Maybe.withDefault -100
                 |> Tuple.pair attack
 
-        bestCharged =
+        ( chargedName, bestCharged ) =
             pokemon.charged
                 |> Set.toList
                 |> L.map lookup
                 |> L.sortBy (\( _, score ) -> score * -1)
                 |> L.head
-                |> Maybe.map Tuple.second
-                |> Maybe.withDefault -100
+                |> Maybe.withDefault ( "no charged", -100 )
 
-        fastAttack =
-            lookup pokemon.fast |> Tuple.second
+        ( fastName, fastAttack ) =
+            lookup pokemon.fast
     in
-    (bestCharged + fastAttack) / 2
+    ( fastName ++ ", " ++ chargedName, (bestCharged + fastAttack) / 2 )
 
 
 {-| Calculates effect of opponent's pokemons' (weighted) average attacks on my pokemon

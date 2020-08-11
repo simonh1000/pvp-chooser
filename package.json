@@ -1,7 +1,7 @@
 {
     "author": "Simon Hampton",
     "name": "elm-pvp-manager",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "description": "Pokemon PVP team manager",
     "main": "index.js",
     "scripts": {
@@ -10,6 +10,7 @@
         "dev": "webpack-dev-server --hot --colors --port 3000",
         "build": "webpack",
         "prod": "export NODE_ENV=production && webpack -p",
+        "pvpoke": "cd scripts && node update-pvpoke.js && cd ..",
         "deploy-local": "npm run prod && cp -r dist/* ~/Sites",
         "analyse": "elm-analyse -s -p 3001 -o"
     },

@@ -31,9 +31,10 @@ init value =
                     { defaultModel
                         | season = Maybe.withDefault Ultra flags.persisted.season
                         , great = flags.persisted.great
+                        , ultraPremier = flags.persisted.ultraPremier
                         , ultra = flags.persisted.ultra
+                        , masterPremier = flags.persisted.masterPremier
                         , master = flags.persisted.master
-                        , premier = flags.persisted.premier
                         , debug = flags.debug
                     }
 
@@ -389,8 +390,9 @@ addScores : Model -> Model
 addScores model =
     { model
         | great = addScoresToLeague model model.great
+        , ultraPremier = addScoresToLeague model model.ultraPremier
         , ultra = addScoresToLeague model model.ultra
-        , premier = addScoresToLeague model model.premier
+        , masterPremier = addScoresToLeague model model.masterPremier
         , master = addScoresToLeague model model.master
     }
 
@@ -425,7 +427,7 @@ getRelevantChoices season search pokedex =
             String.toLower search
 
         filterFn _ entry =
-            if season == Premier then
+            if L.member season [ UltraPremier, MasterPremier ] then
                 not (isLegendary entry) && String.contains search_ (String.toLower entry.speciesName)
 
             else
@@ -539,7 +541,7 @@ pvpFooter : Season -> Html Msg
 pvpFooter tgt =
     let
         convert season =
-            ( SwitchSeason season, stringFromSeason season, season == tgt )
+            ( SwitchSeason season, ppSeason season, season == tgt )
     in
     footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
         [ span [ class "text-sm" ]
@@ -696,7 +698,7 @@ viewTeamOptions model league =
         viewOption ( { cand1, cand2, cand3 } as team, score ) =
             let
                 selected =
-                    team == league.team
+                    getTeamList league.team == getTeamList team
 
                 title =
                     [ cand1, cand2, cand3 ]
@@ -1364,14 +1366,17 @@ getRankings season =
         Great ->
             get "all/rankings-1500.json"
 
+        UltraPremier ->
+            get "premier/rankings-2500.json"
+
         Ultra ->
             get "all/rankings-2500.json"
 
+        MasterPremier ->
+            get "premier/rankings-10000.json"
+
         Master ->
             get "all/rankings-10000.json"
-
-        Premier ->
-            get "premier/rankings-10000.json"
 
 
 
