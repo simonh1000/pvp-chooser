@@ -42,6 +42,7 @@ function convert(league, item) {
 
 getGamemaster();
 convert("all","1500");
+convert("premier","2500");
 convert("all","2500");
-convert("all","10000");
 convert("premier","10000");
+convert("all","10000");
