@@ -14,9 +14,10 @@ import Set exposing (Set)
 type alias Model =
     { season : Season
     , great : League
+    , ultraPremier : League
     , ultra : League
+    , masterPremier : League
     , master : League
-    , premier : League
     , -- session data
       page : Page
     , chooser : SearchTool
@@ -32,9 +33,10 @@ defaultModel : Model
 defaultModel =
     { season = Great
     , great = blankLeague
+    , ultraPremier = blankLeague
     , ultra = blankLeague
     , master = blankLeague
-    , premier = blankLeague
+    , masterPremier = blankLeague
     , debug = False
     , page = LoadingDex
     , chooser = MyChooser "" Autocomplete.empty
@@ -50,14 +52,17 @@ updateLeague fn model =
         Great ->
             { model | great = fn model.great }
 
+        UltraPremier ->
+            { model | ultraPremier = fn model.ultraPremier }
+
         Ultra ->
             { model | ultra = fn model.ultra }
 
+        MasterPremier ->
+            { model | masterPremier = fn model.masterPremier }
+
         Master ->
             { model | master = fn model.master }
-
-        Premier ->
-            { model | premier = fn model.premier }
 
 
 getCurrentLeague : Model -> League
@@ -66,14 +71,17 @@ getCurrentLeague model =
         Great ->
             model.great
 
+        UltraPremier ->
+            model.ultraPremier
+
         Ultra ->
             model.ultra
 
+        MasterPremier ->
+            model.masterPremier
+
         Master ->
             model.master
-
-        Premier ->
-            model.premier
 
 
 
@@ -135,9 +143,10 @@ isRegistering page =
 type alias Persisted =
     { season : Maybe Season -- Nothing on first load
     , great : League
+    , ultraPremier : League
     , ultra : League
+    , masterPremier : League
     , master : League
-    , premier : League
     }
 
 
@@ -153,9 +162,10 @@ decodePersisted =
     Decode.succeed Persisted
         |> andMap (Decode.maybe <| Decode.field "season" decodeSeason)
         |> andMap (dec "great")
+        |> andMap (dec "ultra-premier")
         |> andMap (dec "ultra")
-        |> andMap (dec "master")
         |> andMap (dec "premier")
+        |> andMap (dec "master")
 
 
 encodePersisted : Model -> Encode.Value
@@ -163,9 +173,10 @@ encodePersisted model =
     Encode.object
         [ ( "season", encodeSeason model.season )
         , ( "great", encodeLeague model.great )
+        , ( "ultra-premier", encodeLeague model.ultraPremier )
         , ( "ultra", encodeLeague model.ultra )
         , ( "master", encodeLeague model.master )
-        , ( "premier", encodeLeague model.premier )
+        , ( "premier", encodeLeague model.masterPremier )
         ]
 
 
@@ -177,13 +188,14 @@ encodePersisted model =
 
 type Season
     = Great
+    | UltraPremier
     | Ultra
-    | Premier
+    | MasterPremier
     | Master
 
 
 seasons =
-    [ Great, Ultra, Premier, Master ]
+    [ Great, UltraPremier, Ultra, MasterPremier, Master ]
 
 
 decodeSeason : Decoder Season
@@ -206,14 +218,17 @@ stringFromSeason s =
         Great ->
             "Great"
 
+        UltraPremier ->
+            "UltraPremier"
+
         Ultra ->
             "Ultra"
 
+        MasterPremier ->
+            "Premier"
+
         Master ->
             "Master"
-
-        Premier ->
-            "Premier"
 
 
 ppSeason : Season -> String
@@ -222,14 +237,17 @@ ppSeason s =
         Great ->
             "Great League"
 
+        UltraPremier ->
+            "Ultra: Premier Cup"
+
         Ultra ->
             "Ultra League"
 
+        MasterPremier ->
+            "Master: Premier Cup"
+
         Master ->
             "Master League"
-
-        Premier ->
-            "Premier Cup"
 
 
 
