@@ -792,23 +792,23 @@ viewTeamOptions model league =
         viewOption : ( Team, Float ) -> Html Msg
         viewOption ( { cand1, cand2, cand3 } as team, score ) =
             let
-                selected =
-                    getTeamList league.team == getTeamList team
+                getName cand =
+                    cand |> extractSpeciesId |> Maybe.andThen (\id -> Dict.get id model.pokedex) |> Maybe.map .speciesName |> Maybe.withDefault "error"
 
                 title =
                     [ cand1, cand2, cand3 ]
-                        |> L.filterMap (\c -> c |> extractSpeciesId |> Maybe.andThen (\id -> Dict.get id model.pokedex) |> Maybe.map .speciesName)
-                        |> String.join ", "
+                        |> L.map (\c -> span [ class "flex-1" ] [ text <| getName c ])
+                        |> span [ class "flex flex-grow" ]
             in
             div
                 [ classList
                     [ ( cardClass, True )
                     , ( "mb-1 flex flex-row justify-between cursor-pointer", True )
-                    , ( "bg-blue-100", selected )
+                    , ( "bg-blue-100", getTeamList league.team == getTeamList team )
                     ]
                 , onClick <| UpdateTeam team
                 ]
-                [ span [] [ text title ]
+                [ title
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
                 ]
     in
