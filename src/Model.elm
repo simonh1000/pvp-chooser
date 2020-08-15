@@ -40,7 +40,7 @@ defaultModel =
     , masterPremier = blankLeague
     , debug = False
     , page = LoadingDex
-    , chooser = MyChooser "" Autocomplete.empty
+    , chooser = MyChooser ""
     , errorMessage = Nothing
     , pokedex = Dict.empty
     , moves = Dict.empty
@@ -769,7 +769,7 @@ decodeRankingEntry =
 
 
 type SearchTool
-    = MyChooser String Autocomplete.State
+    = MyChooser String
     | OpponentChooser String Autocomplete.State
     | NoChooser
 
@@ -782,8 +782,8 @@ resetSearch =
 mapSearch : (String -> String) -> SearchTool -> SearchTool
 mapSearch fn chooser =
     case chooser of
-        MyChooser string state ->
-            MyChooser (fn string) state
+        MyChooser string ->
+            MyChooser (fn string)
 
         OpponentChooser string state ->
             OpponentChooser (fn string) state
@@ -795,8 +795,8 @@ mapSearch fn chooser =
 mapAutocomplete : (Autocomplete.State -> Autocomplete.State) -> SearchTool -> SearchTool
 mapAutocomplete fn chooser =
     case chooser of
-        MyChooser string state ->
-            MyChooser string (fn state)
+        MyChooser string ->
+            MyChooser string
 
         OpponentChooser string state ->
             OpponentChooser string (fn state)
