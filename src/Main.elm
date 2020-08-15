@@ -80,6 +80,7 @@ type Msg
     | ACSelect Bool String -- isMyPokemon (or is selecting an opponent) name
     | SetAutoComplete SearchTool
       -- Registering: My pokemon
+    | UpdateSearch String
     | ToggleMyPokemon String
     | SelectFastMove String String
     | SelectChargedMove String String
@@ -140,16 +141,12 @@ update message model =
 
                 ( chooser, c ) =
                     case model.chooser of
-                        MyChooser search autocomplete ->
-                            handler True search autocomplete
-                                |> Tuple.mapFirst (MyChooser search)
-
                         OpponentChooser search autocomplete ->
                             handler False search autocomplete
                                 |> Tuple.mapFirst (OpponentChooser search)
 
-                        NoChooser ->
-                            ( NoChooser, Nothing )
+                        _ ->
+                            ( model.chooser, Nothing )
 
                 model_ =
                     { model | chooser = chooser }
@@ -201,6 +198,9 @@ update message model =
             ( { model | chooser = chooser }, Cmd.none )
 
         -- My Pokemon
+        UpdateSearch search ->
+            ( { model | chooser = MyChooser search }, Cmd.none )
+
         ToggleMyPokemon speciesId ->
             model
                 |> updateLeague (\l -> { l | myPokemon = Dict.update speciesId (Maybe.map <| \p -> { p | expanded = not p.expanded }) l.myPokemon })
@@ -583,8 +583,8 @@ mkStyledButton ( msg, txt, selected ) =
 viewPvPokeRecs : Model -> League -> List (Html Msg)
 viewPvPokeRecs model league =
     let
-        convScore =
-            Maybe.withDefault -99
+        ppFloat_ =
+            Maybe.map ppFloat >> Maybe.withDefault ""
 
         alreadyUsed =
             Dict.keys league.myPokemon
@@ -602,22 +602,42 @@ viewPvPokeRecs model league =
                         , ppTypes entry.types
                         , span [ class "font-bold" ] [ text <| entry.speciesName ++ " " ]
                         ]
-                    , div [ class "text-sm" ] [ text (ppFloat <| convScore entry.score) ]
+                    , div [ class "text-sm" ] [ text (ppFloat_ entry.score) ]
                     ]
                 ]
 
-        recs =
+        filterRecs search =
             model.pokedex
                 |> rejectByList alreadyUsed
+                |> Dict.filter (\_ entry -> String.contains (String.toLower search) (String.toLower entry.speciesName))
                 |> Dict.toList
-                |> L.sortBy (Tuple.second >> .score >> convScore >> (*) -1)
+                |> L.sortBy (Tuple.second >> .score >> Maybe.withDefault -99 >> (*) -1)
                 |> L.take 40
                 |> L.map mkItem
                 |> ul []
+
+        mkElement htm1 search =
+            [ h2 [] [ text <| "PvPoke recommendations" ]
+            , div [ class "flex flex-row items-center justify-between mb-2" ] htm1
+            , filterRecs search
+            ]
     in
-    [ h2 [] [ text <| "PvPoke recommendations for " ++ ppSeason model.season ]
-    , recs
-    ]
+    case model.chooser of
+        MyChooser search ->
+            mkElement
+                [ div []
+                    [ input [ value search, onInput UpdateSearch ] []
+                    , viewCloseChooser
+                    ]
+                ]
+                search
+
+        _ ->
+            mkElement
+                [ viewChooserPlaceholder <| MyChooser ""
+                , pvpPokeLogo
+                ]
+                ""
 
 
 
@@ -629,17 +649,6 @@ viewPvPokeRecs model league =
 viewMyPokemons : Model -> RegisteringModel -> League -> List (Html Msg)
 viewMyPokemons model m league =
     let
-        chooser =
-            div [ class "flex flex-row items-center justify-between mb-2" ] <|
-                case model.chooser of
-                    MyChooser search state ->
-                        [ viewChooser model.pokedex model.season search state ]
-
-                    _ ->
-                        [ viewChooserPlaceholder <| MyChooser "" Autocomplete.empty
-                        , pvpPokeLogo
-                        ]
-
         addData speciesId pokemon =
             MyPokemonData speciesId pokemon (Dict.get speciesId model.pokedex)
 
@@ -657,7 +666,7 @@ viewMyPokemons model m league =
                     )
     in
     [ h2 [] [ text <| "My Pokemon for " ++ ppSeason model.season ]
-    , chooser
+    , div [ class "mb-2" ] [ text "\u{00A0}" ]
     , if Dict.isEmpty league.myPokemon then
         ul []
             [ ol [ class "mb-3" ] [ matIcon "arrow-up-bold", matIcon "arrow-up-bold", text "First add some of your pokemon using the form above" ]
@@ -1269,8 +1278,12 @@ viewChooser pokedex season search autocomplete =
     div [ class "chooser-container flex flex-row justify-between" ]
         [ Autocomplete.view viewConfig autocomplete choices search
             |> Html.map ACMsg
-        , span [ onClick <| SetAutoComplete NoChooser ] [ matIcon "close" ]
+        , viewCloseChooser
         ]
+
+
+viewCloseChooser =
+    span [ onClick <| SetAutoComplete NoChooser ] [ matIcon "close" ]
 
 
 viewChooserPlaceholder : SearchTool -> Html Msg
