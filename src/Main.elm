@@ -480,10 +480,10 @@ view model =
                     ]
 
             TeamOptions ->
-                div [ cls "teams grid grid-cols-1 md:grid-cols-6 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model league)
+                div [ cls "teams grid grid-cols-1 md:grid-cols-5 gap-2" ]
+                    [ div [ class "my-pokemon flex flex-col col-span-1" ] (viewTeamOptions model league)
                     , div [ class "my-team flex flex-col col-span-2" ] (viewTeam model Nothing league)
-                    , div [ class "opponents flex flex-col col-span-3" ] (viewOpponentsBattling model league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
             Battling ->
@@ -782,7 +782,7 @@ summariseMoves attacks pokemon =
 
 
 -- -------------------
--- LHS Teams
+-- LHS Team Options
 -- -------------------
 
 
@@ -798,7 +798,7 @@ viewTeamOptions model league =
                 title =
                     [ cand1, cand2, cand3 ]
                         |> L.map (\c -> span [ class "truncate flex-1 mr-1" ] [ text <| getName c ])
-                        |> span [ class "flex flex-grow" ]
+                        |> span [ class "flex flex-grow overflow-hidden" ]
             in
             div
                 [ classList
@@ -813,6 +813,10 @@ viewTeamOptions model league =
                 ]
     in
     [ h2 [] [ text "Team options" ]
+    , div [ class "flex flex-row items-center justify-between mb-2" ]
+        [ input [ value "search", onInput UpdateSearch ] []
+        , viewCloseChooser
+        ]
     , Helpers.evaluateTeams league
         |> L.take 20
         |> L.map viewOption

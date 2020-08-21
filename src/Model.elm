@@ -711,6 +711,7 @@ decodeRankingEntry =
 type SearchTool
     = MyChooser String
     | OpponentChooser String Autocomplete.State
+    | OptionsFilter String -- Team Options page
     | NoChooser
 
 
@@ -728,6 +729,9 @@ mapSearch fn chooser =
         OpponentChooser string state ->
             OpponentChooser (fn string) state
 
+        OptionsFilter string ->
+            OptionsFilter (fn string)
+
         NoChooser ->
             NoChooser
 
@@ -735,14 +739,11 @@ mapSearch fn chooser =
 mapAutocomplete : (Autocomplete.State -> Autocomplete.State) -> SearchTool -> SearchTool
 mapAutocomplete fn chooser =
     case chooser of
-        MyChooser string ->
-            MyChooser string
-
         OpponentChooser string state ->
             OpponentChooser string (fn state)
 
-        NoChooser ->
-            NoChooser
+        _ ->
+            chooser
 
 
 
