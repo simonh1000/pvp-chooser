@@ -746,12 +746,15 @@ viewAttacksWithRecommendations moves entry speciesId pokemon =
                 ]
             <|
                 [ viewMoveWithPvPoke moves entry attack ]
+
+        entry_ =
+            addReturn entry
     in
-    [ entry.fast
+    [ entry_.fast
         |> L.map (\attack -> viewAttack_ SelectFastMove (attack == pokemon.fast) attack)
         |> (::) (text "Fast: ")
         |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
-    , entry.charged
+    , entry_.charged
         |> L.map (\attack -> viewAttack_ SelectChargedMove (Set.member attack pokemon.charged) attack)
         |> (::) (text "Charged: ")
         |> div [ class "flex flex-row flex-wrap items-center" ]
@@ -792,23 +795,23 @@ viewTeamOptions model league =
         viewOption : ( Team, Float ) -> Html Msg
         viewOption ( { cand1, cand2, cand3 } as team, score ) =
             let
-                selected =
-                    getTeamList league.team == getTeamList team
+                getName cand =
+                    cand |> extractSpeciesId |> Maybe.andThen (\id -> Dict.get id model.pokedex) |> Maybe.map .speciesName |> Maybe.withDefault "error"
 
                 title =
                     [ cand1, cand2, cand3 ]
-                        |> L.filterMap (\c -> c |> extractSpeciesId |> Maybe.andThen (\id -> Dict.get id model.pokedex) |> Maybe.map .speciesName)
-                        |> String.join ", "
+                        |> L.map (\c -> span [ class "truncate flex-1 mr-1" ] [ text <| getName c ])
+                        |> span [ class "flex flex-grow" ]
             in
             div
                 [ classList
                     [ ( cardClass, True )
                     , ( "mb-1 flex flex-row justify-between cursor-pointer", True )
-                    , ( "bg-blue-100", selected )
+                    , ( "bg-blue-100", getTeamList league.team == getTeamList team )
                     ]
                 , onClick <| UpdateTeam team
                 ]
-                [ span [] [ text title ]
+                [ title
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
                 ]
     in
@@ -980,14 +983,17 @@ viewOpponentsRegistering model league names =
                             ]
                         ]
 
+                entry_ =
+                    addReturn entry
+
                 content =
                     if op.expanded then
-                        [ entry.fast
-                            |> L.map (\attack -> viewMoveWithPvPoke model.moves entry attack)
+                        [ entry_.fast
+                            |> L.map (viewMoveWithPvPoke model.moves entry_)
                             |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
                             |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
-                        , entry.charged
-                            |> L.map (\attack -> viewMoveWithPvPoke model.moves entry attack)
+                        , entry_.charged
+                            |> L.map (viewMoveWithPvPoke model.moves entry_)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
                         , div [] <| viewPokemonResistsAndWeaknesses model speciesId
@@ -1018,6 +1024,18 @@ viewOpponentsRegistering model league names =
         |> L.map viewer
         |> div []
     ]
+
+
+addReturn : PokedexEntry -> PokedexEntry
+addReturn entry =
+    { entry
+        | charged =
+            if L.member "RETURN" entry.recMoves then
+                entry.charged ++ [ "RETURN" ]
+
+            else
+                entry.charged
+    }
 
 
 viewOpponentsBattling : Model -> League -> List (Html Msg)
