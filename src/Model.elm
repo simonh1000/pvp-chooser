@@ -94,7 +94,7 @@ type Page
     = Intro
     | LoadingDex
     | Registering RegisteringModel
-    | TeamOptions
+    | TeamOptions String -- search term
     | Battling
     | FatalError String
 
@@ -128,6 +128,16 @@ isRegistering : Page -> Bool
 isRegistering page =
     case page of
         Registering _ ->
+            True
+
+        _ ->
+            False
+
+
+isTeamOptions : Page -> Bool
+isTeamOptions page =
+    case page of
+        TeamOptions _ ->
             True
 
         _ ->
