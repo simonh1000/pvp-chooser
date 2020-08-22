@@ -614,7 +614,7 @@ type alias PokedexEntry =
     , types : List PType
     , fast : List String
     , charged : List String
-    , elite : List String
+    , elite : List String -- legacy moves
     , tags : Set String
     , -- from rankings
       recMoves : List String
