@@ -746,12 +746,15 @@ viewAttacksWithRecommendations moves entry speciesId pokemon =
                 ]
             <|
                 [ viewMoveWithPvPoke moves entry attack ]
+
+        entry_ =
+            addReturn entry
     in
-    [ entry.fast
+    [ entry_.fast
         |> L.map (\attack -> viewAttack_ SelectFastMove (attack == pokemon.fast) attack)
         |> (::) (text "Fast: ")
         |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
-    , entry.charged
+    , entry_.charged
         |> L.map (\attack -> viewAttack_ SelectChargedMove (Set.member attack pokemon.charged) attack)
         |> (::) (text "Charged: ")
         |> div [ class "flex flex-row flex-wrap items-center" ]
@@ -980,14 +983,17 @@ viewOpponentsRegistering model league names =
                             ]
                         ]
 
+                entry_ =
+                    addReturn entry
+
                 content =
                     if op.expanded then
-                        [ entry.fast
-                            |> L.map (\attack -> viewMoveWithPvPoke model.moves entry attack)
+                        [ entry_.fast
+                            |> L.map (viewMoveWithPvPoke model.moves entry_)
                             |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
                             |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
-                        , entry.charged
-                            |> L.map (\attack -> viewMoveWithPvPoke model.moves entry attack)
+                        , entry_.charged
+                            |> L.map (viewMoveWithPvPoke model.moves entry_)
                             |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
                             |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
                         , div [] <| viewPokemonResistsAndWeaknesses model speciesId
@@ -1018,6 +1024,18 @@ viewOpponentsRegistering model league names =
         |> L.map viewer
         |> div []
     ]
+
+
+addReturn : PokedexEntry -> PokedexEntry
+addReturn entry =
+    { entry
+        | charged =
+            if L.member "RETURN" entry.recMoves then
+                entry.charged ++ [ "RETURN" ]
+
+            else
+                entry.charged
+    }
 
 
 viewOpponentsBattling : Model -> League -> List (Html Msg)
