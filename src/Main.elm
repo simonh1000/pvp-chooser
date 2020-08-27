@@ -825,15 +825,23 @@ viewTeamOptions model league search =
 
             else
                 Helpers.evalTeamsSearch model.pokedex league search
+
+        updateMsg =
+            UpdatePage << TeamOptions
     in
     [ h2 [] [ text "Team options" ]
-    , div [ class "flex flex-row items-center justify-between mb-2" ]
+    , div [ class "flex flex-row items-center mb-2" ]
         [ input
             [ value search
-            , onInput (UpdatePage << TeamOptions)
+            , onInput updateMsg
+            , class "pr-5"
             ]
             []
-        , viewCloseChooser
+        , span
+            [ onClick <| updateMsg ""
+            , style "marginLeft" "-1.1rem"
+            ]
+            [ matIcon "backspace-outline" ]
         ]
     , teams
         |> L.take 20
