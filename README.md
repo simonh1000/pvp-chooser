@@ -29,6 +29,12 @@ the `--nodebug` removes the Elm debug tool. This can become valuable if your mod
 
 Open http://localhost:3000 and start modifying the code in /src.  **Note** that this starter expects you have installed [elm-format globally](https://github.com/avh4/elm-format#installation-). 
 
+## Update PvPoke meta data
+
+```sh
+npm run pvpoke
+```
+
 ## Production
 
 Build production assets (js and css together) with:
