@@ -7,7 +7,7 @@ import Common.CoreHelpers exposing (addCmd, ifThenElse, rejectByList)
 import Dict exposing (Dict)
 import FormatNumber
 import FormatNumber.Locales exposing (Decimals(..), usLocale)
-import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupName)
+import Helpers exposing (addScoresToLeague, calculateEffectiveness, evaluateTeam, lookupId)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -90,6 +90,7 @@ type Msg
     | UpdateTeam Team -- second part
     | SwapTeam Bool -- isTopTwo
       -- Team chooser
+    | UpdateTeamOptionsSearch String
     | PinTeamMember String
       -- Registering: opponents
     | ToggleOpponent String
@@ -228,6 +229,9 @@ update message model =
                 |> updateLeague updater
                 |> andPersist
 
+        UpdateTeamOptionsSearch search ->
+            ( updateTeamOptionsSearch search model, Cmd.none )
+
         PinTeamMember name ->
             let
                 updater l =
@@ -241,6 +245,7 @@ update message model =
             in
             model
                 |> updateLeague updater
+                |> updateTeamOptionsSearch ""
                 |> andPersist
 
         UpdateTeam team ->
@@ -330,6 +335,20 @@ update message model =
                     ( { model | errorMessage = Just "Could not access ranking data" }
                     , Cmd.none
                     )
+
+
+updateTeamOptionsSearch : String -> Model -> Model
+updateTeamOptionsSearch search model =
+    let
+        page =
+            case model.page of
+                TeamOptions _ ->
+                    TeamOptions search
+
+                _ ->
+                    model.page
+    in
+    { model | page = page }
 
 
 switchPage : Page -> Model -> Model
@@ -479,10 +498,10 @@ view model =
                     , div [ class "opponents col-span-2 flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
                     ]
 
-            TeamOptions ->
-                div [ cls "teams grid grid-cols-1 md:grid-cols-4 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col" ] (viewTeamOptions model league)
-                    , div [ class "my-team flex flex-col" ] (viewTeam model Nothing league)
+            TeamOptions search ->
+                div [ cls "teams grid grid-cols-1 md:grid-cols-5 gap-2" ]
+                    [ div [ class "my-pokemon flex flex-col col-span-1" ] (viewTeamOptions model league search)
+                    , div [ class "my-team flex flex-col col-span-2" ] (viewTeam model Nothing league)
                     , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
                     ]
 
@@ -515,7 +534,7 @@ pvpHeader tgt =
         switcher =
             mkRadioButtons
                 [ ( SwitchPage False registerPage, "Registering", isRegistering tgt )
-                , ( SwitchPage False TeamOptions, "Team options", TeamOptions == tgt )
+                , ( SwitchPage False (TeamOptions ""), "Team options", isTeamOptions tgt )
                 , ( SwitchPage False Battling, "Battling", Battling == tgt )
                 ]
     in
@@ -642,7 +661,7 @@ viewPvPokeRecs model league =
 
 
 -- -------------------
--- LHS Choosing
+-- LHS Registering
 -- -------------------
 
 
@@ -785,12 +804,12 @@ summariseMoves attacks pokemon =
 
 
 -- -------------------
--- LHS Teams
+-- LHS Team Options
 -- -------------------
 
 
-viewTeamOptions : Model -> League -> List (Html Msg)
-viewTeamOptions model league =
+viewTeamOptions : Model -> League -> String -> List (Html Msg)
+viewTeamOptions model league search =
     let
         viewOption : ( Team, Float ) -> Html Msg
         viewOption ( { cand1, cand2, cand3 } as team, score ) =
@@ -801,7 +820,7 @@ viewTeamOptions model league =
                 title =
                     [ cand1, cand2, cand3 ]
                         |> L.map (\c -> span [ class "truncate flex-1 mr-1" ] [ text <| getName c ])
-                        |> span [ class "flex flex-grow" ]
+                        |> span [ class "flex flex-grow overflow-hidden" ]
             in
             div
                 [ classList
@@ -814,9 +833,29 @@ viewTeamOptions model league =
                 [ title
                 , span [ class "text-sm" ] [ text <| ppFloat score ]
                 ]
+
+        teams =
+            if search == "" then
+                Helpers.evaluateTeams league
+
+            else
+                Helpers.evalTeamsSearch model.pokedex league search
     in
     [ h2 [] [ text "Team options" ]
-    , Helpers.evaluateTeams league
+    , div [ class "flex flex-row items-center mb-2" ]
+        [ input
+            [ value search
+            , onInput UpdateTeamOptionsSearch
+            , class "pr-5"
+            ]
+            []
+        , span
+            [ onClick <| UpdateTeamOptionsSearch ""
+            , style "marginLeft" "-1.1rem"
+            ]
+            [ matIcon "backspace-outline" ]
+        ]
+    , teams
         |> L.take 20
         |> L.map viewOption
         |> div [ class "flex flex-col" ]
@@ -837,12 +876,12 @@ viewTeam model selectedPokemon league =
 
         lookupTeamMember : TeamMember -> Result String Pokemon
         lookupTeamMember =
-            extractSpeciesId >> Result.fromMaybe "Team member not chosen" >> Result.andThen (lookupName league.myPokemon)
+            extractSpeciesId >> Result.fromMaybe "Team member not chosen" >> Result.andThen (lookupId league.myPokemon)
 
         viewMbCand updater mbCand =
             let
                 handler name isPinned =
-                    lookupName league.myPokemon name
+                    lookupId league.myPokemon name
                         |> Result.andThen
                             (\pokemon ->
                                 model.pokedex
@@ -915,7 +954,7 @@ viewTeamMember updater model speciesId entry isPinned pokemon =
                     , span [ class "ml-2" ] [ summariseMoves model.moves pokemon ]
                     ]
                 , case model.page of
-                    TeamOptions ->
+                    TeamOptions _ ->
                         button [ onClick <| PinTeamMember speciesId ]
                             [ matIcon <| ifThenElse isPinned "bookmark" "bookmark-outline" ]
 

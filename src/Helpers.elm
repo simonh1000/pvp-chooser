@@ -38,6 +38,13 @@ mkTeams2 tl =
 evaluateTeams : League -> List ( Team, Float )
 evaluateTeams league =
     let
+        pinnedMembers : List ( String, Pokemon )
+        pinnedMembers =
+            league.team
+                |> mkTeamList
+                |> L.filterMap getPinnedMember
+                |> L.filterMap (\n -> lookupId league.myPokemon n |> Result.toMaybe |> Maybe.map (Tuple.pair n))
+
         sumFreqs =
             calcWeightedTotal league.opponents
 
@@ -49,12 +56,6 @@ evaluateTeams league =
 
         newTeam lst =
             L.foldl (addToTeam << Chosen) pinnedTeam lst
-
-        pinnedMembers : List ( String, Pokemon )
-        pinnedMembers =
-            mkTeamList league.team
-                |> L.filterMap getPinnedMember
-                |> L.filterMap (\n -> lookupName league.myPokemon n |> Result.toMaybe |> Maybe.map (Tuple.pair n))
 
         teams : List ( Team, ( Pokemon, Pokemon, Pokemon ) )
         teams =
@@ -87,8 +88,86 @@ evaluateTeams league =
         |> L.sortBy (Tuple.second >> (*) -1)
 
 
-lookupName : Dict String Pokemon -> String -> Result String Pokemon
-lookupName myPokemon speciesId =
+evalTeamsSearch : Pokedex -> League -> String -> List ( Team, Float )
+evalTeamsSearch pokedex league search =
+    let
+        search_ =
+            String.toLower search
+
+        filterFn : ( String, Pokemon ) -> Maybe ( String, Pokemon )
+        filterFn ( speciesId, pmon ) =
+            pokedex
+                |> Dict.get speciesId
+                |> Maybe.andThen
+                    (\entry ->
+                        if String.contains search_ (String.toLower entry.speciesName) then
+                            Just ( speciesId, pmon )
+
+                        else
+                            Nothing
+                    )
+
+        pinnedMembers : List ( String, Pokemon )
+        pinnedMembers =
+            league.myPokemon
+                |> Dict.toList
+                |> L.filterMap filterFn
+    in
+    if L.length pinnedMembers > 3 then
+        []
+
+    else
+        evaluateTeams2 league pinnedMembers
+
+
+evaluateTeams2 : League -> List ( String, Pokemon ) -> List ( Team, Float )
+evaluateTeams2 league pinnedMembers =
+    let
+        sumFreqs =
+            calcWeightedTotal league.opponents
+
+        mapper ps =
+            (summariseTeam league.opponents <| evaluateTeam ps) / sumFreqs
+
+        pinnedTeam =
+            L.foldl (addToTeam << Pinned << Tuple.first) blankTeam pinnedMembers
+
+        newTeam lst =
+            L.foldl (addToTeam << Chosen) pinnedTeam lst
+
+        teams : List ( Team, ( Pokemon, Pokemon, Pokemon ) )
+        teams =
+            -- built taking into account which team members are pinned
+            case pinnedMembers of
+                [ ( s1, p1 ) ] ->
+                    league.myPokemon
+                        |> Dict.toList
+                        |> L.filter (\( speciesId, _ ) -> speciesId /= s1)
+                        |> mkTeams2
+                        |> L.map (\( ( s2, p2 ), ( s3, p3 ) ) -> ( newTeam [ s2, s3 ], ( p1, p2, p3 ) ))
+
+                [ ( s1, p1 ), ( s2, p2 ) ] ->
+                    league.myPokemon
+                        |> Dict.toList
+                        |> L.filter (\( speciesId, _ ) -> speciesId /= s1 && speciesId /= s2)
+                        |> L.map (\( s3, p3 ) -> ( newTeam [ s3 ], ( p1, p2, p3 ) ))
+
+                [ ( _, p1 ), ( _, p2 ), ( _, p3 ) ] ->
+                    [ ( pinnedTeam, ( p1, p2, p3 ) ) ]
+
+                _ ->
+                    league.myPokemon
+                        |> Dict.toList
+                        |> mkTeams3
+                        |> L.map (\( ( s1, p1 ), ( s2, p2 ), ( s3, p3 ) ) -> ( newTeam [ s1, s2, s3 ], ( p1, p2, p3 ) ))
+    in
+    teams
+        |> L.map (Tuple.mapSecond mapper)
+        |> L.sortBy (Tuple.second >> (*) -1)
+
+
+lookupId : Dict String Pokemon -> String -> Result String Pokemon
+lookupId myPokemon speciesId =
     myPokemon
         |> Dict.get speciesId
         |> Result.fromMaybe ("Could not lookup: " ++ speciesId)

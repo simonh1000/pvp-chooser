@@ -47,6 +47,7 @@ Run the script in scripts directory to update the rankings files from pvpoke
 
 ## Changelog
 
+1.4 Add search to Team Options page
 1.3 Better picker for Registering page
 1.2 Add support for Ultra Premier Cup
 1.1 Add support for Master Premier Cup
