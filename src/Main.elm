@@ -90,7 +90,7 @@ type Msg
     | UpdateTeam Team -- second part
     | SwapTeam Bool -- isTopTwo
       -- Team chooser
-    | UpdatePage Page
+    | UpdateTeamOptionsSearch String
     | PinTeamMember String
       -- Registering: opponents
     | ToggleOpponent String
@@ -229,8 +229,8 @@ update message model =
                 |> updateLeague updater
                 |> andPersist
 
-        UpdatePage page ->
-            ( { model | page = page }, Cmd.none )
+        UpdateTeamOptionsSearch search ->
+            ( updateTeamOptionsSearch search model, Cmd.none )
 
         PinTeamMember name ->
             let
@@ -245,6 +245,7 @@ update message model =
             in
             model
                 |> updateLeague updater
+                |> updateTeamOptionsSearch ""
                 |> andPersist
 
         UpdateTeam team ->
@@ -334,6 +335,20 @@ update message model =
                     ( { model | errorMessage = Just "Could not access ranking data" }
                     , Cmd.none
                     )
+
+
+updateTeamOptionsSearch : String -> Model -> Model
+updateTeamOptionsSearch search model =
+    let
+        page =
+            case model.page of
+                TeamOptions _ ->
+                    TeamOptions search
+
+                _ ->
+                    model.page
+    in
+    { model | page = page }
 
 
 switchPage : Page -> Model -> Model
@@ -825,20 +840,17 @@ viewTeamOptions model league search =
 
             else
                 Helpers.evalTeamsSearch model.pokedex league search
-
-        updateMsg =
-            UpdatePage << TeamOptions
     in
     [ h2 [] [ text "Team options" ]
     , div [ class "flex flex-row items-center mb-2" ]
         [ input
             [ value search
-            , onInput updateMsg
+            , onInput UpdateTeamOptionsSearch
             , class "pr-5"
             ]
             []
         , span
-            [ onClick <| updateMsg ""
+            [ onClick <| UpdateTeamOptionsSearch ""
             , style "marginLeft" "-1.1rem"
             ]
             [ matIcon "backspace-outline" ]
