@@ -493,7 +493,7 @@ view model =
 
             Registering m ->
                 div [ cls "choosing grid grid-cols-1 md:grid-cols-5 gap-2" ]
-                    [ div [ class "pvpoke flex flex-col" ] <| viewPvPokeRecs model league
+                    [ div [ class "pvpoke flex flex-col" ] <| viewLhsRegistering model league
                     , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewMyPokemons model m league)
                     , div [ class "opponents col-span-2 flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
                     ]
@@ -599,8 +599,8 @@ mkStyledButton ( msg, txt, selected ) =
 -- -------------------
 
 
-viewPvPokeRecs : Model -> League -> List (Html Msg)
-viewPvPokeRecs model league =
+viewLhsRegistering : Model -> League -> List (Html Msg)
+viewLhsRegistering model league =
     let
         ppFloat_ =
             Maybe.map ppFloat >> Maybe.withDefault ""
@@ -608,7 +608,12 @@ viewPvPokeRecs model league =
         alreadyUsed =
             Dict.keys league.myPokemon
 
+        mkItem : ( String, PokedexEntry ) -> Html Msg
         mkItem ( speciesId, entry ) =
+            let
+                requiresEliteMove =
+                    L.any (\m -> L.member m entry.elite) entry.recMoves
+            in
             li [ class <| cardClass ++ " mb-2 bg-white" ]
                 [ div [ class "flex flex-row justify-between" ]
                     [ div [ class "flex flex-row align-center" ]
@@ -619,7 +624,10 @@ viewPvPokeRecs model league =
                             ]
                             [ matIcon "plus toggle" ]
                         , ppTypes entry.types
-                        , span [ class "font-bold" ] [ text <| entry.speciesName ++ " " ]
+                        , span []
+                            [ span [ class "font-bold" ] [ text entry.speciesName ]
+                            , text <| ifThenElse requiresEliteMove "*" ""
+                            ]
                         ]
                     , div [ class "text-sm" ] [ text (ppFloat_ entry.score) ]
                     ]
