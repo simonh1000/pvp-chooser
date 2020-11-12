@@ -1,7 +1,7 @@
 {
     "author": "Simon Hampton",
     "name": "elm-pvp-manager",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "description": "Pokemon PVP team manager",
     "main": "index.js",
     "scripts": {

@@ -29,22 +29,17 @@ init value =
             let
                 model =
                     { defaultModel
-                        | season = Maybe.withDefault Ultra flags.persisted.season
-                        , great = flags.persisted.great
-                        , ultraPremier = flags.persisted.ultraPremier
-                        , ultra = flags.persisted.ultra
-                        , masterPremier = flags.persisted.masterPremier
-                        , master = flags.persisted.master
+                        | season = flags.persisted.season
+                        , leagues = flags.persisted.leagues
                         , debug = flags.debug
                     }
 
                 page =
-                    case flags.persisted.season of
-                        Just _ ->
-                            LoadingDex
+                    if Dict.isEmpty model.leagues then
+                        Intro
 
-                        Nothing ->
-                            Intro
+                    else
+                        LoadingDex
             in
             ( addScores { model | page = page }, getPokedex )
 
@@ -73,7 +68,7 @@ decodeFlags =
 
 type Msg
     = SwitchPage Bool Page
-    | SwitchSeason Season
+    | SwitchSeason SeasonName
       -- Autocomplete
     | ACMsg Autocomplete.Msg
     | ACSearch String
@@ -98,7 +93,7 @@ type Msg
     | RemoveOpponent String
       --
     | OnPokedex (Result Http.Error ( Dict String MoveType, Pokedex ))
-    | OnRankingData Season (Result Http.Error (Dict String RankingEntry))
+    | OnRankingData SeasonName (Result Http.Error (Dict String RankingEntry))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -403,13 +398,7 @@ prePopulateOpponents rankings league =
 
 addScores : Model -> Model
 addScores model =
-    { model
-        | great = addScoresToLeague model model.great
-        , ultraPremier = addScoresToLeague model model.ultraPremier
-        , ultra = addScoresToLeague model model.ultra
-        , masterPremier = addScoresToLeague model model.masterPremier
-        , master = addScoresToLeague model model.master
-    }
+    { model | leagues = Dict.map (\_ -> addScoresToLeague model) model.leagues }
 
 
 updateConfig : Bool -> UpdateConfig Msg ( String, PokedexEntry )
@@ -435,7 +424,7 @@ updateConfig isMyPokemon =
     }
 
 
-getRelevantChoices : Season -> String -> Dict String PokedexEntry -> List ( String, PokedexEntry )
+getRelevantChoices : SeasonName -> String -> Dict String PokedexEntry -> List ( String, PokedexEntry )
 getRelevantChoices season search pokedex =
     let
         search_ =
@@ -474,7 +463,7 @@ view model =
             getCurrentLeague model
     in
     div [ class "h-screen flex flex-col" ]
-        [ pvpHeader model.page
+        [ pvpHeader model.season model.page
         , case model.page of
             Intro ->
                 div [ class "intro flex-grow p-3" ]
@@ -516,7 +505,7 @@ view model =
                     [ h1 [] [ text "Fatal Error" ]
                     , div [] [ text string ]
                     ]
-        , pvpFooter model.season
+        , pageFooter
         ]
 
 
@@ -528,8 +517,8 @@ sortOpponents opponents =
         |> L.map Tuple.first
 
 
-pvpHeader : Page -> Html Msg
-pvpHeader tgt =
+pvpHeader : SeasonName -> Page -> Html Msg
+pvpHeader selectedSeason tgt =
     let
         switcher =
             mkRadioButtons
@@ -537,35 +526,44 @@ pvpHeader tgt =
                 , ( SwitchPage False (TeamOptions ""), "Team options", isTeamOptions tgt )
                 , ( SwitchPage False Battling, "Battling", Battling == tgt )
                 ]
+
+        title =
+            h1 [ class "text-2xl justify-center" ] [ text "Pokemon PVP team manager" ]
+
+        mkSeasonOption season =
+            option
+                [ value <| serialiseSeason season
+                , selected <| season == selectedSeason
+                ]
+                [ text <| ppSeason season ]
+
+        seasonSelector =
+            seasons
+                |> L.map mkSeasonOption
+                |> select
+                    [ onInput (deserialiseSeason >> SwitchSeason)
+                    , class "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
+                    ]
     in
-    header [ class "flex flex-row justify-between p-3 bg-gray-400" ]
-        [ h1 [ class "text-2xl justify-center" ] [ text "Pokemon PVP team manager" ]
-        , case tgt of
+    header [ class "flex flex-row justify-between p-3 bg-gray-400" ] <|
+        case tgt of
             Intro ->
-                text ""
+                [ title ]
 
             FatalError _ ->
-                text ""
+                [ title ]
 
             _ ->
-                switcher
-        ]
+                [ title, div [ class "flex flex-row" ] [ switcher, seasonSelector ] ]
 
 
-pvpFooter : Season -> Html Msg
-pvpFooter tgt =
-    let
-        convert season =
-            ( SwitchSeason season, ppSeason season, season == tgt )
-    in
+pageFooter : Html Msg
+pageFooter =
     footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
-        [ span [ class "text-sm" ]
-            [ span [] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "PvPoke" ] ]
-            , span [] [ text ", Privacy: Uses Google Analytics" ]
-            , span [] [ text ", Code: ", a [ href "https://github.com/simonh1000/pvp-chooser" ] [ text "Github" ] ]
-            , span [] [ text ", Feedback: ", a [ href "https://twitter.com/lambda_simon" ] [ text "@lambda_simon" ] ]
-            ]
-        , seasons |> L.map convert |> mkRadioButtons
+        [ span [] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "PvPoke" ] ]
+        , span [] [ text "Privacy: Uses Google Analytics" ]
+        , span [] [ text "Code: ", a [ href "https://github.com/simonh1000/pvp-chooser" ] [ text "Github" ] ]
+        , span [] [ text "Feedback: ", a [ href "https://twitter.com/lambda_simon" ] [ text "@lambda_simon" ] ]
         ]
 
 
@@ -696,9 +694,11 @@ viewMyPokemons model m league =
     , div [ class "mb-2" ] [ text "\u{00A0}" ]
     , if Dict.isEmpty league.myPokemon then
         ul []
-            [ ol [ class "mb-3" ] [ matIcon "arrow-up-bold", matIcon "arrow-up-bold", text "First add some of your pokemon using the form above" ]
-            , ol [ class "mb-3" ] [ text "Select the attacks you are using" ]
-            , ol [ class "mb-3" ] [ text "Click on a Pokemon's name and then on one of the 'My Team' drop-zones to add to your team" ]
+            [ ol [ class "mb-3" ]
+                [ matIcon "arrow-left-bold"
+                , text "First add some of your pokemon from the list to the left"
+                ]
+            , ol [ class "mb-3" ] [ text "Then select the attacks you are using" ]
             ]
 
       else
@@ -1334,7 +1334,7 @@ viewMoveWithPvPoke attacks entry attack =
 -- -------------------
 
 
-viewChooser : Dict String PokedexEntry -> Season -> String -> Autocomplete.State -> Html Msg
+viewChooser : Dict String PokedexEntry -> SeasonName -> String -> Autocomplete.State -> Html Msg
 viewChooser pokedex season search autocomplete =
     let
         choices =
@@ -1508,7 +1508,7 @@ getPokedex =
         }
 
 
-getRankings : Season -> Cmd Msg
+getRankings : SeasonName -> Cmd Msg
 getRankings season =
     let
         get n =
@@ -1517,21 +1517,7 @@ getRankings season =
                 , expect = Http.expectJson (OnRankingData season) decodeRankings
                 }
     in
-    case season of
-        Great ->
-            get "all/rankings-1500.json"
-
-        UltraPremier ->
-            get "premier/rankings-2500.json"
-
-        Ultra ->
-            get "all/rankings-2500.json"
-
-        MasterPremier ->
-            get "premier/rankings-10000.json"
-
-        Master ->
-            get "all/rankings-10000.json"
+    get <| getUrl season
 
 
 
