@@ -147,16 +147,22 @@ encodePersisted model =
 -- -----------------------
 
 
+type alias Season =
+    { name : SeasonName
+    , serialised : String
+    , url : String
+    , pretty : String
+    , stringified : String
+    }
+
+
 type SeasonName
-    = Great
+    = LittleCup
+    | Great
     | UltraPremier
     | Ultra
     | MasterPremier
     | Master
-
-
-seasons =
-    [ Great, UltraPremier, Ultra, MasterPremier, Master ]
 
 
 decodeSeason : Decoder SeasonName
@@ -173,23 +179,20 @@ encodeSeason =
     Encode.string << stringFromSeason
 
 
-type alias Season =
-    { name : SeasonName
-    , serialised : String
-    , url : String
-    , pretty : String
-    , stringified : String
-    }
-
-
 seasonsData : List Season
 seasonsData =
-    [ greatSeason
+    [ Season LittleCup "little" "little/rankings-500.json" "Little Cup" "little"
+    , greatSeason
     , Season UltraPremier "ultra-premier" "premier/rankings-2500.json" "Ultra: Premier Cup" "UltraPremier"
     , Season Ultra "ultra" "all/rankings-2500.json" "Ultra League" "Ultra"
     , Season MasterPremier "premier" "premier/rankings-10000.json" "Master: Premier Cup" "Premier"
     , Season Master "master" "all/rankings-10000.json" "Master League" "Master"
     ]
+
+
+seasons : List SeasonName
+seasons =
+    L.map .name seasonsData
 
 
 greatSeason : Season

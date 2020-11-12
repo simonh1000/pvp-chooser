@@ -13,9 +13,9 @@ function getGamemaster() {
             tmp.pokemon = json.pokemon;
             tmp.moves = json.moves;
             fs.writeFileSync(dstLocation, JSON.stringify(tmp));
-            console.log("written", tmp);
+            // console.log("written", tmp);
         })
-        .catch(err => console.log("bad fetch", err));
+        .catch(err => console.log("** gamemaster **", err));
 }
 
 mapRanking = ranking => {
@@ -29,20 +29,23 @@ mapRanking = ranking => {
 
 function convert(league, item) {
     let filename = `rankings-${item}.json`;
-    let url = `https://pvpoke.com/data/${league}/overall/${filename}`;
+    let url = `https://pvpoke.com/data/rankings/${league}/overall/${filename}`;
     let dstLocation = `../src/assets/${league}/${filename}`;
     fetch(url)
         .then(res => res.json())
         .then(json => {
             json = json.map(mapRanking)
             fs.writeFileSync(dstLocation, JSON.stringify(json));
-            console.log("written", json);
-        });
+            // console.log("written", json);
+        })
+        .catch(err => console.log(`** ${league} ${item} **`, err));
 }
 
 getGamemaster();
-convert("all","1500");
-convert("premier","2500");
-convert("all","2500");
-convert("premier","10000");
-convert("all","10000");
+// https://pvpoke.com/data/rankings/little/overall/rankings-500.json
+convert("little", "500");
+convert("all", "1500");
+convert("premier", "2500");
+convert("all", "2500");
+convert("premier", "10000");
+convert("all", "10000");
