@@ -12,12 +12,8 @@ import Set exposing (Set)
 
 
 type alias Model =
-    { season : Season
-    , great : League
-    , ultraPremier : League
-    , ultra : League
-    , masterPremier : League
-    , master : League
+    { season : SeasonName
+    , leagues : Dict String League
     , -- session data
       page : Page
     , chooser : SearchTool
@@ -32,11 +28,7 @@ type alias Model =
 defaultModel : Model
 defaultModel =
     { season = Great
-    , great = blankLeague
-    , ultraPremier = blankLeague
-    , ultra = blankLeague
-    , master = blankLeague
-    , masterPremier = blankLeague
+    , leagues = Dict.empty
     , debug = False
     , page = LoadingDex
     , chooser = MyChooser ""
@@ -48,40 +40,17 @@ defaultModel =
 
 updateLeague : (League -> League) -> Model -> Model
 updateLeague fn model =
-    case model.season of
-        Great ->
-            { model | great = fn model.great }
-
-        UltraPremier ->
-            { model | ultraPremier = fn model.ultraPremier }
-
-        Ultra ->
-            { model | ultra = fn model.ultra }
-
-        MasterPremier ->
-            { model | masterPremier = fn model.masterPremier }
-
-        Master ->
-            { model | master = fn model.master }
+    let
+        updater =
+            Maybe.withDefault blankLeague >> fn >> Just
+    in
+    { model | leagues = Dict.update (serialiseSeason model.season) updater model.leagues }
 
 
 getCurrentLeague : Model -> League
 getCurrentLeague model =
-    case model.season of
-        Great ->
-            model.great
-
-        UltraPremier ->
-            model.ultraPremier
-
-        Ultra ->
-            model.ultra
-
-        MasterPremier ->
-            model.masterPremier
-
-        Master ->
-            model.master
+    Dict.get (serialiseSeason model.season) model.leagues
+        |> Maybe.withDefault blankLeague
 
 
 
@@ -151,43 +120,25 @@ isTeamOptions page =
 
 
 type alias Persisted =
-    { season : Maybe Season -- Nothing on first load
-    , great : League
-    , ultraPremier : League
-    , ultra : League
-    , masterPremier : League
-    , master : League
+    { season : SeasonName -- Nothing on first load
+    , leagues : Dict String League
     }
 
 
 decodePersisted : Decoder Persisted
 decodePersisted =
-    let
-        dec s =
-            Decode.oneOf
-                [ Decode.field s decodeLeague
-                , Decode.succeed blankLeague
-                ]
-    in
     Decode.succeed Persisted
-        |> andMap (Decode.maybe <| Decode.field "season" decodeSeason)
-        |> andMap (dec "great")
-        |> andMap (dec "ultra-premier")
-        |> andMap (dec "ultra")
-        |> andMap (dec "premier")
-        |> andMap (dec "master")
+        |> andMap (DE.withDefault Ultra <| Decode.field "season" decodeSeason)
+        |> andMap (DE.withDefault Dict.empty decodeLeagues)
 
 
 encodePersisted : Model -> Encode.Value
 encodePersisted model =
-    Encode.object
-        [ ( "season", encodeSeason model.season )
-        , ( "great", encodeLeague model.great )
-        , ( "ultra-premier", encodeLeague model.ultraPremier )
-        , ( "ultra", encodeLeague model.ultra )
-        , ( "master", encodeLeague model.master )
-        , ( "premier", encodeLeague model.masterPremier )
-        ]
+    model.leagues
+        |> Dict.toList
+        |> L.map (Tuple.mapSecond encodeLeague)
+        |> (::) ( "season", encodeSeason model.season )
+        |> Encode.object
 
 
 
@@ -196,7 +147,7 @@ encodePersisted model =
 -- -----------------------
 
 
-type Season
+type SeasonName
     = Great
     | UltraPremier
     | Ultra
@@ -208,7 +159,7 @@ seasons =
     [ Great, UltraPremier, Ultra, MasterPremier, Master ]
 
 
-decodeSeason : Decoder Season
+decodeSeason : Decoder SeasonName
 decodeSeason =
     let
         convert season =
@@ -217,47 +168,63 @@ decodeSeason =
     seasons |> L.map convert |> decodeSimpleCustomTypes
 
 
-encodeSeason : Season -> Value
+encodeSeason : SeasonName -> Value
 encodeSeason =
     Encode.string << stringFromSeason
 
 
-stringFromSeason : Season -> String
-stringFromSeason s =
-    case s of
-        Great ->
-            "Great"
-
-        UltraPremier ->
-            "UltraPremier"
-
-        Ultra ->
-            "Ultra"
-
-        MasterPremier ->
-            "Premier"
-
-        Master ->
-            "Master"
+type alias Season =
+    { name : SeasonName
+    , serialised : String
+    , url : String
+    , pretty : String
+    , stringified : String
+    }
 
 
-ppSeason : Season -> String
-ppSeason s =
-    case s of
-        Great ->
-            "Great League"
+seasonsData : List Season
+seasonsData =
+    [ greatSeason
+    , Season UltraPremier "ultra-premier" "premier/rankings-2500.json" "Ultra: Premier Cup" "UltraPremier"
+    , Season Ultra "ultra" "all/rankings-2500.json" "Ultra League" "Ultra"
+    , Season MasterPremier "premier" "premier/rankings-10000.json" "Master: Premier Cup" "Premier"
+    , Season Master "master" "all/rankings-10000.json" "Master League" "Master"
+    ]
 
-        UltraPremier ->
-            "Ultra: Premier Cup"
 
-        Ultra ->
-            "Ultra League"
+greatSeason : Season
+greatSeason =
+    Season Great "great" "all/rankings-1500.json" "Great League" "Great"
 
-        MasterPremier ->
-            "Master: Premier Cup"
 
-        Master ->
-            "Master League"
+stringFromSeason : SeasonName -> String
+stringFromSeason =
+    getSeason >> .stringified
+
+
+ppSeason : SeasonName -> String
+ppSeason =
+    getSeason >> .pretty
+
+
+getUrl : SeasonName -> String
+getUrl =
+    getSeason >> .url
+
+
+serialiseSeason : SeasonName -> String
+serialiseSeason =
+    getSeason >> .serialised
+
+
+deserialiseSeason : String -> SeasonName
+deserialiseSeason tgt =
+    L.foldl (\season acc -> ifThenElse (season.serialised == tgt) season.name acc) Master seasonsData
+
+
+getSeason : SeasonName -> Season
+getSeason seasonName =
+    L.foldl (\season acc -> ifThenElse (season.name == seasonName) season acc) greatSeason seasonsData
 
 
 
@@ -279,6 +246,11 @@ blankLeague =
     , team = blankTeam
     , opponents = Dict.empty
     }
+
+
+decodeLeagues =
+    Decode.keyValuePairs (Decode.maybe decodeLeague)
+        |> Decode.map (L.filterMap (\( k, v ) -> Maybe.map (Tuple.pair k) v) >> Dict.fromList)
 
 
 decodeLeague : Decoder League
