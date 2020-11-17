@@ -1283,13 +1283,19 @@ viewTypes fn moves title =
                 |> AL.filter fn
                 |> AL.toList
                 |> L.partition (\( _, v ) -> v > 0.5 && v < 1.5)
-    in
-    div [ class "flex flex-row items-center mb-2" ]
-        [ span [ class "mr-3" ] [ text title ]
-        , div [ class "badge-list flex flex-col" ]
+
+        content =
             [ supers |> L.map (\( tp, _ ) -> span [ class "super mr-3" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             , normals |> L.map (\( tp, _ ) -> span [ class "mr-1" ] [ ppType tp ]) |> div [ class "flex flex-row flex-wrap" ]
             ]
+    in
+    div [ class "flex flex-row items-center mb-2" ]
+        [ span [ class "mr-3" ] [ text title ]
+        , if (L.length <| normals ++ supers) > 7 then
+            div [ class "badge-list flex flex-col" ] content
+
+          else
+            div [ class "badge-list flex flex-row flex-grow justify-between" ] content
         ]
 
 
