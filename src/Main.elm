@@ -481,11 +481,8 @@ view model =
                 div [ class "loading flex-grow" ] []
 
             Registering m ->
-                div [ cls "choosing grid grid-cols-1 md:grid-cols-5 gap-2" ]
-                    [ div [ class "pvpoke flex flex-col" ] <| viewRegisteringLHS model league
-                    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewRegisteringMiddle model m league)
-                    , div [ class "opponents col-span-2 flex flex-col" ] (viewRegisteringRHS model league m.opponents)
-                    ]
+                div [ cls "choosing grid grid-cols-1 md:grid-cols-5 gap-2" ] <|
+                    viewRegistering model league m
 
             TeamOptions search ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-5 gap-2" ]
@@ -594,15 +591,18 @@ mkStyledButton ( msg, txt, selected ) =
 
 -- -------------------
 -- Registering
--- LHS
 -- -------------------
 
 
 viewRegistering model league m =
     [ div [ class "pvpoke flex flex-col" ] <| viewRegisteringLHS model league
-    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewMyPokemons model m league)
+    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewRegisteringMiddle model m league)
     , div [ class "opponents col-span-2 flex flex-col" ] (viewRegisteringRHS model league m.opponents)
     ]
+
+
+
+-- LHS
 
 
 viewRegisteringLHS : Model -> League -> List (Html Msg)
@@ -683,12 +683,12 @@ viewName name requiresEliteMove =
         ]
 
 
-
---Middle
-
-
 shadow =
     "(Shadow)"
+
+
+
+--Middle
 
 
 viewRegisteringMiddle : Model -> RegisteringModel -> League -> List (Html Msg)
@@ -737,52 +737,6 @@ type alias MyPokemonData =
     , pokemon : Pokemon
     , dex : Maybe PokedexEntry
     }
-
-
-{-| Used by Registering and Team
--}
-viewMyPokemon : Model -> Maybe String -> String -> Pokemon -> PokedexEntry -> Html Msg
-viewMyPokemon model selectedPokemon speciesId pokemon entry =
-    let
-        mainCls =
-            if selectedPokemon == Just speciesId then
-                " mb-2 bg-blue-100"
-
-            else
-                " mb-2 bg-white"
-
-        topLine =
-            div [ class "flex flex-row items-center justify-between" ]
-                [ -- LHS
-                  div [ class "flex flex-row items-center" ]
-                    [ toggleBtn (ToggleMyPokemon speciesId) pokemon.expanded
-                    , ppTypes entry.types
-                    , div
-                        [ onClick <| SelectCandidate speciesId
-                        , title "Select for team"
-                        , class "cursor-pointer"
-                        ]
-                        [ viewNameTitle entry.speciesName ]
-                    ]
-                , -- RHS
-                  div [ class "flex flex-row items-center text-sm" ]
-                    [ ifThenElse pokemon.expanded (text "") (summariseMoves model.moves pokemon)
-                    , if pokemon.expanded then
-                        deleteIcon <| RemovePokemon speciesId
-
-                      else
-                        entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text
-                    ]
-
-                -- getAttackTypes model.attacks entry
-                ]
-    in
-    div [ class <| cardClass ++ mainCls ] <|
-        if pokemon.expanded then
-            topLine :: viewAttacksWithRecommendations model.moves entry speciesId pokemon
-
-        else
-            [ topLine ]
 
 
 viewAttacksWithRecommendations : Dict String MoveType -> PokedexEntry -> String -> Pokemon -> List (Html Msg)
@@ -1092,92 +1046,6 @@ viewTeamMember updater model speciesId entry isPinned pokemon =
     topLine :: middlePart ++ viewPokedexResistsAndWeaknesses entry
 
 
-
--- -------------------
--- RHS Opponents
--- -------------------
-
-
-viewRegisteringRHS : Model -> League -> List String -> List (Html Msg)
-viewRegisteringRHS model league names =
-    let
-        chooser =
-            div [ class "flex flex-row items-center justify-between mb-2 " ] <|
-                case model.chooser of
-                    OpponentChooser search state ->
-                        [ viewChooser model.pokedex model.season search state ]
-
-                    _ ->
-                        [ viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
-                        , span [ class "text-sm" ] [ text "Frequency" ]
-                        ]
-
-        viewOpponent : ( String, Opponent ) -> PokedexEntry -> Html Msg
-        viewOpponent ( speciesId, op ) entry =
-            let
-                headerRow =
-                    div [ class "flex flex-row align-items justify-between" ]
-                        [ div
-                            [ class "flex flex-row items-center" ]
-                            [ toggleBtn (ToggleOpponent speciesId) op.expanded
-                            , ppTypes entry.types
-                            , viewNameTitle entry.speciesName
-                            ]
-                        , div [ class "flex flex-row items-center" ]
-                            [ button [ onClick <| UpdateOpponentFrequency speciesId -1, class "ml-2 mr-1" ] [ text "-" ]
-                            , span [ class "mr-1" ] [ text <| String.fromInt op.frequency ]
-                            , button [ onClick <| UpdateOpponentFrequency speciesId 1, class "mr-1" ] [ text "+" ]
-                            , if op.expanded then
-                                deleteIcon <| RemoveOpponent speciesId
-
-                              else
-                                text ""
-                            ]
-                        ]
-
-                entry_ =
-                    addReturn entry
-
-                content =
-                    if op.expanded then
-                        [ entry_.fast
-                            |> L.map (viewMoveWithPvPoke model.moves entry_)
-                            |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
-                            |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
-                        , entry_.charged
-                            |> L.map (viewMoveWithPvPoke model.moves entry_)
-                            |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
-                            |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
-                        , div [] <| viewPokemonResistsAndWeaknesses model speciesId
-                        ]
-
-                    else
-                        []
-            in
-            div [ class <| cardClass ++ " mb-2" ]
-                (headerRow :: content)
-
-        viewer : ( String, Opponent ) -> Html Msg
-        viewer ( speciesId, op ) =
-            case Dict.get speciesId model.pokedex of
-                Just entry ->
-                    viewOpponent ( speciesId, op ) entry
-
-                Nothing ->
-                    div [ class "flex flex-row justify-between" ]
-                        [ text <| "Could not look up " ++ speciesId
-                        , deleteIcon <| RemoveOpponent speciesId
-                        ]
-    in
-    [ h2 [] [ text "Opponents" ]
-    , chooser
-    , names
-        |> L.filterMap (\n -> Dict.get n league.opponents |> Maybe.map (Tuple.pair n))
-        |> L.map viewer
-        |> div []
-    ]
-
-
 addReturn : PokedexEntry -> PokedexEntry
 addReturn entry =
     { entry
@@ -1341,6 +1209,52 @@ summariseTeamInner attacks pokemons =
 -- -------------------
 -- View pokemon
 -- -------------------
+
+
+{-| Used by Registering and Team
+-}
+viewMyPokemon : Model -> Maybe String -> String -> Pokemon -> PokedexEntry -> Html Msg
+viewMyPokemon model selectedPokemon speciesId pokemon entry =
+    let
+        mainCls =
+            if selectedPokemon == Just speciesId then
+                " mb-2 bg-blue-100"
+
+            else
+                " mb-2 bg-white"
+
+        topLine =
+            div [ class "flex flex-row items-center justify-between" ]
+                [ -- LHS
+                  div [ class "flex flex-row items-center" ]
+                    [ toggleBtn (ToggleMyPokemon speciesId) pokemon.expanded
+                    , ppTypes entry.types
+                    , div
+                        [ onClick <| SelectCandidate speciesId
+                        , title "Select for team"
+                        , class "cursor-pointer"
+                        ]
+                        [ viewNameTitle entry.speciesName ]
+                    ]
+                , -- RHS
+                  div [ class "flex flex-row items-center text-sm" ]
+                    [ ifThenElse pokemon.expanded (text "") (summariseMoves model.moves pokemon)
+                    , if pokemon.expanded then
+                        deleteIcon <| RemovePokemon speciesId
+
+                      else
+                        entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text
+                    ]
+
+                -- getAttackTypes model.attacks entry
+                ]
+    in
+    div [ class <| cardClass ++ mainCls ] <|
+        if pokemon.expanded then
+            topLine :: viewAttacksWithRecommendations model.moves entry speciesId pokemon
+
+        else
+            [ topLine ]
 
 
 viewNameTitle : String -> Html msg
