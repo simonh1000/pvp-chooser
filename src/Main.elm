@@ -481,20 +481,23 @@ view model =
                 div [ class "loading flex-grow" ] []
 
             Registering m ->
-                div [ cls "choosing grid grid-cols-1 md:grid-cols-5 gap-2" ] <|
-                    viewRegistering model league m
+                div [ cls "choosing grid grid-cols-1 md:grid-cols-5 gap-2" ]
+                    [ div [ class "pvpoke flex flex-col" ] <| viewRegisteringLHS model league
+                    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewRegisteringMiddle model m league)
+                    , div [ class "opponents col-span-2 flex flex-col" ] (viewRegisteringRHS model league m.opponents)
+                    ]
 
             TeamOptions search ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-5 gap-2" ]
-                    [ div [ class "my-pokemon flex flex-col col-span-1" ] (viewTeamOptions model league search)
-                    , div [ class "my-team flex flex-col col-span-2" ] (viewTeam model Nothing league)
-                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
+                    [ div [ class "my-pokemon flex flex-col col-span-1" ] (viewTeamLHS model league search)
+                    , div [ class "my-team flex flex-col col-span-2" ] (viewTeamMiddle model Nothing league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewTeamRHS model league)
                     ]
 
             Battling ->
                 div [ cls "battling grid grid-cols-1 md:grid-cols-3 gap-2" ]
-                    [ div [ class "my-team flex flex-col" ] (viewTeam model Nothing league)
-                    , div [ class "opponents flex flex-col col-span-2" ] (viewOpponentsBattling model league)
+                    [ div [ class "my-team flex flex-col" ] (viewTeamMiddle model Nothing league)
+                    , div [ class "opponents flex flex-col col-span-2" ] (viewTeamRHS model league)
                     ]
 
             FatalError string ->
@@ -680,12 +683,16 @@ viewName name requiresEliteMove =
         ]
 
 
+
+--Middle
+
+
 shadow =
     "(Shadow)"
 
 
-viewMyPokemons : Model -> RegisteringModel -> League -> List (Html Msg)
-viewMyPokemons model m league =
+viewRegisteringMiddle : Model -> RegisteringModel -> League -> List (Html Msg)
+viewRegisteringMiddle model m league =
     let
         addData speciesId pokemon =
             MyPokemonData speciesId pokemon (Dict.get speciesId model.pokedex)
@@ -732,6 +739,8 @@ type alias MyPokemonData =
     }
 
 
+{-| Used by Registering and Team
+-}
 viewMyPokemon : Model -> Maybe String -> String -> Pokemon -> PokedexEntry -> Html Msg
 viewMyPokemon model selectedPokemon speciesId pokemon entry =
     let
@@ -781,10 +790,9 @@ viewAttacksWithRecommendations moves entry speciesId pokemon =
     let
         viewAttack_ selectMove isSelected attack =
             span
-                [ class <| "flex flex-row items-center cursor-pointer rounded ml-1 p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-transparent"
+                [ class <| "flex flex-row items-center cursor-pointer rounded p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-transparent"
                 , onClick <| selectMove speciesId attack
                 ]
-            <|
                 [ viewMoveWithPvPoke moves entry attack ]
 
         entry_ =
@@ -792,11 +800,11 @@ viewAttacksWithRecommendations moves entry speciesId pokemon =
     in
     [ entry_.fast
         |> L.map (\attack -> viewAttack_ SelectFastMove (attack == pokemon.fast) attack)
-        |> (::) (text "Fast: ")
+        |> (::) (span [ class "attacks-header" ] [ text "Fast: " ])
         |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
     , entry_.charged
         |> L.map (\attack -> viewAttack_ SelectChargedMove (Set.member attack pokemon.charged) attack)
-        |> (::) (text "Charged: ")
+        |> (::) (span [ class "attacks-header" ] [ text "Charged: " ])
         |> div [ class "flex flex-row flex-wrap items-center" ]
     , if Set.size pokemon.charged > 2 then
         div [ class "text-red-400" ] [ text "You have selected more than 2 charged moves" ]
@@ -824,13 +832,97 @@ summariseMoves attacks pokemon =
 
 
 
+-- Right
+
+
+viewRegisteringRHS : Model -> League -> List String -> List (Html Msg)
+viewRegisteringRHS model league names =
+    let
+        chooser =
+            div [ class "flex flex-row items-center justify-between mb-2 " ] <|
+                case model.chooser of
+                    OpponentChooser search state ->
+                        [ viewChooser model.pokedex model.season search state ]
+
+                    _ ->
+                        [ viewChooserPlaceholder <| OpponentChooser "" Autocomplete.empty
+                        , span [ class "text-sm" ] [ text "Frequency" ]
+                        ]
+
+        viewOpponent : ( String, Opponent ) -> PokedexEntry -> Html Msg
+        viewOpponent ( speciesId, op ) entry =
+            let
+                headerRow =
+                    div [ class "flex flex-row align-items justify-between" ]
+                        [ div
+                            [ class "flex flex-row items-center" ]
+                            [ toggleBtn (ToggleOpponent speciesId) op.expanded
+                            , ppTypes entry.types
+                            , viewNameTitle entry.speciesName
+                            ]
+                        , div [ class "flex flex-row items-center" ]
+                            [ button [ onClick <| UpdateOpponentFrequency speciesId -1, class "ml-2 mr-1" ] [ text "-" ]
+                            , span [ class "mr-1" ] [ text <| String.fromInt op.frequency ]
+                            , button [ onClick <| UpdateOpponentFrequency speciesId 1, class "mr-1" ] [ text "+" ]
+                            , if op.expanded then
+                                deleteIcon <| RemoveOpponent speciesId
+
+                              else
+                                text ""
+                            ]
+                        ]
+
+                entry_ =
+                    addReturn entry
+
+                content =
+                    if op.expanded then
+                        [ entry_.fast
+                            |> L.map (viewMoveWithPvPoke model.moves entry_)
+                            |> (::) (span [ class "mr-2" ] [ text "Fast:" ])
+                            |> div [ class "flex flex-row flex-wrap items-center ml-1 mb-2" ]
+                        , entry_.charged
+                            |> L.map (viewMoveWithPvPoke model.moves entry_)
+                            |> (::) (span [ class "mr-2" ] [ text "Charged:" ])
+                            |> div [ class "flex flex-row flex-wrap items-center mb-2" ]
+                        , div [] <| viewPokemonResistsAndWeaknesses model speciesId
+                        ]
+
+                    else
+                        []
+            in
+            div [ class <| cardClass ++ " mb-2" ]
+                (headerRow :: content)
+
+        viewer : ( String, Opponent ) -> Html Msg
+        viewer ( speciesId, op ) =
+            case Dict.get speciesId model.pokedex of
+                Just entry ->
+                    viewOpponent ( speciesId, op ) entry
+
+                Nothing ->
+                    div [ class "flex flex-row justify-between" ]
+                        [ text <| "Could not look up " ++ speciesId
+                        , deleteIcon <| RemoveOpponent speciesId
+                        ]
+    in
+    [ h2 [] [ text "Opponents" ]
+    , chooser
+    , names
+        |> L.filterMap (\n -> Dict.get n league.opponents |> Maybe.map (Tuple.pair n))
+        |> L.map viewer
+        |> div []
+    ]
+
+
+
 -- -------------------
--- LHS Team Options
+-- Team Options
 -- -------------------
 
 
-viewTeamOptions : Model -> League -> String -> List (Html Msg)
-viewTeamOptions model league search =
+viewTeamLHS : Model -> League -> String -> List (Html Msg)
+viewTeamLHS model league search =
     let
         viewOption : ( Team, Float ) -> Html Msg
         viewOption ( { cand1, cand2, cand3 } as team, score ) =
@@ -889,8 +981,8 @@ viewTeamOptions model league search =
 -- -------------------
 
 
-viewTeam : Model -> Maybe String -> League -> List (Html Msg)
-viewTeam model selectedPokemon league =
+viewTeamMiddle : Model -> Maybe String -> League -> List (Html Msg)
+viewTeamMiddle model selectedPokemon league =
     let
         team =
             league.team
@@ -1098,8 +1190,8 @@ addReturn entry =
     }
 
 
-viewOpponentsBattling : Model -> League -> List (Html Msg)
-viewOpponentsBattling model league =
+viewTeamRHS : Model -> League -> List (Html Msg)
+viewTeamRHS model league =
     let
         team : List ( String, PType )
         team =
@@ -1284,8 +1376,7 @@ getDefenceMeta effectiveness tps =
         go _ dict =
             L.foldl (\tp acc -> AL.get tp dict |> Maybe.withDefault 1 |> (*) acc) 1 tps
     in
-    effectiveness
-        |> AL.map go
+    AL.map go effectiveness
 
 
 viewTypes : (PType -> Float -> Bool) -> AL.Dict PType Float -> String -> Html msg
@@ -1303,7 +1394,7 @@ viewTypes fn moves title =
             ]
     in
     div [ class "flex flex-row items-center mb-2" ]
-        [ span [ class "mr-3" ] [ text title ]
+        [ div [ class "attacks-header mr-1" ] [ text title ]
         , if (L.length <| normals ++ supers) > 7 then
             div [ class "badge-list flex flex-col" ] content
 
