@@ -155,11 +155,18 @@ type alias Season =
     , stringified : String
     }
 
+
+type SeasonName
+    = Great
+    | UltraPremier
+    | Ultra
+    | MasterPremier
+    | Master
+
+
 seasonsData : List Season
 seasonsData =
-    [ Season LittleCup "little" "little/rankings-500.json" "Little Cup" "little"
-    , greatSeason
-    , Season Kanto "kanto" "kanto/rankings-1500.json" "Kanto Cup" "kanto"
+    [ greatSeason
     , Season UltraPremier "ultra-premier" "premier/rankings-2500.json" "Ultra: Premier Cup" "UltraPremier"
     , Season Ultra "ultra" "all/rankings-2500.json" "Ultra League" "Ultra"
     , Season MasterPremier "premier" "premier/rankings-10000.json" "Master: Premier Cup" "Premier"
@@ -170,15 +177,6 @@ seasonsData =
 greatSeason : Season
 greatSeason =
     Season Great "great" "all/rankings-1500.json" "Great League" "Great"
-
-type SeasonName
-    = LittleCup
-    | Great
-    | Kanto
-    | UltraPremier
-    | Ultra
-    | MasterPremier
-    | Master
 
 
 decodeSeason : Decoder SeasonName
@@ -195,11 +193,9 @@ encodeSeason =
     Encode.string << stringFromSeason
 
 
-
 seasons : List SeasonName
 seasons =
     L.map .name seasonsData
-
 
 
 stringFromSeason : SeasonName -> String

@@ -42,10 +42,6 @@ function convert(league, item) {
 }
 
 getGamemaster();
-// https://pvpoke.com/data/rankings/little/overall/rankings-500.json
-convert("little", "500");
-// /data/rankings/kanto/overall/rankings-1500.json
-convert("kanto", "1500");
 convert("all", "1500");
 convert("premier", "2500");
 convert("all", "2500");

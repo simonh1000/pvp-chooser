@@ -481,11 +481,8 @@ view model =
                 div [ class "loading flex-grow" ] []
 
             Registering m ->
-                div [ cls "choosing grid grid-cols-1 md:grid-cols-5 gap-2" ]
-                    [ div [ class "pvpoke flex flex-col" ] <| viewLhsRegistering model league
-                    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewMyPokemons model m league)
-                    , div [ class "opponents col-span-2 flex flex-col" ] (viewOpponentsRegistering model league m.opponents)
-                    ]
+                div [ cls "choosing grid grid-cols-1 md:grid-cols-5 gap-2" ] <|
+                    viewRegistering model league m
 
             TeamOptions search ->
                 div [ cls "teams grid grid-cols-1 md:grid-cols-5 gap-2" ]
@@ -593,12 +590,20 @@ mkStyledButton ( msg, txt, selected ) =
 
 
 -- -------------------
--- LHS PvPoke list
+-- Registering
+-- LHS
 -- -------------------
 
 
-viewLhsRegistering : Model -> League -> List (Html Msg)
-viewLhsRegistering model league =
+viewRegistering model league m =
+    [ div [ class "pvpoke flex flex-col" ] <| viewRegisteringLHS model league
+    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewMyPokemons model m league)
+    , div [ class "opponents col-span-2 flex flex-col" ] (viewRegisteringRHS model league m.opponents)
+    ]
+
+
+viewRegisteringLHS : Model -> League -> List (Html Msg)
+viewRegisteringLHS model league =
     let
         ppFloat_ =
             Maybe.map ppFloat >> Maybe.withDefault ""
@@ -622,10 +627,7 @@ viewLhsRegistering model league =
                             ]
                             [ matIcon "plus toggle" ]
                         , ppTypes entry.types
-                        , span []
-                            [ span [ class "font-bold" ] [ text entry.speciesName ]
-                            , text <| ifThenElse requiresEliteMove "*" ""
-                            ]
+                        , span [ class "font-bold" ] (viewName entry.speciesName requiresEliteMove)
                         ]
                     , div [ class "text-sm" ] [ text (ppFloat_ entry.score) ]
                     ]
@@ -665,10 +667,21 @@ viewLhsRegistering model league =
                 ""
 
 
+viewName name requiresEliteMove =
+    if String.endsWith "(Shadow)" name then
+        [ text <| String.dropRight (String.length shadow) name
+        , span [ class "text-purple-400" ] [ matIcon "fire" ]
+        , text <| ifThenElse requiresEliteMove "*" ""
+        ]
 
--- -------------------
--- LHS Registering
--- -------------------
+    else
+        [ text name
+        , text <| ifThenElse requiresEliteMove "*" ""
+        ]
+
+
+shadow =
+    "(Shadow)"
 
 
 viewMyPokemons : Model -> RegisteringModel -> League -> List (Html Msg)
@@ -993,8 +1006,8 @@ viewTeamMember updater model speciesId entry isPinned pokemon =
 -- -------------------
 
 
-viewOpponentsRegistering : Model -> League -> List String -> List (Html Msg)
-viewOpponentsRegistering model league names =
+viewRegisteringRHS : Model -> League -> List String -> List (Html Msg)
+viewRegisteringRHS model league names =
     let
         chooser =
             div [ class "flex flex-row items-center justify-between mb-2 " ] <|
