@@ -1,8 +1,9 @@
 module.exports = {
-    purge: [
-        'src/*.elm',
-        'src/*.css'
-    ],
+    purge: {
+        mode: 'layers',
+        layers: ['utilities'],
+        content: [],
+    },
     theme: {
         extend: {}
     },
