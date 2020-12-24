@@ -670,25 +670,19 @@ viewRegisteringLHS model league =
                 ""
 
 
-viewName name requiresEliteMove =
-    if String.endsWith "(Shadow)" name then
-        [ text <| String.dropRight (String.length shadow) name
-        , span [ class "text-purple-400" ] [ matIcon "fire" ]
-        , text <| ifThenElse requiresEliteMove "*" ""
-        ]
-
-    else
-        [ text name
-        , text <| ifThenElse requiresEliteMove "*" ""
-        ]
-
-
 shadow =
     "(Shadow)"
 
 
 
 --Middle
+
+
+type alias MyPokemonData =
+    { speciesId : String
+    , pokemon : Pokemon
+    , dex : Maybe PokedexEntry
+    }
 
 
 viewRegisteringMiddle : Model -> RegisteringModel -> League -> List (Html Msg)
@@ -730,13 +724,6 @@ viewRegisteringMiddle model m league =
             |> L.map viewer
             |> div []
     ]
-
-
-type alias MyPokemonData =
-    { speciesId : String
-    , pokemon : Pokemon
-    , dex : Maybe PokedexEntry
-    }
 
 
 viewAttacksWithRecommendations : Dict String MoveType -> PokedexEntry -> String -> Pokemon -> List (Html Msg)
@@ -1259,7 +1246,8 @@ viewMyPokemon model selectedPokemon speciesId pokemon entry =
 
 viewNameTitle : String -> Html msg
 viewNameTitle name =
-    h3 [ class "text-xl font-bold truncate ml-1" ] [ text name ]
+    h3 [ class "text-xl font-bold truncate ml-1" ] <|
+        viewName name False
 
 
 viewPokemonResistsAndWeaknesses : Model -> String -> List (Html msg)
@@ -1410,6 +1398,20 @@ viewConfig =
 -- -------------------
 -- View Helpers
 -- -------------------
+
+
+viewName : String -> Bool -> List (Html msg)
+viewName name requiresEliteMove =
+    if String.endsWith "(Shadow)" name then
+        [ text <| String.dropRight (String.length shadow) name
+        , span [ class "text-purple-400" ] [ matIcon "fire" ]
+        , text <| ifThenElse requiresEliteMove "*" ""
+        ]
+
+    else
+        [ text name
+        , text <| ifThenElse requiresEliteMove "*" ""
+        ]
 
 
 toggleBtn : msg -> Bool -> Html msg
