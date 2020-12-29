@@ -1,7 +1,7 @@
 module.exports = {
     purge: {
         mode: 'layers',
-        layers: ['utilities'],
+        layers: [],
         content: [],
     },
     theme: {
