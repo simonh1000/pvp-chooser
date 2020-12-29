@@ -740,7 +740,7 @@ viewAttacksWithRecommendations moves entry speciesId pokemon =
             addReturn entry
     in
     [ entry_.fast
-        |> L.map (\attack -> viewAttack_ SelectFastMove (Debug.log "selected?" <| attack == pokemon.fast) attack)
+        |> L.map (\attack -> viewAttack_ SelectFastMove (attack == pokemon.fast) attack)
         |> (::) (span [ class "attacks-header" ] [ text "Fast: " ])
         |> div [ class "flex flex-row flex-wrap items-center ml-1 " ]
     , entry_.charged
