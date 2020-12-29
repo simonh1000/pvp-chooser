@@ -157,7 +157,8 @@ type alias Season =
 
 
 type SeasonName
-    = Great
+    = Holiday
+    | Great
     | UltraPremier
     | Ultra
     | MasterPremier
@@ -167,6 +168,7 @@ type SeasonName
 seasonsData : List Season
 seasonsData =
     [ greatSeason
+    , Season Holiday "holiday" "holiday/rankings-1500.json" "Holiday Cup" "Holiday"
     , Season UltraPremier "ultra-premier" "premier/rankings-2500.json" "Ultra: Premier Cup" "UltraPremier"
     , Season Ultra "ultra" "all/rankings-2500.json" "Ultra League" "Ultra"
     , Season MasterPremier "premier" "premier/rankings-10000.json" "Master: Premier Cup" "Premier"
