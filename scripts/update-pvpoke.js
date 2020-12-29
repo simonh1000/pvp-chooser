@@ -42,6 +42,8 @@ function convert(league, item) {
 }
 
 getGamemaster();
+// https://pvpoke.com/data/rankings/holiday/overall/rankings-1500.json
+convert("holiday", "1500");
 convert("all", "1500");
 convert("premier", "2500");
 convert("all", "2500");
