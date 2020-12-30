@@ -1,7 +1,8 @@
 const {merge} = require('webpack-merge');
-const ClosurePlugin = require("closure-webpack-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
 
+const CopyWebpackPlugin = require("copy-webpack-plugin");
+// JS minification
+const ClosurePlugin = require("closure-webpack-plugin");
 // Production CSS assets - separate, minimised file
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
@@ -22,11 +23,7 @@ const prod = {
     plugins: [
         // Copy static assets
         new CopyWebpackPlugin({
-            patterns: [
-                {
-                    from: "src/assets"
-                }
-            ]
+            patterns: [{from: "src/assets"}]
         }),
         new MiniCssExtractPlugin({
             // Options similar to the same options in webpackOptions.output
