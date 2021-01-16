@@ -576,10 +576,10 @@ mkStyledButton ( msg, txt, selected ) =
     let
         cls =
             if selected then
-                "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
+                "inline-block border rounded py-1 px-3 border-blue-500 bg-blue-500 text-white"
 
             else
-                "inline-block border border-white rounded hover:border-gray-200 text-blue-500 hover:bg-gray-200 py-1 px-3"
+                "inline-block border rounded py-1 px-3 border-white text-blue-500 hover:border-gray-200 hover:bg-gray-200"
     in
     button
         [ class cls
@@ -731,7 +731,7 @@ viewAttacksWithRecommendations moves entry speciesId pokemon =
     let
         viewAttack_ selectMove isSelected attack =
             span
-                [ class <| "flex flex-row items-center cursor-pointer rounded p-1 " ++ ifThenElse isSelected "bg-teal-300" "bg-transparent"
+                [ class <| "flex flex-row items-center cursor-pointer rounded p-1 " ++ ifThenElse isSelected "bg-green-300" "bg-transparent"
                 , onClick <| selectMove speciesId attack
                 ]
                 [ viewMoveWithPvPoke moves entry attack ]
