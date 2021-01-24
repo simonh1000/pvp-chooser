@@ -80,7 +80,6 @@ type Msg
     | SelectFastMove String String
     | SelectChargedMove String String
     | RemovePokemon String
-    | SelectCandidate String -- speciesId
       -- Registering: Team
     | UpdateTeam Team -- second part
     | SwapTeam Bool -- isTopTwo
@@ -250,13 +249,6 @@ update message model =
                 |> andPersist
 
         -- team chooser
-        SelectCandidate pokemon ->
-            let
-                mapFn m =
-                    { m | selectedPokemon = ifThenElse (Just pokemon == m.selectedPokemon) Nothing (Just pokemon) }
-            in
-            ( { model | page = mapRegistering mapFn model.page }, Cmd.none )
-
         SwapTeam isTopTwo ->
             let
                 updater l =
@@ -596,7 +588,7 @@ mkStyledButton ( msg, txt, selected ) =
 
 viewRegistering model league m =
     [ div [ class "pvpoke flex flex-col" ] <| viewRegisteringLHS model league
-    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewRegisteringMiddle model m league)
+    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewRegisteringMiddle model league)
     , div [ class "opponents col-span-2 flex flex-col" ] (viewRegisteringRHS model league m.opponents)
     ]
 
@@ -685,24 +677,25 @@ type alias MyPokemonData =
     }
 
 
-viewRegisteringMiddle : Model -> RegisteringModel -> League -> List (Html Msg)
-viewRegisteringMiddle model m league =
+viewRegisteringMiddle : Model -> League -> List (Html Msg)
+viewRegisteringMiddle model league =
     let
         addData speciesId pokemon =
             MyPokemonData speciesId pokemon (Dict.get speciesId model.pokedex)
 
+        defaultView { speciesId, pokemon, dex } =
+            div [ class <| cardClass ++ " mb-2 bg-red-200" ]
+                [ div [ class "flex flex-row items-center justify-between" ]
+                    [ viewNameTitle speciesId
+                    , deleteIcon <| RemovePokemon speciesId
+                    ]
+                , div [] [ text <| "Unexpected error looking up. Please delete and re-add" ]
+                ]
+
         viewer : MyPokemonData -> Html Msg
-        viewer { speciesId, pokemon, dex } =
-            Maybe.map (viewMyPokemon model m.selectedPokemon speciesId pokemon) dex
-                |> Maybe.withDefault
-                    (div [ class <| cardClass ++ " mb-2 bg-red-200" ]
-                        [ div [ class "flex flex-row items-center justify-between" ]
-                            [ viewNameTitle speciesId
-                            , deleteIcon <| RemovePokemon speciesId
-                            ]
-                        , div [] [ text <| "Unexpected error looking up. Please delete and re-add" ]
-                        ]
-                    )
+        viewer ({ speciesId, pokemon, dex } as data) =
+            Maybe.map (viewMyPokemon model speciesId pokemon) dex
+                |> Maybe.withDefault (defaultView data)
     in
     [ h2 [] [ text <| "My Pokemon for " ++ ppSeason model.season ]
     , div [ class "mb-2" ] [ text "\u{00A0}" ]
@@ -717,7 +710,6 @@ viewRegisteringMiddle model m league =
 
       else
         league.myPokemon
-            --|> rejectByList (L.filterMap extractSpeciesId <| mkTeamList league.team)
             |> Dict.map addData
             |> Dict.values
             |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .score |> Maybe.withDefault 0 |> (*) -1)
@@ -1200,15 +1192,31 @@ summariseTeamInner attacks pokemons =
 
 {-| Used by Registering and Team
 -}
-viewMyPokemon : Model -> Maybe String -> String -> Pokemon -> PokedexEntry -> Html Msg
-viewMyPokemon model selectedPokemon speciesId pokemon entry =
+viewMyPokemon : Model -> String -> Pokemon -> PokedexEntry -> Html Msg
+viewMyPokemon model speciesId pokemon entry =
     let
         mainCls =
-            if selectedPokemon == Just speciesId then
-                " mb-2 bg-blue-100"
+            " mb-2 bg-white"
+
+        rhs1 =
+            if pokemon.expanded then
+                []
 
             else
-                " mb-2 bg-white"
+                [ if L.all (\attk -> L.member attk entry.recMoves) (pokemon.fast :: Set.toList pokemon.charged) then
+                    pvpPokeLogo
+
+                  else
+                    text ""
+                , summariseMoves model.moves pokemon
+                ]
+
+        rhs2 =
+            if pokemon.expanded then
+                deleteIcon <| RemovePokemon speciesId
+
+            else
+                entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text
 
         topLine =
             div [ class "flex flex-row items-center justify-between" ]
@@ -1216,22 +1224,11 @@ viewMyPokemon model selectedPokemon speciesId pokemon entry =
                   div [ class "flex flex-row items-center" ]
                     [ toggleBtn (ToggleMyPokemon speciesId) pokemon.expanded
                     , ppTypes entry.types
-                    , div
-                        [ onClick <| SelectCandidate speciesId
-                        , title "Select for team"
-                        , class "cursor-pointer"
-                        ]
-                        [ viewNameTitle entry.speciesName ]
+                    , viewNameTitle entry.speciesName
                     ]
                 , -- RHS
-                  div [ class "flex flex-row items-center text-sm" ]
-                    [ ifThenElse pokemon.expanded (text "") (summariseMoves model.moves pokemon)
-                    , if pokemon.expanded then
-                        deleteIcon <| RemovePokemon speciesId
-
-                      else
-                        entry.score |> Maybe.map ppFloat |> Maybe.withDefault "" |> text
-                    ]
+                  div [ class "flex flex-row items-center text-sm" ] <|
+                    (rhs1 ++ [ rhs2 ])
 
                 -- getAttackTypes model.attacks entry
                 ]
