@@ -45,6 +45,9 @@ npm run prod
 
 Run the script in scripts directory to update the rankings files from pvpoke
 
+## Add new cup
+
+
 ## Changelog
 
 1.7 Add Holiday Cup
