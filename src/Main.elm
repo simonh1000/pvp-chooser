@@ -1,4 +1,4 @@
-module Main exposing (main, viewAttacksWithRecommendations)
+module Main exposing (main, shadow, viewAttacksWithRecommendations)
 
 import AssocList as AL
 import Autocomplete exposing (..)
@@ -15,6 +15,7 @@ import Http
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra exposing (andMap)
 import List as L
+import Maybe.Extra as ME
 import Model exposing (..)
 import Pokemon exposing (Effectiveness, PType, effectiveness, stringFromPType)
 import Ports
@@ -81,6 +82,8 @@ type Msg
     | SelectChargedMove String String
     | RemovePokemon String
       -- Registering: Team
+    | UpdateSeasonToCopy SeasonName
+    | CopyFromSeason SeasonName
     | UpdateTeam Team -- second part
     | SwapTeam Bool -- isTopTwo
       -- Team chooser
@@ -223,6 +226,30 @@ update message model =
                 |> updateLeague updater
                 |> andPersist
 
+        UpdateSeasonToCopy seasonName ->
+            ( { model | page = mapRegistering (\m -> { m | seasonToCopy = seasonName }) model.page }, Cmd.none )
+
+        CopyFromSeason seasonName ->
+            case Dict.get (serialiseSeason seasonName) model.leagues of
+                Just leagueToCopy ->
+                    let
+                        myPokemon =
+                            leagueToCopy.myPokemon
+                                |> Dict.filter
+                                    (\speciesId _ ->
+                                        model.pokedex |> Dict.get speciesId |> Maybe.andThen .score |> ME.isJust
+                                    )
+
+                        updater league =
+                            { league | myPokemon = myPokemon }
+                    in
+                    model
+                        |> updateLeague updater
+                        |> andPersist
+
+                _ ->
+                    ( model, Cmd.none )
+
         UpdateTeamOptionsSearch search ->
             ( updateTeamOptionsSearch search model, Cmd.none )
 
@@ -244,7 +271,7 @@ update message model =
 
         UpdateTeam team ->
             -- mapRegistering has no effect on TeamChoosing page
-            { model | page = mapRegistering (\m -> { m | selectedPokemon = Nothing }) model.page }
+            model
                 |> updateLeague (\l -> { l | team = team })
                 |> andPersist
 
@@ -494,7 +521,7 @@ view model =
                     [ h1 [] [ text "Fatal Error" ]
                     , div [] [ text string ]
                     ]
-        , pageFooter
+        , pageFooter model.errorMessage
         ]
 
 
@@ -519,20 +546,8 @@ pvpHeader selectedSeason tgt =
         title =
             h1 [ class "text-2xl justify-center" ] [ text "Pokemon PVP team manager" ]
 
-        mkSeasonOption season =
-            option
-                [ value <| serialiseSeason season
-                , selected <| season == selectedSeason
-                ]
-                [ text <| ppSeason season ]
-
         seasonSelector =
-            seasons
-                |> L.map mkSeasonOption
-                |> select
-                    [ onInput (deserialiseSeason >> SwitchSeason)
-                    , class "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
-                    ]
+            mkSeasonsSelector SwitchSeason selectedSeason seasons
     in
     header [ class "flex flex-row justify-between p-3 bg-gray-400" ] <|
         case tgt of
@@ -546,14 +561,37 @@ pvpHeader selectedSeason tgt =
                 [ title, div [ class "flex flex-row" ] [ switcher, seasonSelector ] ]
 
 
-pageFooter : Html Msg
-pageFooter =
-    footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
-        [ span [] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "PvPoke" ] ]
-        , span [] [ text "Privacy: Uses Google Analytics" ]
-        , span [] [ text "Code: ", a [ href "https://github.com/simonh1000/pvp-chooser" ] [ text "Github" ] ]
-        , span [] [ text "Feedback: ", a [ href "https://twitter.com/lambda_simon" ] [ text "@lambda_simon" ] ]
-        ]
+mkSeasonsSelector : (SeasonName -> Msg) -> SeasonName -> List SeasonName -> Html Msg
+mkSeasonsSelector updateMsg selectedSeason =
+    let
+        mkSeasonOption season =
+            option
+                [ value <| serialiseSeason season
+                , selected <| season == selectedSeason
+                ]
+                [ text <| ppSeason season ]
+    in
+    L.map mkSeasonOption
+        >> select
+            [ onInput (deserialiseSeason >> updateMsg)
+            , class "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white"
+            ]
+
+
+pageFooter : Maybe String -> Html Msg
+pageFooter errorMessage =
+    case errorMessage of
+        Just err ->
+            footer [ class "flex flex-row items-center justify-between p-3 bg-red-400" ]
+                [ text err ]
+
+        Nothing ->
+            footer [ class "flex flex-row items-center justify-between p-3 bg-gray-400" ]
+                [ span [] [ text "Credits: Meta data from ", a [ href "https://pvpoke.com/" ] [ text "PvPoke" ] ]
+                , span [] [ text "Privacy: Uses Google Analytics" ]
+                , span [] [ text "Code: ", a [ href "https://github.com/simonh1000/pvp-chooser" ] [ text "Github" ] ]
+                , span [] [ text "Feedback: ", a [ href "https://twitter.com/lambda_simon" ] [ text "@lambda_simon" ] ]
+                ]
 
 
 mkRadioButtons : List ( msg, String, Bool ) -> Html msg
@@ -586,9 +624,10 @@ mkStyledButton ( msg, txt, selected ) =
 -- -------------------
 
 
+viewRegistering : Model -> League -> RegisteringModel -> List (Html Msg)
 viewRegistering model league m =
     [ div [ class "pvpoke flex flex-col" ] <| viewRegisteringLHS model league
-    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewRegisteringMiddle model league)
+    , div [ class "my-pokemon col-span-2 flex flex-col" ] (viewRegisteringMiddle model league m.seasonToCopy)
     , div [ class "opponents col-span-2 flex flex-col" ] (viewRegisteringRHS model league m.opponents)
     ]
 
@@ -662,6 +701,7 @@ viewRegisteringLHS model league =
                 ""
 
 
+shadow : String
 shadow =
     "(Shadow)"
 
@@ -677,8 +717,8 @@ type alias MyPokemonData =
     }
 
 
-viewRegisteringMiddle : Model -> League -> List (Html Msg)
-viewRegisteringMiddle model league =
+viewRegisteringMiddle : Model -> League -> SeasonName -> List (Html Msg)
+viewRegisteringMiddle model league seasonToCopy =
     let
         addData speciesId pokemon =
             MyPokemonData speciesId pokemon (Dict.get speciesId model.pokedex)
@@ -696,26 +736,42 @@ viewRegisteringMiddle model league =
         viewer ({ speciesId, pokemon, dex } as data) =
             Maybe.map (viewMyPokemon model speciesId pokemon) dex
                 |> Maybe.withDefault (defaultView data)
-    in
-    [ h2 [] [ text <| "My Pokemon for " ++ ppSeason model.season ]
-    , div [ class "mb-2" ] [ text "\u{00A0}" ]
-    , if Dict.isEmpty league.myPokemon then
-        ul []
-            [ ol [ class "mb-3" ]
+
+        copyPart =
+            [ div [ class "mb-3" ]
                 [ matIcon "arrow-left-bold"
                 , text "First add some of your pokemon from the list to the left"
                 ]
-            , ol [ class "mb-3" ] [ text "Then select the attacks you are using" ]
+            , div [ class "mb-3" ] [ text "Then select the attacks you are using" ]
+            , div []
+                [ span [ class "mr-1" ] [ text "Or copy from:" ]
+                , seasons
+                    |> L.filter ((/=) model.season)
+                    |> mkSeasonsSelector UpdateSeasonToCopy Great
+                , button
+                    [ class "inline-block border rounded ml-1 py-1 px-3 border-blue-500 bg-blue-500 text-white"
+                    , onClick <| CopyFromSeason seasonToCopy
+                    ]
+                    [ text "Copy" ]
+                ]
             ]
 
-      else
-        league.myPokemon
-            |> Dict.map addData
-            |> Dict.values
-            |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .score |> Maybe.withDefault 0 |> (*) -1)
-            |> L.map viewer
-            |> div []
+        normalPart =
+            league.myPokemon
+                |> Dict.map addData
+                |> Dict.values
+                |> L.sortBy (\{ dex } -> dex |> Maybe.andThen .score |> Maybe.withDefault 0 |> (*) -1)
+                |> L.map viewer
+    in
+    [ h2 [] [ text <| "My Pokemon for " ++ ppSeason model.season ]
+    , div [ class "mb-2" ] [ text "\u{00A0}" ]
     ]
+        ++ (if Dict.isEmpty league.myPokemon then
+                copyPart
+
+            else
+                normalPart
+           )
 
 
 viewAttacksWithRecommendations : Dict String MoveType -> PokedexEntry -> String -> Pokemon -> List (Html Msg)
@@ -1533,14 +1589,10 @@ getPokedex =
 
 getRankings : SeasonName -> Cmd Msg
 getRankings season =
-    let
-        get n =
-            Http.get
-                { url = n
-                , expect = Http.expectJson (OnRankingData season) decodeRankings
-                }
-    in
-    get <| getUrl season
+    Http.get
+        { url = getUrl season
+        , expect = Http.expectJson (OnRankingData season) decodeRankings
+        }
 
 
 

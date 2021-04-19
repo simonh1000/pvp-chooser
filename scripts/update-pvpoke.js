@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 const fetch = require('node-fetch');
 
@@ -30,11 +31,16 @@ mapRanking = ranking => {
 function convert(league, item) {
     let filename = `rankings-${item}.json`;
     let url = `https://pvpoke.com/data/rankings/${league}/overall/${filename}`;
-    let dstLocation = `../src/assets/${league}/${filename}`;
+    let dstDir = `../src/assets/${league}`;
+    let dstLocation = path.join(dstDir, filename);
     fetch(url)
         .then(res => res.json())
         .then(json => {
-            json = json.map(mapRanking)
+            json = json.map(mapRanking);
+            if (!fs.existsSync(dstDir)){
+                fs.mkdirSync(dstDir);
+            }
+
             fs.writeFileSync(dstLocation, JSON.stringify(json));
             // console.log("written", json);
         })
@@ -42,8 +48,8 @@ function convert(league, item) {
 }
 
 getGamemaster();
-// https://pvpoke.com/data/rankings/holiday/overall/rankings-1500.json
-// convert("holiday", "1500");
+// https://pvpoke.com/data/rankings/remix/overall/rankings-1500.json
+convert("remix", "1500");
 convert("all", "1500");
 convert("premier", "2500");
 convert("all", "2500");

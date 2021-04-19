@@ -78,19 +78,22 @@ mapRegistering function page =
             page
 
 
-type alias RegisteringModel =
-    { opponents : List String
-    , selectedPokemon : Maybe String -- speciesId
-    }
-
-
+registerPage : Page
 registerPage =
     Registering blankRegistering
 
 
+type alias RegisteringModel =
+    { opponents : List String
+    , seasonToCopy : SeasonName
+    }
+
+
 blankRegistering : RegisteringModel
 blankRegistering =
-    { opponents = [], selectedPokemon = Nothing }
+    { opponents = []
+    , seasonToCopy = Great
+    }
 
 
 isRegistering : Page -> Bool
@@ -157,7 +160,7 @@ type alias Season =
 
 
 type SeasonName
-    = Holiday
+    = Remix
     | Great
     | UltraPremier
     | Ultra
@@ -168,8 +171,7 @@ type SeasonName
 seasonsData : List Season
 seasonsData =
     [ greatSeason
-
-    --, Season Holiday "holiday" "holiday/rankings-1500.json" "Holiday Cup" "Holiday"
+    , Season Remix "remix" "remix/rankings-1500.json" "Remix Cup" "Remix"
     , Season UltraPremier "ultra-premier" "premier/rankings-2500.json" "Ultra: Premier Cup" "UltraPremier"
     , Season Ultra "ultra" "all/rankings-2500.json" "Ultra League" "Ultra"
     , Season MasterPremier "premier" "premier/rankings-10000.json" "Master: Premier Cup" "Premier"

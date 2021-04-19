@@ -14,7 +14,7 @@ const flags = {
 // console.log(flags);
 
 const {Elm} = require("./Main");
-var app = Elm.Main.init({
+const app = Elm.Main.init({
     flags
 });
 
