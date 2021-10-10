@@ -647,10 +647,6 @@ viewRegisteringLHS model league =
 
         mkItem : ( String, PokedexEntry ) -> Html Msg
         mkItem ( speciesId, entry ) =
-            let
-                requiresEliteMove =
-                    L.any (\m -> L.member m entry.elite) entry.recMoves
-            in
             li [ class <| cardClass ++ " mb-2 bg-white" ]
                 [ div [ class "flex flex-row justify-between" ]
                     [ div [ class "flex flex-row align-center" ]
@@ -661,7 +657,7 @@ viewRegisteringLHS model league =
                             ]
                             [ matIcon "plus toggle" ]
                         , ppTypes entry.types
-                        , span [ class "font-bold" ] (viewName entry.speciesName requiresEliteMove)
+                        , span [ class "font-bold" ] (viewEntryName entry)
                         ]
                     , div [ class "text-sm" ] [ text (ppFloat_ entry.score) ]
                     ]
@@ -1280,7 +1276,7 @@ viewMyPokemon model speciesId pokemon entry =
                   div [ class "flex flex-row items-center" ]
                     [ toggleBtn (ToggleMyPokemon speciesId) pokemon.expanded
                     , ppTypes entry.types
-                    , viewNameTitle entry.speciesName
+                    , h3 [ class "text-xl font-bold truncate ml-1" ] (viewEntryName entry)
                     ]
                 , -- RHS
                   div [ class "flex flex-row items-center text-sm" ] <|
@@ -1451,6 +1447,44 @@ viewConfig =
 -- -------------------
 -- View Helpers
 -- -------------------
+
+
+viewEntryName : PokedexEntry -> List (Html msg)
+viewEntryName entry =
+    let
+        requiresEliteMove =
+            L.any (\m -> L.member m entry.elite) entry.recMoves
+
+        suffix =
+            if Set.member "shadow" entry.tags then
+                " (Shadow)"
+                --else if Set.member "xs" entry.tags then
+                --    "_xs"
+
+            else
+                ""
+
+        tagToIcon s =
+            case s of
+                "shadow" ->
+                    span [ class "text-purple-400" ] [ matIcon "fire" ]
+
+                "xs" ->
+                    span [ class "text-red-400 ml-1" ] [ text "xs" ]
+
+                "shadoweligible" ->
+                    text ""
+
+                "alolan" ->
+                    text ""
+
+                x ->
+                    span [ class "text-purple-400" ] [ text x ]
+
+        namePart =
+            text <| String.dropRight (String.length suffix) entry.speciesName
+    in
+    namePart :: (entry.tags |> Set.toList |> L.map tagToIcon) ++ [ text <| ifThenElse requiresEliteMove "*" "" ]
 
 
 viewName : String -> Bool -> List (Html msg)
