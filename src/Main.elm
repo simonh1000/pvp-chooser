@@ -1472,19 +1472,17 @@ viewEntryName entry =
                 "xs" ->
                     span [ class "text-red-400 ml-1" ] [ text "xs" ]
 
-                "shadoweligible" ->
-                    text ""
-
-                "alolan" ->
-                    text ""
-
                 x ->
                     span [ class "text-purple-400" ] [ text x ]
+
+        removeKnownTags s =
+            L.foldl Set.remove s [ "shadoweligible", "alolan", "galarian", "mythical", "legendary", "starter", "untradeable" ]
+                |> Set.toList
 
         namePart =
             text <| String.dropRight (String.length suffix) entry.speciesName
     in
-    namePart :: (entry.tags |> Set.toList |> L.map tagToIcon) ++ [ text <| ifThenElse requiresEliteMove "*" "" ]
+    namePart :: (entry.tags |> removeKnownTags |> L.map tagToIcon) ++ [ text <| ifThenElse requiresEliteMove "*" "" ]
 
 
 viewName : String -> Bool -> List (Html msg)
