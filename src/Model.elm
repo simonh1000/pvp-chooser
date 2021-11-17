@@ -1,7 +1,7 @@
 module Model exposing (..)
 
 import Autocomplete exposing (..)
-import Common.CoreHelpers exposing (decodeSimpleCustomTypes, exactMatchString, ifThenElse)
+import Common.CoreHelpers exposing (exactMatchString, ifThenElse)
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Decode.Extra as DE exposing (andMap)
@@ -55,69 +55,6 @@ getCurrentLeague model =
 
 
 -- -----------------------
--- Page
--- -----------------------
-
-
-type Page
-    = Intro
-    | LoadingDex
-    | Registering RegisteringModel
-    | TeamOptions String -- search term
-    | Battling
-    | FatalError String
-
-
-mapRegistering : (RegisteringModel -> RegisteringModel) -> Page -> Page
-mapRegistering function page =
-    case page of
-        Registering m ->
-            Registering <| function m
-
-        _ ->
-            page
-
-
-registerPage : Page
-registerPage =
-    Registering blankRegistering
-
-
-type alias RegisteringModel =
-    { opponents : List String
-    , seasonToCopy : SeasonName
-    }
-
-
-blankRegistering : RegisteringModel
-blankRegistering =
-    { opponents = []
-    , seasonToCopy = Great
-    }
-
-
-isRegistering : Page -> Bool
-isRegistering page =
-    case page of
-        Registering _ ->
-            True
-
-        _ ->
-            False
-
-
-isTeamOptions : Page -> Bool
-isTeamOptions page =
-    case page of
-        TeamOptions _ ->
-            True
-
-        _ ->
-            False
-
-
-
--- -----------------------
 -- Persistence
 -- -----------------------
 
@@ -152,60 +89,57 @@ encodePersisted model =
 
 type alias Season =
     { name : SeasonName
-    , serialised : String
-    , url : String
+    , serialised : String -- key in the persisted data
+    , url : String -- pvpoke link
     , pretty : String
-    , stringified : String
+    , maxCP : Int -- where to copy over from
     }
 
 
 type SeasonName
-    = Remix
+    = GreatRemix
     | Great
+    | Halloween
     | UltraPremier
     | Ultra
+    | UltraRemix
     | MasterPremier
     | Master
+    | Other String
 
 
 seasonsData : List Season
 seasonsData =
-    [ greatSeason
-    , Season Remix "remix" "remix/rankings-1500.json" "Remix Cup" "Remix"
-    , Season UltraPremier "ultra-premier" "premier/rankings-2500.json" "Ultra: Premier Cup" "UltraPremier"
-    , Season Ultra "ultra" "all/rankings-2500.json" "Ultra League" "Ultra"
-    , Season MasterPremier "premier" "premier/rankings-10000.json" "Master: Premier Cup" "Premier"
-    , Season Master "master" "all/rankings-10000.json" "Master League" "Master"
+    [ Season (Other "Jungle") "jungle" "littlejungle/rankings-500.json" "List Jungle" 500
+    , Season Halloween "halloween" "halloween/rankings-1500.json" "Halloween" 1500
+    , greatSeason
+    , Season GreatRemix "remix" "remix/rankings-1500.json" "Remix Great" 1500
+    , Season UltraPremier "ultra-premier" "premier/rankings-2500.json" "Ultra: Premier Cup" 2500
+    , Season Ultra "ultra" "all/rankings-2500.json" "Ultra League" 2500
+    , Season UltraRemix "Remix Ultra" "remix/rankings-2500.json" "Ultra Remix" 2500
+    , Season MasterPremier "premier" "premier/rankings-10000.json" "Master: Premier Cup" 0
+    , Season Master "master" "all/rankings-10000.json" "Master League" 0
     ]
 
 
 greatSeason : Season
 greatSeason =
-    Season Great "great" "all/rankings-1500.json" "Great League" "Great"
+    Season Great "great" "all/rankings-1500.json" "Great League" 1500
 
 
 decodeSeason : Decoder SeasonName
 decodeSeason =
-    let
-        convert season =
-            ( stringFromSeason season, season )
-    in
-    seasons |> L.map convert |> decodeSimpleCustomTypes
+    Decode.string |> Decode.map deserialiseSeason
 
 
 encodeSeason : SeasonName -> Value
 encodeSeason =
-    Encode.string << stringFromSeason
+    Encode.string << serialiseSeason
 
 
 seasons : List SeasonName
 seasons =
     L.map .name seasonsData
-
-
-stringFromSeason : SeasonName -> String
-stringFromSeason =
-    getSeason >> .stringified
 
 
 ppSeason : SeasonName -> String
@@ -662,6 +596,69 @@ decMoveType =
     Decode.map2 MoveType
         (Decode.field "name" Decode.string)
         (Decode.field "type" decodePType)
+
+
+
+-- -----------------------
+-- Page
+-- -----------------------
+
+
+type Page
+    = Intro
+    | LoadingDex
+    | Registering RegisteringModel
+    | TeamOptions String -- search term
+    | Battling
+    | FatalError String
+
+
+mapRegistering : (RegisteringModel -> RegisteringModel) -> Page -> Page
+mapRegistering function page =
+    case page of
+        Registering m ->
+            Registering <| function m
+
+        _ ->
+            page
+
+
+registerPage : Page
+registerPage =
+    Registering blankRegistering
+
+
+type alias RegisteringModel =
+    { opponents : List String
+    , seasonToCopy : SeasonName
+    }
+
+
+blankRegistering : RegisteringModel
+blankRegistering =
+    { opponents = []
+    , seasonToCopy = Great
+    }
+
+
+isRegistering : Page -> Bool
+isRegistering page =
+    case page of
+        Registering _ ->
+            True
+
+        _ ->
+            False
+
+
+isTeamOptions : Page -> Bool
+isTeamOptions page =
+    case page of
+        TeamOptions _ ->
+            True
+
+        _ ->
+            False
 
 
 

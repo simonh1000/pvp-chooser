@@ -49,9 +49,10 @@ function convert(league, item) {
 
 getGamemaster();
 // https://pvpoke.com/data/rankings/remix/overall/rankings-1500.json
-convert("remix", "1500");
 convert("all", "1500");
+convert("halloween", "1500");
 convert("premier", "2500");
+convert("remix", "2500");
 convert("all", "2500");
 convert("premier", "10000");
 convert("all", "10000");
